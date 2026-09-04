@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "doffi secure"
+rootProject.name = "Decryptum"
 include(":app")
