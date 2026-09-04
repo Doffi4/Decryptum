@@ -326,7 +326,7 @@ fun SettingsScreen(
 
             // Version
             Text(
-                text = "Decryptum v1.0",
+                text = "Decryptum v0.8",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp)
