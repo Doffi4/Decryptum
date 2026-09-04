@@ -1,4 +1,4 @@
-﻿# Decryptum 🔐
+# Decryptum 🔐
 
 <p align="center">
   <a href="https://github.com/Doffi4/Decryptum/releases/tag/v0.8.0"><img src="https://img.shields.io/badge/Release-v0.8.0%20Beta-orange.svg" alt="Version"></a>
@@ -56,75 +56,22 @@ Pre-built, signed APKs and release notes are available on the [**GitHub Releases
 
 > ⚠️ *Note: Decryptum is currently in **v0.8.0 Beta Preview**. Cryptographic storage and generator are fully functional; cold-start latency and large vault scrolling optimizations are actively being refined.*
 
-## ☕ Support the Project
-
-If you find this project useful, you can support its development:
-
-[![Donate with Tonkeeper] **TJRMN3nQvG3SQVjZJkV4JcrszNcVYdjQqb**
-
-<details>
-<summary>📋 Click to view TON / USDT (TON) wallet address</summary>
-
-```text
-ТВОЙ_TON_АДРЕС
-
-### 📄 License
-Distributed under the **GNU General Public License v3.0 (GPLv3)**. See [LICENSE](LICENSE) for details.
-
 ---
 
+### ☕ Support the Project
+
+If you find Decryptum useful, you can support its independent development:
+
+<p align="left">
+  <img src="https://img.shields.io/badge/USDT-TRC20-26A17B?style=for-the-badge&logo=tether&logoColor=white" alt="USDT TRC-20">
+  <img src="https://img.shields.io/badge/Ethereum%20%2F%20EVM-ETH%20%7C%20USDT-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white" alt="Ethereum EVM">
+</p>
+
 <details>
-<summary><b>🇷🇺 Нажмите здесь, чтобы прочитать описание на русском</b></summary>
+<summary>📋 <b>Click to reveal Crypto Wallet Addresses</b></summary>
 
 <br>
 
-## Decryptum 🔐
-
-**Decryptum** — это современный, полностью автономный менеджер паролей с открытым исходным кодом для Android, разработанный на Jetpack Compose с дизайном Material You, чистой архитектурой (Clean Architecture) и аппаратным шифрованием Android Keystore.
-
-### ✨ Основные возможности
-
-#### 🛡️ Безопасность и криптография
-- **Аппаратное конвертное шифрование AES/GCM**: Ваши ключи шифрования защищены через **Android Keystore** (`enc:2:...`). Мастер-ключ не покидает защищенный чип устройства, а расшифрованные данные хранятся в оперативной памяти только во время разблокированной сессии.
-- **Биометрия и мастер-пароль**: Разблокировка по отпечатку пальца или лицу (**BiometricPrompt**) и хешированный мастер-пароль.
-- **Настраиваемый авто-лок**: Блокировка приложения при бездействии (30 сек, 1 мин, 5 мин, 15 мин или никогда).
-- **Защита от скриншотов (`FLAG_SECURE`)**: Запрет создания снимков экрана и скрытие содержимого в диспетчере недавних задач.
-- **Безопасный буфер обмена**: Автоматическое удаление скопированного пароля из буфера через 30 секунд.
-- **Импорт и экспорт CSV**: Поддержка резервного копирования и миграции из **Chrome**, **Bitwarden**, **LastPass** и **KeePass**.
-
-#### 🎲 Генератор паролей и аудит
-- **Гибкая настройка**: Слайдер длины (8–64 символа), переключатели регистра, цифр и спецсимволов.
-- **Исключение похожих символов**: Отключение неоднозначных знаков (`0O1lI`).
-- **Готовые пресеты**: Быстрый выбор сложности (Слабый, Средний, Сильный, Максимальный).
-- **Живая оценка надежности**: Анимированный 4-сегментный индикатор сложности пароля.
-- **Анализ уязвимостей**: Автоматический поиск дублирующихся и слабых паролей.
-
-#### ⚡ Производительность и оптимизация
-- **Material You**: Динамические цвета под обои рабочего стола, темный запуск без белой вспышки (`#101418`) и плавная кастомная капсула навигации.
-- **VaultWarmup**: Фоновая расшифровка и кэширование иконок сайтов прямо во время показа экрана блокировки для мгновенного отклика списка.
-- **Компактный APK (~2.6 МБ)**: Полная оптимизация R8 и встроенный **Baseline Profile** для быстрого холодного старта.
-- **Встроенная диагностика**: Скрытый режим разработчика (6 быстрых тапов по заголовку) с оверлеями FPS, дропов кадров и нагрузки на процессор.
-
----
-
-### 🛠️ Реальный стек технологий
-- **Язык**: Kotlin 2.2.10 (minSdk 26, targetSdk 37)
-- **UI**: Jetpack Compose (BOM 2026.02), Material 3, Navigation Compose
-- **Архитектура**: Clean Architecture + MVVM
-- **Внедрение зависимостей (DI)**: **Koin 3.5.0** (`koin-android`, `koin-androidx-compose`)
-- **База данных**: Room 2.8.4 (KSP, режим WAL)
-- **Безопасность**: AndroidX Security Crypto & Biometrics (Keystore, AES-GCM)
-- **Загрузка фавиконов**: Coil 2.7.0
-- **Оптимизация**: AndroidX ProfileInstaller (Baseline Profiles) & ProGuard/R8
-
----
-
-### 📥 Скачать приложение
-Готовые установочные файлы (APK) доступны в разделе [**GitHub Releases**](https://github.com/Doffi4/Decryptum/releases).
-
-> ⚠️ *Decryptum находится на стадии **v0.8.0 Beta Preview**. Основной защитный функционал полностью работает; полировка производительности холодного запуска и плавности скролла больших баз активно продолжается.*
-
-### 📄 Лицензия
-Распространяется под лицензией **GNU General Public License v3.0 (GPLv3)**. Подробности в файле [LICENSE](LICENSE).
-
-</details>
+**USDT (TRC-20 / Tron Network)**
+```text
+TJRMN3nQvG3SQVjZJkV4JcrszNcVYdjQqb
