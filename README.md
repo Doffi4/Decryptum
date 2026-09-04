@@ -56,6 +56,18 @@ Pre-built, signed APKs and release notes are available on the [**GitHub Releases
 
 > ⚠️ *Note: Decryptum is currently in **v0.8.0 Beta Preview**. Cryptographic storage and generator are fully functional; cold-start latency and large vault scrolling optimizations are actively being refined.*
 
+## ☕ Support the Project
+
+If you find this project useful, you can support its development:
+
+[![Donate with Tonkeeper] **TJRMN3nQvG3SQVjZJkV4JcrszNcVYdjQqb**
+
+<details>
+<summary>📋 Click to view TON / USDT (TON) wallet address</summary>
+
+```text
+ТВОЙ_TON_АДРЕС
+
 ### 📄 License
 Distributed under the **GNU General Public License v3.0 (GPLv3)**. See [LICENSE](LICENSE) for details.
 
