@@ -1,4 +1,4 @@
-﻿# Decryptum (DoffiSecure) 🔐
+﻿# Decryptum 🔐
 
 <p align="center">
   <a href="#-english">English</a> •
@@ -17,7 +17,7 @@
 
 ## 🇬🇧 English
 
-**Decryptum** (also known as **DoffiSecure**) is a modern, privacy-first, open-source password manager for Android built with Jetpack Compose, Material You design, and Clean Architecture.
+**Decryptum** is a modern, privacy-first, open-source password manager for Android built with Jetpack Compose, Material You design, and Clean Architecture.
 
 ### ✨ Features
 - 🛡️ **Zero-Knowledge Local Storage**: All passwords are encrypted using strong cryptographic primitives and stored exclusively on your device.
