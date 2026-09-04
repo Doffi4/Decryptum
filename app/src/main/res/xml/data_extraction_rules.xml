@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+    Data extraction rules. Auto-backup is disabled via allowBackup="false" in
+    the manifest, but these rules additionally prevent the Room database and
+    shared preferences from ever being backed up or transferred to a new device
+    (the Keystore encryption key cannot travel with the backup, so a restored
+    plain-text copy or an orphaned DB would be both useless and a data risk).
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="database" path="." />
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="." />
+    </device-transfer>
+</data-extraction-rules>

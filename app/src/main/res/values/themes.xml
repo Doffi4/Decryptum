@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Dark startup theme: windowBackground (the pre-Compose splash on API < 31)
+         and the system bars are dark, so a cold start never flashes a white
+         screen. Compose draws the real UI right after the first frame. -->
+    <style name="Theme.Decryptum" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/splash_background</item>
+        <item name="android:statusBarColor">@color/splash_background</item>
+        <item name="android:navigationBarColor">@color/splash_background</item>
+    </style>
+</resources>

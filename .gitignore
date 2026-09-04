@@ -1,0 +1,30 @@
+*.iml
+.gradle
+/local.properties
+local.properties
+
+# Android Studio / IntelliJ IDEA
+/.idea/
+.idea/
+*.iws
+
+# Build artifacts
+/build
+build/
+.externalNativeBuild
+.cxx
+captures/
+.artifacts/
+.kotlin/
+
+# OS and temporary files
+.DS_Store
+Thumbs.db
+
+# Logs and local debugging dumps
+*.log
+logcat.txt
+*report*.txt
+project_issues.txt
+warnings.txt
+n... (wait, I need the correct path)
