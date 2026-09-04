@@ -28,3 +28,6 @@ logcat.txt
 project_issues.txt
 warnings.txt
 n... (wait, I need the correct path)
+
+*.apk
+
