@@ -58,17 +58,21 @@ Pre-built, signed APKs and release notes are available on the [**GitHub Releases
 
 ---
 
-### ☕ Support the Project
+## ☕ Support the Project
 
 If you find Decryptum useful, you can support its independent development:
 
 <p align="left">
-  <img src="https://img.shields.io/badge/USDT-TRC20-26A17B?style=for-the-badge&logo=tether&logoColor=white" alt="USDT TRC-20">
-  <img src="https://img.shields.io/badge/Ethereum%20%2F%20EVM-ETH%20%7C%20USDT-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white" alt="Ethereum EVM">
+  <a href="[https://tronscan.org/#/address/TJRMN3nQvG3SQVjZJkV4JcrszNcVYdjQqb](https://tronscan.org/#/address/TJRMN3nQvG3SQVjZJkV4JcrszNcVYdjQqb)" target="_blank">
+    <img src="[https://img.shields.io/badge/USDT-TRC20-26A17B?style=for-the-badge&logo=tether&logoColor=white](https://img.shields.io/badge/USDT-TRC20-26A17B?style=for-the-badge&logo=tether&logoColor=white)" alt="USDT TRC-20">
+  </a>
+  <a href="[https://etherscan.io/address/0xBE7d70b17F26be6E7E34BC84b7c84871f27279F8](https://etherscan.io/address/0xBE7d70b17F26be6E7E34BC84b7c84871f27279F8)" target="_blank">
+    <img src="[https://img.shields.io/badge/Ethereum%20%2F%20EVM-ETH%20%7C%20USDT-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white](https://img.shields.io/badge/Ethereum%20%2F%20EVM-ETH%20%7C%20USDT-3C3C3D?style=for-the-badge&logo=ethereum&logoColor=white)" alt="Ethereum EVM">
+  </a>
 </p>
 
-<details>
-<summary>📋 <b>Click to reveal Crypto Wallet Addresses</b></summary>
+<details open>
+<summary>📋 <b>Click to copy Wallet Addresses</b></summary>
 
 <br>
 
