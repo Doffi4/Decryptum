@@ -1,5 +1,8 @@
 package com.doffi4.doffisecure.domain.model
 
+import androidx.annotation.StringRes
+import com.doffi4.doffisecure.R
+
 /**
  * Heuristic password-strength levels behind the 4-segment meter.
  *
@@ -8,11 +11,15 @@ package com.doffi4.doffisecure.domain.model
  * ~12-character password in [MEDIUM]/[STRONG], and 14+ characters with several
  * classes reach [VERY_STRONG].
  */
-enum class PasswordStrength(val level: Int, val label: String) {
-    WEAK(1, "Слабый"),
-    MEDIUM(2, "Средний"),
-    STRONG(3, "Сильный"),
-    VERY_STRONG(4, "Очень сильный");
+enum class PasswordStrength(
+    val level: Int,
+    @StringRes val labelRes: Int,
+    val label: String = ""
+) {
+    WEAK(1, R.string.strength_weak, "Weak"),
+    MEDIUM(2, R.string.strength_medium, "Medium"),
+    STRONG(3, R.string.strength_strong, "Strong"),
+    VERY_STRONG(4, R.string.strength_very_strong, "Very strong");
 
     companion object {
 

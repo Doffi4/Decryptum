@@ -14,8 +14,10 @@ import com.doffi4.doffisecure.dev.RefreshRateController
 import com.doffi4.doffisecure.dev.RefreshTier
 import com.doffi4.doffisecure.security.DevModeManager
 import com.doffi4.doffisecure.security.SecureClipboard
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.security.UserSettingsManager
 import com.doffi4.doffisecure.security.VaultWarmup
+import com.doffi4.doffisecure.ui.util.UiText
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Job
@@ -89,14 +91,14 @@ class PasswordViewModel(
             try {
                 _selectedPassword.value = getPasswordByIdUseCase(id)
                 if (_selectedPassword.value == null) {
-                    _uiState.value = PasswordUiState.Error("Password not found")
+                    _uiState.value = PasswordUiState.Error(UiText.StringResource(R.string.toast_password_not_found))
                 } else {
                     _uiState.value = PasswordUiState.Success(emptyList())
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiState.value = PasswordUiState.Error(e.message ?: "Failed to load password")
+                _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to load password"))
             }
         }
     }
@@ -127,7 +129,7 @@ class PasswordViewModel(
                 _uiState.value = PasswordUiState.Loading
             }
             getPasswordsUseCase()
-                .catch { e -> _uiState.value = PasswordUiState.Error(e.message ?: "Unknown Error") }
+                .catch { e -> _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Unknown Error")) }
                 .collect { passwords ->
                     _uiState.value = PasswordUiState.Success(passwords)
                 }
@@ -155,7 +157,7 @@ class PasswordViewModel(
         val alreadyEnabled = devModeManager.devModeEnabled.value
         if (alreadyEnabled) {
             viewModelScope.launch {
-                _uiEvent.emit(PasswordUiEvent.ShowToast("Developer mode already active"))
+                _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.dev_toast_already_active)))
             }
         }
         return !alreadyEnabled
@@ -169,7 +171,7 @@ class PasswordViewModel(
         if (!devModeManager.isDevPasswordValid(password)) return false
         devModeManager.enableDevMode(true)
         viewModelScope.launch {
-            _uiEvent.emit(PasswordUiEvent.ShowToast("Developer mode enabled"))
+            _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.dev_toast_enabled)))
         }
         return true
     }
@@ -177,14 +179,14 @@ class PasswordViewModel(
     fun addPassword(service: String, username: String, password: String) {
         viewModelScope.launch {
             if (service.isBlank() || username.isBlank() || password.isBlank()) {
-                _uiState.value = PasswordUiState.Error("All fields are required")
+                _uiState.value = PasswordUiState.Error(UiText.StringResource(R.string.error_all_fields_required))
                 return@launch
             }
             try {
                 addPasswordUseCase(service, username, password)
-                _uiEvent.emit(PasswordUiEvent.ShowToast("Password added successfully"))
+                _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_saved)))
             } catch (e: Exception) {
-                _uiState.value = PasswordUiState.Error(e.message ?: "Failed to add password")
+                _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to add password"))
             }
         }
     }
@@ -192,14 +194,14 @@ class PasswordViewModel(
     fun updatePassword(id: Long, service: String, username: String, password: String) {
         viewModelScope.launch {
             if (service.isBlank() || username.isBlank() || password.isBlank()) {
-                _uiState.value = PasswordUiState.Error("All fields are required")
+                _uiState.value = PasswordUiState.Error(UiText.StringResource(R.string.error_all_fields_required))
                 return@launch
             }
             try {
                 updatePasswordUseCase(id, service, username, password)
-                _uiEvent.emit(PasswordUiEvent.ShowToast("Password updated successfully"))
+                _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_updated)))
             } catch (e: Exception) {
-                _uiState.value = PasswordUiState.Error(e.message ?: "Failed to update password")
+                _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to update password"))
             }
         }
     }
@@ -208,9 +210,9 @@ class PasswordViewModel(
         viewModelScope.launch {
             try {
                 deletePasswordUseCase(id)
-                _uiEvent.emit(PasswordUiEvent.ShowToast("Password deleted successfully"))
+                _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_deleted)))
             } catch (e: Exception) {
-                _uiState.value = PasswordUiState.Error(e.message ?: "Failed to delete password")
+                _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to delete password"))
             }
         }
     }
@@ -218,14 +220,14 @@ class PasswordViewModel(
     fun copyUsername(username: String) {
         secureClipboard.copy(username)
         viewModelScope.launch {
-            _uiEvent.emit(PasswordUiEvent.ShowToast("Username copied"))
+            _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_username_copied)))
         }
     }
 
     fun copyPassword(password: String) {
         secureClipboard.copy(password)
         viewModelScope.launch {
-            _uiEvent.emit(PasswordUiEvent.ShowToast("Password copied"))
+            _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_copied)))
         }
     }
 
@@ -239,14 +241,18 @@ class PasswordViewModel(
                 val password = getPasswordByIdUseCase(id)?.password
                 if (!password.isNullOrEmpty()) {
                     secureClipboard.copy(password)
-                    _uiEvent.emit(PasswordUiEvent.ShowToast("Password copied"))
+                    _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_copied)))
                 } else {
-                    _uiEvent.emit(PasswordUiEvent.ShowToast("Password not found"))
+                    _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_not_found)))
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _uiEvent.emit(PasswordUiEvent.ShowToast("Copy failed: ${e.message ?: "unknown"}"))
+                _uiEvent.emit(
+                    PasswordUiEvent.ShowToast(
+                        UiText.StringResource(R.string.toast_copy_failed, arrayOf(e.message ?: "unknown"))
+                    )
+                )
             }
         }
     }
@@ -262,14 +268,14 @@ class PasswordViewModel(
                     return@launch
                 }
                 searchPasswordsUseCase(query)
-                    .catch { e -> _uiState.value = PasswordUiState.Error(e.message ?: "Search error") }
+                    .catch { e -> _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Search error")) }
                     .collect { passwords ->
                         _uiState.value = PasswordUiState.Success(passwords)
                     }
             } catch (_: CancellationException) {
                 // Expected when job is cancelled
             } catch (e: Exception) {
-                _uiState.value = PasswordUiState.Error(e.message ?: "Search failed")
+                _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Search failed"))
             }
         }
     }

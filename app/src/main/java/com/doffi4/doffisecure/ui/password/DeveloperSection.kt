@@ -23,10 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.pm.PackageInfoCompat
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.dev.CpuStats
+import com.doffi4.doffisecure.ui.util.UiText
 import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.StateFlow
 import org.koin.androidx.compose.koinViewModel
@@ -70,7 +73,7 @@ fun DeveloperSection(
     LaunchedEffect(Unit) {
         devTools.event.collect { event ->
             if (event is DevToolsEvent.ShowToast) {
-                Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                Toast.makeText(context, event.message.asString(context), Toast.LENGTH_LONG).show()
             }
         }
     }
@@ -93,9 +96,9 @@ fun DeveloperSection(
         ) {
             Column {
                 ListItem(
-                    headlineContent = { Text("Show password count") },
+                    headlineContent = { Text(stringResource(R.string.dev_setting_password_count)) },
                     supportingContent = {
-                        Text("Display the number of passwords in the app on the main screen")
+                        Text(stringResource(R.string.dev_setting_password_count_desc))
                     },
                     leadingContent = { Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
@@ -107,9 +110,9 @@ fun DeveloperSection(
                 )
                 HorizontalDivider()
                 ListItem(
-                    headlineContent = { Text("Show warm-up progress") },
+                    headlineContent = { Text(stringResource(R.string.dev_setting_warmup_progress)) },
                     supportingContent = {
-                        Text("Display the vault warm-up percentage on the main and lock screens")
+                        Text(stringResource(R.string.dev_setting_warmup_progress_desc))
                     },
                     leadingContent = { Icon(Icons.Default.Refresh, null, tint = MaterialTheme.colorScheme.primary) },
                     trailingContent = {
@@ -121,8 +124,8 @@ fun DeveloperSection(
                 )
                 HorizontalDivider()
                 ListItem(
-                    headlineContent = { Text("Disable Developer Mode") },
-                    supportingContent = { Text("Hides this section and all developer features") },
+                    headlineContent = { Text(stringResource(R.string.dev_btn_disable_mode)) },
+                    supportingContent = { Text(stringResource(R.string.dev_disable_mode_desc)) },
                     leadingContent = { Icon(Icons.Default.Build, null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable { onDisableDevMode() }
                 )
@@ -130,7 +133,7 @@ fun DeveloperSection(
         }
 
         // ──── Warm-up (cold-start prefetch) ────
-        SectionLabel("Warm-up")
+        SectionLabel(stringResource(R.string.dev_section_warmup))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -138,13 +141,17 @@ fun DeveloperSection(
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (warmupProgress >= 100) "Vault warmed (100%)" else "Warming vault: $warmupProgress%",
+                        text = if (warmupProgress >= 100) {
+                            stringResource(R.string.dev_warmup_warmed)
+                        } else {
+                            stringResource(R.string.dev_warmup_warming, warmupProgress)
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
                     if (warmupRunning) {
                         Text(
-                            text = "running…",
+                            text = stringResource(R.string.dev_warmup_running),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -158,30 +165,30 @@ fun DeveloperSection(
                     onClick = { devTools.reWarmWarmup() },
                     modifier = Modifier.align(Alignment.End)
                 ) {
-                    Text("Re-run warm-up")
+                    Text(stringResource(R.string.dev_btn_rerun_warmup))
                 }
             }
         }
 
         // ──── Test data ────
-        SectionLabel("Test data")
+        SectionLabel(stringResource(R.string.dev_section_test_data))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
         ) {
             Column {
                 ListItem(
-                    headlineContent = { Text("Insert 100 test passwords") },
+                    headlineContent = { Text(stringResource(R.string.dev_btn_insert_100)) },
                     supportingContent = {
-                        Text("Fake accounts to test grouping, search, favicons and duplicates")
+                        Text(stringResource(R.string.dev_desc_insert_100))
                     },
                     leadingContent = { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable { devTools.insertTestPasswords(100) }
                 )
                 HorizontalDivider()
                 ListItem(
-                    headlineContent = { Text("Insert 500 test passwords") },
-                    supportingContent = { Text("Larger volume - check import speed and list performance") },
+                    headlineContent = { Text(stringResource(R.string.dev_btn_insert_500)) },
+                    supportingContent = { Text(stringResource(R.string.dev_desc_insert_500)) },
                     leadingContent = { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) },
                     modifier = Modifier.clickable { devTools.insertTestPasswords(500) }
                 )
@@ -189,13 +196,13 @@ fun DeveloperSection(
         }
 
         // ──── Database ────
-        SectionLabel("Database")
+        SectionLabel(stringResource(R.string.dev_section_db))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Database", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.dev_section_db), style = MaterialTheme.typography.titleSmall)
                 Text(
                     text = dbFile.absolutePath,
                     style = MaterialTheme.typography.bodySmall,
@@ -203,7 +210,7 @@ fun DeveloperSection(
                 )
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Size: $dbSize  ·  Rows: $totalCount  ·  Encrypted: $encryptedCount",
+                        text = stringResource(R.string.dev_db_stats_format, dbSize, totalCount, encryptedCount),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f)
@@ -213,17 +220,17 @@ fun DeveloperSection(
                     }) {
                         Icon(Icons.Default.Refresh, null, Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Refresh")
+                        Text(stringResource(R.string.action_refresh))
                     }
                 }
                 OutlinedButton(
                     onClick = { devTools.checkIntegrity() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Check encryption integrity")
+                    Text(stringResource(R.string.dev_btn_check_integrity))
                 }
                 Text(
-                    text = integrity ?: "Not checked yet",
+                    text = integrity ?: stringResource(R.string.dev_integrity_not_checked),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -234,13 +241,13 @@ fun DeveloperSection(
                 ) {
                     Icon(Icons.Default.Delete, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Wipe database…")
+                    Text(stringResource(R.string.dev_btn_wipe_db))
                 }
             }
         }
 
         // ──── Duplicates ────
-        SectionLabel("Duplicates")
+        SectionLabel(stringResource(R.string.dev_section_duplicates))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -249,9 +256,9 @@ fun DeveloperSection(
                 val extraRecords = duplicates.sumOf { it.count - 1 }
                 Text(
                     text = if (duplicates.isEmpty()) {
-                        "No duplicate (service + username) groups"
+                        stringResource(R.string.dev_duplicates_none)
                     } else {
-                        "${duplicates.size} duplicate group(s) · $extraRecords extra record(s)"
+                        stringResource(R.string.dev_duplicates_summary, duplicates.size, extraRecords)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -263,13 +270,13 @@ fun DeveloperSection(
                 ) {
                     Icon(Icons.Default.Warning, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Remove duplicates (keep oldest)")
+                    Text(stringResource(R.string.dev_btn_remove_duplicates))
                 }
             }
         }
 
         // ──── Performance ────
-        SectionLabel("Performance")
+        SectionLabel(stringResource(R.string.dev_section_performance))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -279,12 +286,12 @@ fun DeveloperSection(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Show frame-time overlay",
+                            text = stringResource(R.string.dev_setting_fps_overlay),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Live fps / frame ms / jank readout on the main screen",
+                            text = stringResource(R.string.dev_setting_fps_overlay_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -298,7 +305,7 @@ fun DeveloperSection(
                 // Number of LazyColumn items composed ahead of the viewport.
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "List prefetch: $prefetchCount item(s) ahead",
+                        text = stringResource(R.string.dev_setting_prefetch_format, prefetchCount),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
@@ -321,7 +328,7 @@ fun DeveloperSection(
                 }
                 HorizontalDivider()
                 Text(
-                    text = decryptTest ?: "Not measured yet",
+                    text = decryptTest ?: stringResource(R.string.dev_decryption_not_measured),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -329,13 +336,13 @@ fun DeveloperSection(
                     onClick = { devTools.measureDecryption() },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Measure full list decryption")
+                    Text(stringResource(R.string.dev_btn_measure_decryption_title))
                 }
             }
         }
 
         // ──── System (CPU telemetry) ────
-        SectionLabel("System")
+        SectionLabel(stringResource(R.string.dev_section_system))
         CpuSystemCard(
             cpuStats = devTools.cpuStats,
             cpuOverlayEnabled = showCpuOverlay,
@@ -343,7 +350,7 @@ fun DeveloperSection(
         )
 
         // ──── Diagnostics ────
-        SectionLabel("Diagnostics")
+        SectionLabel(stringResource(R.string.dev_section_diagnostics))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -354,13 +361,13 @@ fun DeveloperSection(
                     onClick = { copyToClipboard(context, "Decryptum diagnostics", diagnostics) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Copy diagnostics to clipboard")
+                    Text(stringResource(R.string.dev_btn_copy_diagnostics_title))
                 }
             }
         }
 
         // ──── Quick actions ────
-        SectionLabel("Quick actions")
+        SectionLabel(stringResource(R.string.dev_section_quick_actions))
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -368,13 +375,16 @@ fun DeveloperSection(
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Auto-lock: ${if (lockTimeout == 0) "Never" else "${lockTimeout}s"}",
+                        text = stringResource(
+                            R.string.dev_autolock_format,
+                            if (lockTimeout == 0) stringResource(R.string.timeout_never) else "${lockTimeout}s"
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    TextButton(onClick = { devTools.setLockTimeout(30) }) { Text("30 s") }
-                    TextButton(onClick = { devTools.setLockTimeout(300) }) { Text("5 min") }
-                    TextButton(onClick = { devTools.setLockTimeout(0) }) { Text("Never") }
+                    TextButton(onClick = { devTools.setLockTimeout(30) }) { Text("30s") }
+                    TextButton(onClick = { devTools.setLockTimeout(300) }) { Text("5m") }
+                    TextButton(onClick = { devTools.setLockTimeout(0) }) { Text(stringResource(R.string.timeout_never)) }
                 }
                 OutlinedButton(
                     onClick = { devTools.lockNow() },
@@ -382,14 +392,14 @@ fun DeveloperSection(
                 ) {
                     Icon(Icons.Default.Lock, null, Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Lock app now")
+                    Text(stringResource(R.string.dev_btn_lock_now))
                 }
                 TextButton(
                     onClick = { showResetLockDialog = true },
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
                 ) {
-                    Text("Reset master password (remove app lock)")
+                    Text(stringResource(R.string.dev_btn_reset_master))
                 }
             }
         }
@@ -399,8 +409,8 @@ fun DeveloperSection(
     if (showWipeDialog) {
         AlertDialog(
             onDismissRequest = { showWipeDialog = false },
-            title = { Text("Wipe database?") },
-            text = { Text("This permanently deletes ALL passwords. This action cannot be undone. (Developer tool - no biometric confirmation.)") },
+            title = { Text(stringResource(R.string.dev_wipe_dialog_title)) },
+            text = { Text(stringResource(R.string.dev_wipe_dialog_text)) },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -408,10 +418,10 @@ fun DeveloperSection(
                         showWipeDialog = false
                         devTools.deleteAllPasswords()
                     }
-                ) { Text("Wipe") }
+                ) { Text(stringResource(R.string.dev_wipe_dialog_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showWipeDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showWipeDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -419,8 +429,8 @@ fun DeveloperSection(
     if (showResetLockDialog) {
         AlertDialog(
             onDismissRequest = { showResetLockDialog = false },
-            title = { Text("Reset master password?") },
-            text = { Text("The master password and auto-lock settings will be cleared. The app will stay locked until you set a new one.") },
+            title = { Text(stringResource(R.string.dev_reset_dialog_title)) },
+            text = { Text(stringResource(R.string.dev_reset_dialog_text)) },
             confirmButton = {
                 Button(
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
@@ -428,10 +438,10 @@ fun DeveloperSection(
                         showResetLockDialog = false
                         devTools.resetMasterPassword()
                     }
-                ) { Text("Reset") }
+                ) { Text(stringResource(R.string.action_reset)) }
             },
             dismissButton = {
-                TextButton(onClick = { showResetLockDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showResetLockDialog = false }) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -472,68 +482,70 @@ private fun CpuSystemCard(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Memory,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(Modifier.width(8.dp))
-                Text("CPU / система", style = MaterialTheme.typography.titleSmall)
-            }
+                    Icon(
+                        Icons.Default.Memory,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.dev_cpu_system_title), style = MaterialTheme.typography.titleSmall)
+                }
 
-            // Approximate temperature with a rough source hint. "~" because it
-            // comes from thermal zones, not a dedicated public CPU API.
-            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Approximate temperature with a rough source hint. "~" because it
+                // comes from thermal zones, not a dedicated public CPU API.
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.dev_cpu_temperature),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = stats.cpuTempC?.let { "~${"%.1f".format(it)} °C" } ?: stringResource(R.string.not_available),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = tempColor(stats.cpuTempC)
+                    )
+                }
                 Text(
-                    text = "Температура CPU",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f)
+                    text = stringResource(R.string.dev_cpu_source, stats.tempSource),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Text(
-                    text = stats.cpuTempC?.let { "~${"%.1f".format(it)} °C" } ?: "н/д",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = tempColor(stats.cpuTempC)
-                )
-            }
-            Text(
-                text = "Источник: ${stats.tempSource}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
 
-            // Overall CPU load with a small progress bar.
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Нагрузка CPU",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f)
+                // Overall CPU load with a small progress bar.
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.dev_cpu_load),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "${stats.cpuLoadPercent.roundToInt()} %",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                LinearProgressIndicator(
+                    progress = { (stats.cpuLoadPercent / 100f).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Text(
-                    text = "${stats.cpuLoadPercent.roundToInt()} %",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            LinearProgressIndicator(
-                progress = { (stats.cpuLoadPercent / 100f).coerceIn(0f, 1f) },
-                modifier = Modifier.fillMaxWidth()
-            )
 
-            // Current highest core frequency (dev nicety).
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "Частота CPU",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.weight(1f)
-                )
-                Text(
-                    text = stats.cpuFreqMhz?.let { "%.2f ГГц".format(it / 1000f) } ?: "н/д",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+                // Current highest core frequency (dev nicety).
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.dev_cpu_frequency),
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = stats.cpuFreqMhz?.let {
+                            stringResource(R.string.dev_cpu_freq_ghz, it / 1000f)
+                        } ?: stringResource(R.string.not_available),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
 
             // CPU overlay toggle: show the pill on every screen except Settings.
@@ -544,12 +556,12 @@ private fun CpuSystemCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Show CPU overlay",
+                        text = stringResource(R.string.dev_setting_cpu_overlay),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Температура и нагрузка поверх экранов (кроме настроек)",
+                        text = stringResource(R.string.dev_setting_cpu_overlay_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -600,5 +612,5 @@ private fun formatFileSize(bytes: Long): String = when {
 private fun copyToClipboard(context: Context, label: String, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     clipboard.setPrimaryClip(ClipData.newPlainText(label, text))
-    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.dev_toast_diagnostics_copied), Toast.LENGTH_SHORT).show()
 }

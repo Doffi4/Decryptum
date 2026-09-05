@@ -1,16 +1,23 @@
 package com.doffi4.doffisecure.ui.password
 
+import android.app.Activity
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.domain.usecase.DeleteAllPasswordsUseCase
 import com.doffi4.doffisecure.domain.usecase.GetPasswordsUseCase
 import com.doffi4.doffisecure.domain.usecase.ImportPasswordsUseCase
 import com.doffi4.doffisecure.security.AppLockManager
+import com.doffi4.doffisecure.security.AppLocaleManager
 import com.doffi4.doffisecure.security.CsvManager
 import com.doffi4.doffisecure.security.DevModeManager
 import com.doffi4.doffisecure.security.UserSettingsManager
+import com.doffi4.doffisecure.ui.util.UiText
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -18,14 +25,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 sealed interface SettingsEvent {
-    data class ShowToast(val message: String) : SettingsEvent
-    data class ShowConfirmation(val title: String, val message: String) : SettingsEvent
+    data class ShowToast(val message: UiText) : SettingsEvent
 }
 
 class SettingsViewModel(
@@ -49,6 +53,68 @@ class SettingsViewModel(
 
     val allowScreenshots = MutableStateFlow(lockManager.getAllowScreenshots())
 
+    // ---- Language selection ----
+    val appLanguage: StateFlow<String> = userSettings.appLanguage
+
+    fun setAppLanguage(activity: Activity, languageCode: String) {
+        userSettings.setAppLanguage(languageCode)
+        AppLocaleManager.applyLanguage(activity, languageCode)
+    }
+
+    // ---- Autofill Framework & Credential Manager ----
+    val autofillAlwaysRequireAuth: StateFlow<Boolean> = userSettings.autofillAlwaysRequireAuth
+
+    fun setAutofillAlwaysRequireAuth(require: Boolean) {
+        userSettings.setAutofillAlwaysRequireAuth(require)
+    }
+
+    fun isAutofillEnabled(context: Context): Boolean {
+        return try {
+            val afm = context.getSystemService(android.view.autofill.AutofillManager::class.java)
+            afm?.hasEnabledAutofillServices() == true
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun openAutofillSettings(context: Context) {
+        val intent = android.content.Intent(android.provider.Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE).apply {
+            data = "package:${context.packageName}".toUri()
+        }
+        try {
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            try {
+                context.startActivity(android.content.Intent("android.settings.REQUEST_SET_AUTOFILL_SERVICE"))
+            } catch (_: Exception) {
+                try {
+                    context.startActivity(android.content.Intent(android.provider.Settings.ACTION_SETTINGS))
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    fun openCredentialProviderSettings(context: Context) {
+        val candidates = mutableListOf<android.content.Intent>()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            candidates.add(android.content.Intent("android.settings.CREDENTIAL_PROVIDER"))
+        }
+        candidates.add(android.content.Intent(android.provider.Settings.ACTION_REQUEST_SET_AUTOFILL_SERVICE).apply {
+            data = "package:${context.packageName}".toUri()
+        })
+        candidates.add(android.content.Intent("android.settings.REQUEST_SET_AUTOFILL_SERVICE"))
+        candidates.add(android.content.Intent("android.settings.AUTOFILL_SETTINGS"))
+        candidates.add(android.content.Intent(android.provider.Settings.ACTION_SYNC_SETTINGS))
+        candidates.add(android.content.Intent(android.provider.Settings.ACTION_SETTINGS))
+
+        for (intent in candidates) {
+            try {
+                context.startActivity(intent)
+                return
+            } catch (_: Exception) {}
+        }
+    }
+
     // ---- Developer mode (hidden section in Settings) ----
 
     val devModeEnabled: StateFlow<Boolean> = devModeManager.devModeEnabled
@@ -56,26 +122,18 @@ class SettingsViewModel(
 
     fun setShowPasswordCount(show: Boolean) {
         devModeManager.setShowPasswordCount(show)
-        viewModelScope.launch {
-            _event.emit(
-                SettingsEvent.ShowToast(
-                    if (show) "Password count display enabled" else "Password count display disabled"
-                )
-            )
-        }
     }
 
     fun disableDevMode() {
         devModeManager.enableDevMode(false)
-        viewModelScope.launch { _event.emit(SettingsEvent.ShowToast("Developer mode disabled")) }
+        viewModelScope.launch {
+            _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.dev_btn_disable_mode)))
+        }
     }
 
     fun setAllowScreenshots(allow: Boolean) {
         allowScreenshots.value = allow
         lockManager.setAllowScreenshots(allow)
-        viewModelScope.launch {
-            _event.emit(SettingsEvent.ShowToast(if (allow) "Screenshots enabled" else "Screenshots blocked"))
-        }
     }
 
     // ---- User settings: password strength meter ----
@@ -84,19 +142,11 @@ class SettingsViewModel(
 
     fun setShowPasswordStrength(show: Boolean) {
         userSettings.setShowPasswordStrength(show)
-        viewModelScope.launch {
-            _event.emit(
-                SettingsEvent.ShowToast(
-                    if (show) "Password strength meter shown" else "Password strength meter hidden"
-                )
-            )
-        }
     }
 
     fun setLockTimeout(seconds: Int) {
         _lockTimeout.value = seconds
         lockManager.setLockTimeoutSeconds(seconds)
-        viewModelScope.launch { _event.emit(SettingsEvent.ShowToast("Auto-lock timeout updated")) }
     }
 
     fun exportPasswords(context: Context, uri: Uri) {
@@ -104,16 +154,16 @@ class SettingsViewModel(
             try {
                 val passwords = getPasswordsUseCase().first()
                 if (passwords.isEmpty()) {
-                    _event.emit(SettingsEvent.ShowToast("No passwords to export"))
+                    _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.passwords_empty)))
                     return@launch
                 }
                 val count = CsvManager.export(context, uri, passwords)
-                _event.emit(SettingsEvent.ShowToast("Exported $count passwords"))
+                _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_export_success, arrayOf(count))))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 val reason = e.message ?: e.javaClass.simpleName
-                _event.emit(SettingsEvent.ShowToast("Export failed: $reason"))
+                _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_export_failed, arrayOf(reason))))
             }
         }
     }
@@ -121,32 +171,20 @@ class SettingsViewModel(
     fun importPasswords(context: Context, uri: Uri) {
         viewModelScope.launch {
             try {
-                // Parse the CSV off the main thread - large files would otherwise
-                // freeze the UI (the root cause of import lag).
                 val passwords = withContext(Dispatchers.Default) {
                     CsvManager.import(context, uri)
                 }
                 if (passwords.isEmpty()) {
-                    _event.emit(SettingsEvent.ShowToast("No valid passwords found in file"))
+                    _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.passwords_empty)))
                     return@launch
                 }
-                // Single bulk transaction - fast and reliable for large imports.
-                // Encryption + DB write both run on background dispatchers inside
-                // the repository, so the UI stays responsive.
                 val imported = importPasswordsUseCase(passwords)
-                val msg = if (imported == passwords.size) {
-                    "Imported $imported passwords"
-                } else {
-                    "Imported $imported of ${passwords.size} passwords"
-                }
-                _event.emit(SettingsEvent.ShowToast(msg))
+                _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_import_success, arrayOf(imported))))
             } catch (e: CancellationException) {
-                // Coroutine was cancelled (e.g. navigating away) - not an import error
                 throw e
             } catch (e: Exception) {
-                // e.message is often null for NPE/IllegalState - show a useful fallback
                 val reason = e.message ?: e.javaClass.simpleName
-                _event.emit(SettingsEvent.ShowToast("Import failed: $reason"))
+                _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_import_failed, arrayOf(reason))))
             }
         }
     }
@@ -155,9 +193,10 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 deleteAllPasswordsUseCase()
-                _event.emit(SettingsEvent.ShowToast("All passwords deleted"))
+                _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_delete_all_success)))
             } catch (e: Exception) {
-                _event.emit(SettingsEvent.ShowToast("Delete failed: ${e.message}"))
+                val reason = e.message ?: e.javaClass.simpleName
+                _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_delete_all_failed, arrayOf(reason))))
             }
         }
     }

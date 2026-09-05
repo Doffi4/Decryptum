@@ -56,12 +56,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import kotlin.math.cos
 import kotlin.math.sin
 
-sealed class NavItem(val route: String, val label: String) {
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.doffi4.doffisecure.R
+
+sealed class NavItem(val route: String, @StringRes val labelRes: Int, val label: String = "") {
     /** Renders the tab icon with the selection tint applied. */
     @Composable
     abstract fun Icon(selected: Boolean)
 
-    object Passwords : NavItem(Screen.PasswordList.route, "Пароли") {
+    object Passwords : NavItem(Screen.PasswordList.route, R.string.nav_passwords, "Passwords") {
         @Composable
         override fun Icon(selected: Boolean) {
             Icon(
@@ -73,7 +77,7 @@ sealed class NavItem(val route: String, val label: String) {
         }
     }
 
-    object Generator : NavItem(Screen.Generator.route, "Генератор") {
+    object Generator : NavItem(Screen.Generator.route, R.string.nav_generator, "Generator") {
         @Composable
         override fun Icon(selected: Boolean) {
             Icon(
@@ -85,7 +89,7 @@ sealed class NavItem(val route: String, val label: String) {
         }
     }
 
-    object Settings : NavItem(Screen.Settings.route, "Настройки") {
+    object Settings : NavItem(Screen.Settings.route, R.string.nav_settings, "Settings") {
         @Composable
         override fun Icon(selected: Boolean) {
             Icon(
@@ -287,7 +291,7 @@ private fun TabContent(item: NavItem, isSelected: Boolean) {
             if (selected) {
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = item.label,
+                    text = stringResource(item.labelRes),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp

@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -26,7 +25,6 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
@@ -57,9 +55,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.ui.components.PasswordStrengthBadge
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Dev-mode pill that shows the live vault warm-up percentage. Extracted as its
@@ -83,11 +84,7 @@ private fun DevWarmupPill(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = if (warmupProgress >= 100) {
-                    "Warm-up: 100% (ready)"
-                } else {
-                    "Warm-up: $warmupProgress%"
-                },
+                text = stringResource(R.string.lock_warmup_progress, warmupProgress),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onTertiaryContainer
             )
@@ -113,8 +110,8 @@ private const val DEV_TAP_WINDOW_MS = 1500L
 private const val FAVICON_QUICK_WARM = 16
 /** Remaining favicons are warmed in batches to avoid a network storm. */
 private const val FAVICON_BATCH_SIZE = 8
-/** Pause between warm-up batches (ms) so the main thread stays responsive. */
-private const val FAVICON_BATCH_DELAY_MS = 90L
+/** Pause between warm-up batches so the main thread stays responsive. */
+private val FAVICON_BATCH_DELAY = 90.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,11 +149,12 @@ fun PasswordScreen(
     var devTaps by remember { mutableIntStateOf(0) }
     var lastDevTapTime by remember { mutableLongStateOf(0L) }
 
+    val context = LocalContext.current
     LaunchedEffect(Unit) {
         viewModel.uiEvent.collect { event ->
             when (event) {
                 is PasswordUiEvent.ShowToast -> {
-                    snackbarHostState.showSnackbar(event.message)
+                    snackbarHostState.showSnackbar(event.message.asString(context))
                 }
             }
         }
@@ -186,12 +184,12 @@ fun PasswordScreen(
                 devPasswordInput = ""
             },
             title = {
-                Text("Режим разработчика", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.dev_dialog_title), fontWeight = FontWeight.SemiBold)
             },
             text = {
                 Column {
                     Text(
-                        text = "Введите дев-пароль, чтобы активировать режим разработчика.",
+                        text = stringResource(R.string.dev_dialog_prompt),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -202,11 +200,11 @@ fun PasswordScreen(
                             devPasswordInput = it
                             if (devPasswordWrong) devPasswordWrong = false
                         },
-                        label = { Text("Дев-пароль") },
+                        label = { Text(stringResource(R.string.dev_dialog_field_label)) },
                         singleLine = true,
                         isError = devPasswordWrong,
                         supportingText = if (devPasswordWrong) {
-                            { Text("Неверный пароль, попробуйте ещё раз") }
+                            { Text(stringResource(R.string.dev_dialog_wrong_password)) }
                         } else {
                             null
                         },
@@ -223,7 +221,7 @@ fun PasswordScreen(
                                     } else {
                                         Icons.Filled.Visibility
                                     },
-                                    contentDescription = if (devPasswordVisible) "Скрыть" else "Показать"
+                                    contentDescription = if (devPasswordVisible) stringResource(R.string.action_hide) else stringResource(R.string.action_show)
                                 )
                             }
                         },
@@ -237,7 +235,7 @@ fun PasswordScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = submitDevPassword) { Text("Активировать") }
+                TextButton(onClick = submitDevPassword) { Text(stringResource(R.string.action_activate)) }
             },
             dismissButton = {
                 TextButton(
@@ -246,7 +244,7 @@ fun PasswordScreen(
                         devPasswordWrong = false
                         devPasswordInput = ""
                     }
-                ) { Text("Отмена") }
+                ) { Text(stringResource(R.string.action_cancel)) }
             }
         )
     }
@@ -283,7 +281,7 @@ fun PasswordScreen(
                         },
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Decryptum", style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                     }
                 },
                 actions = {
@@ -291,7 +289,7 @@ fun PasswordScreen(
                     if (devModeEnabled) {
                         Icon(
                             imageVector = Icons.Default.Build,
-                            contentDescription = "Developer mode",
+                            contentDescription = stringResource(R.string.section_developer),
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(end = 16.dp)
                         )
@@ -314,7 +312,7 @@ fun PasswordScreen(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
-                Icon(Icons.Default.Add, "Add")
+                Icon(Icons.Default.Add, stringResource(R.string.action_add))
             }
         }
     ) { padding ->
@@ -328,7 +326,7 @@ fun PasswordScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Search...", color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                placeholder = { Text(stringResource(R.string.search_placeholder), color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
@@ -373,7 +371,7 @@ fun PasswordScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "DEV · Passwords: $totalPasswordsCount",
+                            text = stringResource(R.string.dev_pill_passwords_count, totalPasswordsCount),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
@@ -393,13 +391,13 @@ fun PasswordScreen(
                 when (val state = uiState) {
                     is PasswordUiState.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                     is PasswordUiState.Error -> Text(
-                        state.message, 
+                        state.message.asString(), 
                         Modifier.align(Alignment.Center), 
                         color = MaterialTheme.colorScheme.error
                     )
                     is PasswordUiState.Success -> {
                         if (state.passwords.isEmpty()) {
-                            Text("No passwords found", Modifier.align(Alignment.Center))
+                            Text(stringResource(R.string.passwords_empty), Modifier.align(Alignment.Center))
                         } else {
                             val groups = remember(state.passwords) { state.passwords.groupBySite() }
                             // Which sites are expanded (accounts shown). Kept at screen
@@ -419,7 +417,7 @@ fun PasswordScreen(
                                         ImageRequest.Builder(context).data(url).size(160).build()
                                     )
                                 }
-                                urls.drop(FAVICON_QUICK_WARM)
+                                urls.asSequence().drop(FAVICON_QUICK_WARM)
                                     .chunked(FAVICON_BATCH_SIZE)
                                     .forEach { chunk ->
                                         chunk.forEach { url ->
@@ -427,7 +425,7 @@ fun PasswordScreen(
                                                 ImageRequest.Builder(context).data(url).size(160).build()
                                             )
                                         }
-                                        kotlinx.coroutines.delay(FAVICON_BATCH_DELAY_MS)
+                                        kotlinx.coroutines.delay(FAVICON_BATCH_DELAY)
                                     }
                             }
                             // Flatten groups into top-level lazy entries: every account
@@ -679,20 +677,20 @@ private fun AccountRow(
             // Copy username: person icon + mini copy badge (bottom-right corner)
             QuickCopyButton(
                 icon = Icons.Default.Person,
-                contentDescription = "Copy username",
+                contentDescription = stringResource(R.string.cd_copy_username),
                 onClick = { onCopyUsername(pwd.username) }
             )
             Spacer(modifier = Modifier.width(4.dp))
             // Copy password: key icon + mini copy badge (bottom-right corner)
             QuickCopyButton(
                 icon = Icons.Default.Key,
-                contentDescription = "Copy password",
+                contentDescription = stringResource(R.string.cd_copy_password),
                 onClick = { onCopyPassword(pwd.id) }
             )
             Spacer(modifier = Modifier.width(4.dp))
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = "View details",
+                contentDescription = stringResource(R.string.view_details),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.size(20.dp)
             )
@@ -745,57 +743,6 @@ private fun QuickCopyButton(
 }
 
 @Composable
-fun PasswordListItem(
-    pwd: Password,
-    onClick: () -> Unit,
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-    ) {
-        ListItem(
-            headlineContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    SiteAvatar(
-                        displayName = pwd.service,
-                        faviconUrl = DomainUtils.faviconUrl(
-                            DomainUtils.extract(pwd.url ?: pwd.service)
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = pwd.service,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = pwd.username,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            trailingContent = {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = "View details",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                )
-            }
-        )
-    }
-}
-
-@Composable
 fun AddPasswordDialog(
     onDismiss: () -> Unit,
     onConfirm: (String, String, String) -> Unit,
@@ -808,25 +755,25 @@ fun AddPasswordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Password") },
+        title = { Text(stringResource(R.string.add_password_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = service,
                     onValueChange = { service = it },
-                    label = { Text("Service") },
+                    label = { Text(stringResource(R.string.field_service)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = user,
                     onValueChange = { user = it },
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.field_username)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = pass,
                     onValueChange = { pass = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.field_password)) },
                     visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -855,10 +802,10 @@ fun AddPasswordDialog(
                     }
                     onDismiss()
                 },
-            ) { Text("Add") }
+            ) { Text(stringResource(R.string.action_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
 }
@@ -877,25 +824,25 @@ fun EditPasswordDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Edit Password") },
+        title = { Text(stringResource(R.string.edit_password_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(
                     value = service,
                     onValueChange = { service = it },
-                    label = { Text("Service") },
+                    label = { Text(stringResource(R.string.field_service)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = user,
                     onValueChange = { user = it },
-                    label = { Text("Username") },
+                    label = { Text(stringResource(R.string.field_username)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = pass,
                     onValueChange = { pass = it },
-                    label = { Text("Password") },
+                    label = { Text(stringResource(R.string.field_password)) },
                     visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -927,10 +874,10 @@ fun EditPasswordDialog(
                     )
                     onDismiss()
                 },
-            ) { Text("Update") }
+            ) { Text(stringResource(R.string.action_update)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
 }

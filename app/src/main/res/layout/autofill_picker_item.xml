@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="6dp"
+    android:paddingBottom="4dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:minHeight="40dp"
+        android:background="?android:attr/selectableItemBackground">
+
+        <ImageView
+            android:id="@+id/autofill_picker_icon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginEnd="8dp"
+            android:src="@drawable/ic_autofill_search"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/autofill_picker_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#E5A882"
+            android:text="@string/autofill_choose_other"
+            android:ellipsize="end"
+            android:singleLine="true" />
+
+    </LinearLayout>
+
+</FrameLayout>

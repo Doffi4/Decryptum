@@ -5,7 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -19,17 +19,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.doffi4.doffisecure.domain.model.Password
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.ui.components.PasswordStrengthBadge
-import org.koin.androidx.compose.koinViewModel
-import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
+import kotlinx.coroutines.launch
+import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,8 +40,9 @@ fun PasswordDetailScreen(
     onNavigateBack: () -> Unit,
     viewModel: PasswordViewModel = koinViewModel()
 ) {
-    val selectedPassword by viewModel.selectedPassword.collectAsState()
+    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val selectedPassword by viewModel.selectedPassword.collectAsState()
     val showEditDialog by viewModel.showEditDialog.collectAsState()
     val showPasswordStrength by viewModel.showPasswordStrength.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -54,7 +57,7 @@ fun PasswordDetailScreen(
             when (event) {
                 is PasswordUiEvent.ShowToast -> {
                     scope.launch {
-                        snackbarHostState.showSnackbar(event.message)
+                        snackbarHostState.showSnackbar(event.message.asString(context))
                     }
                 }
             }
@@ -65,17 +68,20 @@ fun PasswordDetailScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Details") },
+                title = { Text(stringResource(R.string.details_title)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { 
                         selectedPassword?.let { viewModel.onEditPasswordClicked(it) }
                     }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit")
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit))
                     }
                     IconButton(onClick = {
                         selectedPassword?.let {
@@ -83,7 +89,7 @@ fun PasswordDetailScreen(
                             onNavigateBack()
                         }
                     }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.action_delete), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             )
@@ -98,7 +104,7 @@ fun PasswordDetailScreen(
             is PasswordUiState.Error -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = (uiState as PasswordUiState.Error).message,
+                        text = (uiState as PasswordUiState.Error).message.asString(),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(16.dp)
@@ -114,9 +120,9 @@ fun PasswordDetailScreen(
                             .fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        DetailItem(label = "Service", value = pwd.service)
+                        DetailItem(label = stringResource(R.string.field_service), value = pwd.service)
                         DetailItem(
-                            label = "Username",
+                            label = stringResource(R.string.field_username),
                             value = pwd.username,
                             copyIcon = Icons.Default.Person,
                             onCopy = {
@@ -124,7 +130,7 @@ fun PasswordDetailScreen(
                             }
                         )
                         DetailItem(
-                            label = "Password",
+                            label = stringResource(R.string.field_password),
                             value = pwd.password,
                             isSecret = true,
                             showStrength = showPasswordStrength,
@@ -133,12 +139,12 @@ fun PasswordDetailScreen(
                                 viewModel.copyPassword(pwd.password)
                             }
                         )
-                        pwd.url?.let { DetailItem(label = "URL", value = it) }
+                        pwd.url?.let { DetailItem(label = stringResource(R.string.field_url), value = it) }
 
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            text = "Created on: ${formatDate(pwd.createdAt)}",
+                            text = "${stringResource(R.string.detail_created)}: ${formatDate(pwd.createdAt)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -176,7 +182,10 @@ fun DetailItem(
     onCopy: (() -> Unit)? = null
 ) {
     var isVisible by remember { mutableStateOf(!isSecret) }
-    
+    val hideDesc = stringResource(R.string.action_hide)
+    val showDesc = stringResource(R.string.action_show)
+    val copyDesc = stringResource(R.string.action_copy)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -202,7 +211,7 @@ fun DetailItem(
                         IconButton(onClick = { isVisible = !isVisible }) {
                             Icon(
                                 imageVector = if (isVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (isVisible) "Hide" else "Show",
+                                contentDescription = if (isVisible) hideDesc else showDesc,
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -210,7 +219,7 @@ fun DetailItem(
                     if (onCopy != null) {
                         QuickCopyBadgeIcon(
                             icon = copyIcon,
-                            contentDescription = "Copy",
+                            contentDescription = copyDesc,
                             onClick = onCopy
                         )
                     }

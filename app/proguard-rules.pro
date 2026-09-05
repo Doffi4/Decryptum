@@ -26,3 +26,6 @@
 -keepclasseswithmembers class * {
     @androidx.room.* <methods>;
 }
+
+# Autofill & Credential Provider services and activities
+-keep class com.doffi4.doffisecure.autofill.** { *; }

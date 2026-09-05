@@ -2,6 +2,7 @@ package com.doffi4.doffisecure.security
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
@@ -135,10 +136,10 @@ class PasswordCrypto(context: Context) {
         System.arraycopy(iv, 0, wrapped, 0, iv.size)
         System.arraycopy(encrypted, 0, wrapped, iv.size, encrypted.size)
 
-        prefs.edit()
-            .putString(KEY_DEK_WRAPPED, Base64.encodeToString(wrapped, Base64.NO_WRAP))
-            .putBoolean(KEY_HAS_DEK, true)
-            .apply()
+        prefs.edit {
+            putString(KEY_DEK_WRAPPED, Base64.encodeToString(wrapped, Base64.NO_WRAP))
+            putBoolean(KEY_HAS_DEK, true)
+        }
         return dek
     }
 

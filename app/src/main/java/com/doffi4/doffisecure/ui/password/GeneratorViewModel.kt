@@ -2,11 +2,13 @@ package com.doffi4.doffisecure.ui.password
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.domain.model.PasswordGeneratorOptions
 import com.doffi4.doffisecure.domain.model.PasswordPreset
 import com.doffi4.doffisecure.domain.usecase.AddPasswordUseCase
 import com.doffi4.doffisecure.domain.usecase.GeneratePasswordUseCase
 import com.doffi4.doffisecure.security.SecureClipboard
+import com.doffi4.doffisecure.ui.util.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -19,7 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 sealed interface GeneratorEvent {
-    data class ShowToast(val message: String) : GeneratorEvent
+    data class ShowToast(val message: UiText) : GeneratorEvent
 }
 
 /**
@@ -99,7 +101,7 @@ class GeneratorViewModel(
         val options = currentOptions
         if (!options.hasCharset) {
             _currentPassword.value = ""
-            emitToast("Выберите хотя бы один набор символов")
+            emitToast(UiText.StringResource(R.string.toast_select_charset))
             return
         }
         _currentPassword.value = generatePasswordUseCase(options)
@@ -124,7 +126,8 @@ class GeneratorViewModel(
         _excludeLookalikes.value = options.excludeLookalikes
         regenerate()
     }
-// ── Options ────────────────────────────────────────────────────────────
+
+    // ── Options ────────────────────────────────────────────────────────────
 
     fun setLength(value: Int) {
         val clamped = value.coerceIn(8, 64)
@@ -169,11 +172,11 @@ class GeneratorViewModel(
     fun copyPassword() {
         val password = _currentPassword.value
         if (password.isEmpty()) {
-            emitToast("Сначала сгенерируйте пароль")
+            emitToast(UiText.StringResource(R.string.toast_generate_first))
             return
         }
         secureClipboard.copy(password)
-        emitToast("Пароль скопирован (очистится через 30 с)")
+        emitToast(UiText.StringResource(R.string.toast_password_copied_clipboard))
     }
 
     fun openSaveDialog() {
@@ -199,27 +202,27 @@ class GeneratorViewModel(
         val serviceName = _service.value.trim()
         val login = _username.value.trim()
         if (serviceName.isBlank() || login.isBlank()) {
-            emitToast("Заполните сервис и логин")
+            emitToast(UiText.StringResource(R.string.toast_fill_service_username))
             return
         }
         if (_currentPassword.value.isEmpty()) {
-            emitToast("Сначала сгенерируйте пароль")
+            emitToast(UiText.StringResource(R.string.toast_generate_first))
             return
         }
         viewModelScope.launch {
             try {
                 addPasswordUseCase(serviceName, login, _currentPassword.value)
                 _showSaveDialog.value = false
-                emitToast("Пароль сохранён")
+                emitToast(UiText.StringResource(R.string.toast_password_saved))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                emitToast("Не удалось сохранить: ${e.message ?: e.javaClass.simpleName}")
+                emitToast(UiText.StringResource(R.string.toast_save_failed, arrayOf(e.message ?: e.javaClass.simpleName)))
             }
         }
     }
 
-    private fun emitToast(message: String) {
+    private fun emitToast(message: UiText) {
         viewModelScope.launch { _event.emit(GeneratorEvent.ShowToast(message)) }
     }
 }

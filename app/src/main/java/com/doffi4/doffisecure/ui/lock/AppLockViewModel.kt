@@ -2,9 +2,11 @@ package com.doffi4.doffisecure.ui.lock
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.security.AppLockManager
 import com.doffi4.doffisecure.security.DevModeManager
 import com.doffi4.doffisecure.security.VaultWarmup
+import com.doffi4.doffisecure.ui.util.UiText
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -28,7 +30,7 @@ sealed interface BiometricEvent {
 data class LockInputState(
     val password: String = "",
     val confirmPassword: String = "",
-    val error: String? = null
+    val error: UiText? = null
 )
 
 class AppLockViewModel(
@@ -100,7 +102,9 @@ class AppLockViewModel(
 
     /** Called by the UI on biometric failure (user can fall back to password). */
     fun onBiometricError(errorMessage: String) {
-        _input.value = _input.value.copy(error = "Biometric: $errorMessage")
+        _input.value = _input.value.copy(
+            error = UiText.StringResource(R.string.error_biometric_prefix, arrayOf(errorMessage))
+        )
     }
 
     fun submit() {
@@ -108,13 +112,16 @@ class AppLockViewModel(
             is LockState.NeedsSetup -> {
                 val text = _input.value
                 if (text.password.isBlank()) {
-                    _input.value = text.copy(error = "Password cannot be empty"); return
+                    _input.value = text.copy(error = UiText.StringResource(R.string.error_password_empty))
+                    return
                 }
                 if (text.password != text.confirmPassword) {
-                    _input.value = text.copy(error = "Passwords do not match"); return
+                    _input.value = text.copy(error = UiText.StringResource(R.string.error_passwords_mismatch))
+                    return
                 }
                 if (text.password.length < 4) {
-                    _input.value = text.copy(error = "Password must be at least 4 characters"); return
+                    _input.value = text.copy(error = UiText.StringResource(R.string.error_password_too_short))
+                    return
                 }
                 if (lockManager.setMasterPassword(text.password)) {
                     _lockState.value = LockState.Unlocked
@@ -126,7 +133,7 @@ class AppLockViewModel(
                 if (lockManager.verifyPassword(text.password)) {
                     unlock()
                 } else {
-                    _input.value = text.copy(error = "Incorrect password")
+                    _input.value = text.copy(error = UiText.StringResource(R.string.error_password_incorrect))
                 }
             }
             is LockState.Unlocked -> Unit
@@ -152,19 +159,15 @@ class AppLockViewModel(
         }
     }
 
+    /** Records that the user interacted with the app (resets idle timer). */
     fun touchLastActive() {
         if (lockState.value == LockState.Unlocked) {
             lockManager.touchLastActive()
         }
     }
 
+    /** Whether the user has enabled screenshots in Settings. */
     fun isScreenshotsAllowed(): Boolean = lockManager.getAllowScreenshots()
-
-    fun resetAndLock() {
-        lockManager.resetLock()
-        _lockState.value = LockState.NeedsSetup
-        clearInput()
-    }
 
     private fun unlock() {
         lockManager.setLocked(false)

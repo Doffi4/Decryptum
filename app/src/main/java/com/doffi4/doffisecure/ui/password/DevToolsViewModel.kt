@@ -32,9 +32,11 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import com.doffi4.doffisecure.R
+import com.doffi4.doffisecure.ui.util.UiText
 
 sealed interface DevToolsEvent {
-    data class ShowToast(val message: String) : DevToolsEvent
+    data class ShowToast(val message: UiText) : DevToolsEvent
 }
 
 /**
@@ -80,7 +82,7 @@ class DevToolsViewModel(
 
     // Live CPU temperature / load / frequency (sysfs + /proc/stat), sampled
     // once per second while the Developer section is on screen.
-    private val _cpuStats = MutableStateFlow(CpuStats(null, "н/д", 0f, null))
+    private val _cpuStats = MutableStateFlow(CpuStats(null, "—", 0f, null))
     val cpuStats: StateFlow<CpuStats> = _cpuStats.asStateFlow()
 
     // Dev-mode toggle + live warm-up state (shared singletons).
@@ -93,7 +95,8 @@ class DevToolsViewModel(
         viewModelScope.launch {
             _event.emit(
                 DevToolsEvent.ShowToast(
-                    if (show) "Warm-up progress display enabled" else "Warm-up progress display disabled"
+                    if (show) UiText.StringResource(R.string.dev_toast_warmup_enabled)
+                    else UiText.StringResource(R.string.dev_toast_warmup_disabled)
                 )
             )
         }
@@ -102,7 +105,9 @@ class DevToolsViewModel(
     /** Manually re-runs the cold-start warm-up (useful while testing). */
     fun reWarmWarmup() {
         vaultWarmup.warm()
-        viewModelScope.launch { _event.emit(DevToolsEvent.ShowToast("Warm-up restarted")) }
+        viewModelScope.launch {
+            _event.emit(DevToolsEvent.ShowToast(UiText.StringResource(R.string.dev_toast_warmup_restarted)))
+        }
     }
 
     // ---- Frame-time overlay + list prefetch tuning ----
@@ -116,7 +121,8 @@ class DevToolsViewModel(
         viewModelScope.launch {
             _event.emit(
                 DevToolsEvent.ShowToast(
-                    if (show) "Frame-time overlay enabled" else "Frame-time overlay disabled"
+                    if (show) UiText.StringResource(R.string.dev_toast_fps_enabled)
+                    else UiText.StringResource(R.string.dev_toast_fps_disabled)
                 )
             )
         }
@@ -127,7 +133,8 @@ class DevToolsViewModel(
         viewModelScope.launch {
             _event.emit(
                 DevToolsEvent.ShowToast(
-                    if (show) "CPU-оверлей включён" else "CPU-оверлей выключен"
+                    if (show) UiText.StringResource(R.string.dev_toast_cpu_enabled)
+                    else UiText.StringResource(R.string.dev_toast_cpu_disabled)
                 )
             )
         }
@@ -136,7 +143,7 @@ class DevToolsViewModel(
     fun setPrefetchCount(count: Int) {
         devModeManager.setPrefetchCount(count)
         viewModelScope.launch {
-            _event.emit(DevToolsEvent.ShowToast("List prefetch set to $count item(s) ahead"))
+            _event.emit(DevToolsEvent.ShowToast(UiText.StringResource(R.string.dev_toast_prefetch_set, count)))
         }
     }
 
@@ -170,11 +177,11 @@ class DevToolsViewModel(
         viewModelScope.launch {
             try {
                 val inserted = importPasswordsUseCase(generateTestPasswords(count))
-                emitToast("Inserted $inserted test passwords")
+                emitToast(UiText.StringResource(R.string.dev_toast_inserted_test_passwords, inserted))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                emitToast("Test data failed: ${e.message ?: e.javaClass.simpleName}")
+                emitToast(UiText.DynamicString("Test data failed: ${e.message ?: e.javaClass.simpleName}"))
             }
         }
     }
@@ -222,13 +229,13 @@ class DevToolsViewModel(
             try {
                 val removed = deleteDuplicatesUseCase()
                 emitToast(
-                    if (removed > 0) "Removed $removed duplicate record(s)"
-                    else "No duplicates to remove"
+                    if (removed > 0) UiText.StringResource(R.string.dev_toast_duplicates_removed, removed)
+                    else UiText.StringResource(R.string.dev_toast_no_duplicates)
                 )
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                emitToast("Duplicate cleanup failed: ${e.message ?: e.javaClass.simpleName}")
+                emitToast(UiText.DynamicString("Duplicate cleanup failed: ${e.message ?: e.javaClass.simpleName}"))
             }
         }
     }
@@ -238,17 +245,17 @@ class DevToolsViewModel(
     fun setLockTimeout(seconds: Int) {
         lockManager.setLockTimeoutSeconds(seconds)
         _lockTimeout.value = seconds
-        emitToast("Auto-lock set to ${if (seconds == 0) "never" else "$seconds s"}")
+        emitToast(UiText.StringResource(R.string.dev_toast_autolock_set, if (seconds == 0) "Never" else "$seconds s"))
     }
 
     fun lockNow() {
         lockManager.setLocked(true)
-        emitToast("App locked")
+        emitToast(UiText.StringResource(R.string.dev_toast_app_locked))
     }
 
     fun resetMasterPassword() {
         lockManager.resetLock()
-        emitToast("Master password removed")
+        emitToast(UiText.StringResource(R.string.dev_toast_master_password_reset))
     }
 
     // ---- 2. Database wipe (dev) ----
@@ -257,16 +264,16 @@ class DevToolsViewModel(
         viewModelScope.launch {
             try {
                 deleteAllPasswordsUseCase()
-                emitToast("All passwords deleted (dev wipe)")
+                emitToast(UiText.StringResource(R.string.dev_toast_all_deleted))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                emitToast("Wipe failed: ${e.message ?: e.javaClass.simpleName}")
+                emitToast(UiText.DynamicString("Wipe failed: ${e.message ?: e.javaClass.simpleName}"))
             }
         }
     }
 
-    private fun emitToast(message: String) {
+    private fun emitToast(message: UiText) {
         viewModelScope.launch { _event.emit(DevToolsEvent.ShowToast(message)) }
     }
 

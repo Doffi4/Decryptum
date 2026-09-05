@@ -1,5 +1,5 @@
 [versions]
-agp = "9.3.1"
+agp = "9.4.0"
 profileinstaller = "1.4.1"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -17,6 +17,7 @@ koin = "3.5.0"
 coil = "2.7.0"
 fragmentKtx = "1.8.0"
 biometric = "1.2.0-alpha05"
+credentials = "1.5.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +47,7 @@ androidx-biometric = { group = "androidx.biometric", name = "biometric", version
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragmentKtx" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 androidx-profileinstaller = { group = "androidx.profileinstaller", name = "profileinstaller", version.ref = "profileinstaller" }
+androidx-credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 
 
 [plugins]

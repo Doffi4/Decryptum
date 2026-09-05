@@ -1,5 +1,8 @@
 package com.doffi4.doffisecure.domain.model
 
+import androidx.annotation.StringRes
+import com.doffi4.doffisecure.R
+
 /**
  * Character-class options for the password generator.
  *
@@ -8,7 +11,7 @@ package com.doffi4.doffisecure.domain.model
  * @param includeUpper Latin capital letters (A-Z).
  * @param includeLower Latin small letters (a-z).
  * @param includeDigits Digits (0-9).
- * @param includeSymbols Printable symbols (!@#$\u2026).
+ * @param includeSymbols Printable symbols (!@#$…).
  * @param excludeLookalikes Prevent ambiguities caused by 0/O/1/l/I.
  */
 data class PasswordGeneratorOptions(
@@ -29,46 +32,54 @@ data class PasswordGeneratorOptions(
  * One-tap presets for the generator: each one configures the length and the
  * character sets so the result lands in the matching strength bracket.
  */
-enum class PasswordPreset(val label: String, val options: PasswordGeneratorOptions) {
+enum class PasswordPreset(
+    @StringRes val labelRes: Int,
+    val options: PasswordGeneratorOptions,
+    val label: String = ""
+) {
     WEAK(
-        "Слабый",
+        R.string.strength_weak,
         PasswordGeneratorOptions(
             length = 8,
             includeUpper = false,
             includeLower = true,
             includeDigits = true,
             includeSymbols = false,
-        )
+        ),
+        "Weak"
     ),
     MEDIUM(
-        "Средний",
+        R.string.strength_medium,
         PasswordGeneratorOptions(
             length = 12,
             includeUpper = true,
             includeLower = true,
             includeDigits = true,
             includeSymbols = false,
-        )
+        ),
+        "Medium"
     ),
     STRONG(
-        "Сильный",
+        R.string.strength_strong,
         PasswordGeneratorOptions(
             length = 16,
             includeUpper = true,
             includeLower = true,
             includeDigits = true,
             includeSymbols = true,
-        )
+        ),
+        "Strong"
     ),
     VERY_STRONG(
-        "Очень сильный",
+        R.string.strength_very_strong,
         PasswordGeneratorOptions(
             length = 24,
             includeUpper = true,
             includeLower = true,
             includeDigits = true,
             includeSymbols = true,
-        )
+        ),
+        "Very strong"
     ),
 }
 

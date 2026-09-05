@@ -1,6 +1,7 @@
 package com.doffi4.doffisecure
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -13,6 +14,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.doffi4.doffisecure.dev.RefreshRateController
+import com.doffi4.doffisecure.security.AppLocaleManager
+import com.doffi4.doffisecure.security.UserSettingsManager
 import com.doffi4.doffisecure.ui.lock.AppLockViewModel
 import com.doffi4.doffisecure.ui.lock.LockScreen
 import com.doffi4.doffisecure.ui.lock.LockState
@@ -24,6 +27,12 @@ import org.koin.androidx.compose.koinViewModel
 class MainActivity : FragmentActivity() {
 
     private val refreshRateController: RefreshRateController by inject()
+    private val userSettings: UserSettingsManager by inject()
+
+    override fun attachBaseContext(newBase: Context) {
+        val savedLang = UserSettingsManager.getSavedLanguage(newBase)
+        super.attachBaseContext(AppLocaleManager.wrapContext(newBase, savedLang))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

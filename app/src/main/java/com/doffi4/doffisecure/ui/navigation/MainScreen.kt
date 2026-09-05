@@ -31,9 +31,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.dev.CpuMonitor
 import com.doffi4.doffisecure.dev.CpuStats
 import com.doffi4.doffisecure.dev.FrameStatsMonitor
@@ -141,7 +143,7 @@ private fun CpuOverlayChip(
     modifier: Modifier = Modifier,
 ) {
     val cpuMonitor = remember { GlobalContext.get().get<CpuMonitor>() }
-    var stats by remember { mutableStateOf(CpuStats(null, "н/д", 0f, null)) }
+    var stats by remember { mutableStateOf(CpuStats(null, "—", 0f, null)) }
 
     LaunchedEffect(visible) {
         while (visible && isActive) {
@@ -169,6 +171,8 @@ private fun CpuOverlayChip(
             }
             else -> MaterialTheme.colorScheme.primaryContainer
         }
+        val notAvailable = stringResource(R.string.not_available)
+        val cpuLabel = stringResource(R.string.cpu_label)
         Surface(
             shape = CircleShape,
             color = container.copy(alpha = 0.92f),
@@ -176,8 +180,8 @@ private fun CpuOverlayChip(
         ) {
             Text(
                 text = buildString {
-                    append("CPU")
-                    if (temp != null) append(" · ~${"%.1f".format(temp)} °C") else append(" · н/д")
+                    append(cpuLabel)
+                    if (temp != null) append(" · ~${"%.1f".format(temp)} °C") else append(" · $notAvailable")
                     append(" · ${stats.cpuLoadPercent.roundToInt()}%")
                 },
                 style = MaterialTheme.typography.labelSmall,
@@ -236,6 +240,7 @@ private fun FrameOverlay(
         else -> MaterialTheme.colorScheme.primaryContainer
     }
 
+    val frameMeterText = stringResource(R.string.frame_meter)
     Surface(
         modifier = modifier,
         shape = CircleShape,
@@ -246,7 +251,7 @@ private fun FrameOverlay(
             text = if (tier != RefreshTier.ACTIVE) {
                 "${tier.label} · capped ${tier.fps} fps"
             } else if (stats.fps == 0) {
-                "Frame meter…"
+                frameMeterText
             } else {
                 "${stats.fps} fps · ${"%.1f".format(stats.avgFrameMs)} ms · " +
                         "${stats.jankFrames} jank · max ${"%.1f".format(stats.worstFrameMs)}"

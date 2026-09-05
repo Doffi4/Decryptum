@@ -77,16 +77,16 @@ class CpuMonitor {
 
     private fun readCpuTemperature(): Pair<Float?, String> {
         val zones = readThermalZones()
-        if (zones.isEmpty()) return null to "н/д"
+        if (zones.isEmpty()) return null to "—"
 
         // Prefer CPU/SoC-related zones; otherwise fall back to the hottest zone.
         val cpuZones = zones.filter { (type, _) ->
             CPU_ZONE_HINTS.any { hint -> type.contains(hint, ignoreCase = true) }
         }
         if (cpuZones.isNotEmpty()) {
-            return (cpuZones.maxOfOrNull { it.second }) to "cpu-зоны"
+            return (cpuZones.maxOfOrNull { it.second }) to "cpu-zones"
         }
-        return (zones.maxOfOrNull { it.second }) to "макс. зона"
+        return (zones.maxOfOrNull { it.second }) to "max-zone"
     }
 
     /** Reads every readable thermal zone as (type, millidegC). */

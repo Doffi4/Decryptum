@@ -84,6 +84,24 @@ class PasswordRepositoryImpl(
             .distinctUntilChanged()
     }
 
+    override fun getAutofillHeaders(): Flow<List<Password>> {
+        return passwordDao.getAllPasswords()
+            .map { entities ->
+                entities.map { entity ->
+                    Password(
+                        id = entity.id,
+                        service = entity.service,
+                        username = entity.username,
+                        password = "",
+                        url = entity.url,
+                        createdAt = entity.createdAt
+                    )
+                }
+            }
+            .flowOn(Dispatchers.IO)
+            .distinctUntilChanged()
+    }
+
     override fun countPasswords(): Flow<Int> = passwordDao.countPasswords()
 
     override fun countEncryptedPasswords(): Flow<Int> = passwordDao.countEncryptedPasswords()

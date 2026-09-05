@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.domain.model.PasswordStrength
 
 @Composable
@@ -49,7 +51,7 @@ fun LockScreen(
         // Fallback: show a plain message if FragmentActivity is unavailable
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             Box(contentAlignment = Alignment.Center) {
-                Text("Unsupported activity type", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.lock_unsupported_activity), color = MaterialTheme.colorScheme.error)
             }
         }
         return
@@ -82,7 +84,7 @@ fun LockScreen(
                         ) { viewModel.onBiometricError(errString.toString()) }
                     }
                     override fun onAuthenticationFailed() {
-                        viewModel.onBiometricError("Biometric not recognized.")
+                        viewModel.onBiometricError(activity.getString(R.string.biometric_error_not_recognized))
                     }
                 }
             )
@@ -91,6 +93,10 @@ fun LockScreen(
         }
     }
 
+    val promptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
+    val biometricUnavailableError = stringResource(R.string.biometric_error_unavailable)
+    val biometricLaunchFailedError = stringResource(R.string.biometric_error_launch_failed)
+
     // Only authenticate if biometric is available AND prompt was created successfully
     LaunchedEffect(lockState) {
         if (lockState == LockState.Locked && biometricAvailable && !isSetup && prompt != null) {
@@ -98,12 +104,12 @@ fun LockScreen(
                 prompt.authenticate(
                     BiometricPrompt.PromptInfo.Builder()
                         .setTitle("Decryptum")
-                        .setSubtitle("Authenticate to access your passwords")
+                        .setSubtitle(promptSubtitle)
                         .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
                         .build()
                 )
             } catch (_: Exception) {
-                viewModel.onBiometricError("Biometric authentication unavailable")
+                viewModel.onBiometricError(biometricUnavailableError)
             }
         }
     }
@@ -137,7 +143,7 @@ fun LockScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = if (isSetup) "Set Up Master Password" else "Decryptum is Locked",
+                text = if (isSetup) stringResource(R.string.lock_title_setup) else stringResource(R.string.lock_title_locked),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -146,9 +152,9 @@ fun LockScreen(
 
             Text(
                 text = if (isSetup)
-                    "Create a password to protect your vault. It cannot be recovered if forgotten."
+                    stringResource(R.string.lock_subtitle_setup)
                 else
-                    "Enter your master password or use biometrics to continue.",
+                    stringResource(R.string.lock_subtitle_locked),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -159,7 +165,7 @@ fun LockScreen(
             OutlinedTextField(
                 value = input.password,
                 onValueChange = viewModel::onPasswordChange,
-                label = { Text("Master Password") },
+                label = { Text(stringResource(R.string.lock_field_master_password)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -171,7 +177,7 @@ fun LockScreen(
                     IconButton(onClick = { showPassword = !showPassword }) {
                         Icon(
                             imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (showPassword) "Hide" else "Show"
+                            contentDescription = if (showPassword) stringResource(R.string.action_hide) else stringResource(R.string.action_show)
                         )
                     }
                 },
@@ -183,7 +189,7 @@ fun LockScreen(
                 OutlinedTextField(
                     value = input.confirmPassword,
                     onValueChange = viewModel::onConfirmChange,
-                    label = { Text("Confirm Password") },
+                    label = { Text(stringResource(R.string.lock_field_confirm_password)) },
                     singleLine = true,
                     visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth()
@@ -196,7 +202,7 @@ fun LockScreen(
                 PasswordStrength.fromPassword(input.password) == PasswordStrength.WEAK
             ) {
                 Text(
-                    text = "Ваш пароль слабый. Рекомендуем поставить более сложный пароль для безопасности ваших аккаунтов.",
+                    text = stringResource(R.string.lock_weak_password_warning),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(top = 8.dp)
@@ -207,7 +213,7 @@ fun LockScreen(
             AnimatedVisibility(visible = input.error != null) {
                 input.error?.let {
                     Text(
-                        text = it,
+                        text = it.asString(),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 8.dp)
@@ -215,14 +221,13 @@ fun LockScreen(
                 }
             }
 
-            // Error message with animated visibility for smooth appearance
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
                 onClick = viewModel::submit,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(if (isSetup) "Create & Unlock" else "Unlock", fontSize = 16.sp)
+                Text(if (isSetup) stringResource(R.string.lock_btn_create_and_unlock) else stringResource(R.string.action_unlock), fontSize = 16.sp)
             }
 
             // Biometric unlock button (only when locked, not during setup)
@@ -234,12 +239,12 @@ fun LockScreen(
                             prompt?.authenticate(
                                 BiometricPrompt.PromptInfo.Builder()
                                     .setTitle("Decryptum")
-                                    .setSubtitle("Authenticate to access your passwords")
+                                    .setSubtitle(promptSubtitle)
                                     .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
                                     .build()
                             )
                         } catch (_: Exception) {
-                            viewModel.onBiometricError("Biometric launch failed")
+                            viewModel.onBiometricError(biometricLaunchFailedError)
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -250,7 +255,7 @@ fun LockScreen(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text("Use Biometrics", fontSize = 16.sp)
+                    Text(stringResource(R.string.lock_btn_use_biometrics), fontSize = 16.sp)
                 }
             }
 
@@ -263,7 +268,7 @@ fun LockScreen(
                     modifier = Modifier.padding(top = 32.dp)
                 ) {
                     Text(
-                        text = "Warm-up: $warmupProgress%",
+                        text = stringResource(R.string.lock_warmup_progress, warmupProgress),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

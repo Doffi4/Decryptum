@@ -12,8 +12,8 @@ android {
         applicationId = "com.doffi4.doffisecure"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.8.0"
+        versionCode = 2
+        versionName = "0.9.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -71,6 +72,8 @@ dependencies {
     implementation(libs.androidx.fragment.ktx)
     implementation(libs.coil.compose)
     implementation(libs.androidx.profileinstaller)
+    implementation("androidx.autofill:autofill:1.1.0")
+    implementation(libs.androidx.credentials)
 
 
     testImplementation(libs.junit)

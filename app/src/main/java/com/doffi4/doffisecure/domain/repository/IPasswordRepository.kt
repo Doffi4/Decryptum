@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface IPasswordRepository {
     fun getAllPasswords(): Flow<List<Password>>
+    fun getAutofillHeaders(): Flow<List<Password>>
     fun countPasswords(): Flow<Int>
     fun countEncryptedPasswords(): Flow<Int>
     fun getDuplicateGroups(): Flow<List<DuplicateGroup>>

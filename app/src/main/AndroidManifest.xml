@@ -13,7 +13,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Decryptum">
+        android:theme="@style/Theme.Decryptum"
+        android:localeConfig="@xml/locales_config">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -25,6 +26,62 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Autofill Service (Android 8.0 - 16+) -->
+        <service
+            android:name=".autofill.DecryptumAutofillService"
+            android:label="@string/autofill_service_label"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/autofill_service_config" />
+        </service>
+
+        <!-- Credential Provider Service (Android 14 - 16+) -->
+        <service
+            android:name=".autofill.DecryptumCredentialProviderService"
+            android:label="@string/autofill_service_label"
+            android:permission="android.permission.BIND_CREDENTIAL_PROVIDER_SERVICE"
+            android:exported="true"
+            tools:targetApi="34">
+            <intent-filter>
+                <action android:name="android.service.credentials.CredentialProviderService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.credentials.provider"
+                android:resource="@xml/credential_provider_config" />
+        </service>
+
+        <!-- Credential Auth Activity (for modern Credential Manager sheet) -->
+        <activity
+            android:name=".autofill.CredentialAuthActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Decryptum.Translucent" />
+
+        <!-- Autofill Dialog Activities -->
+        <activity
+            android:name=".autofill.AutofillAuthActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Decryptum.Translucent" />
+
+        <activity
+            android:name=".autofill.AutofillPickerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Decryptum.Translucent" />
+
+        <activity
+            android:name=".autofill.AutofillSaveActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Decryptum.Translucent" />
+
+        <activity
+            android:name=".autofill.AutofillDismissActivity"
+            android:exported="false"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
     </application>
 
 </manifest>
