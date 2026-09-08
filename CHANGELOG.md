@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [0.10.0 Beta] - 2026-09-08
+## [1.0.0] - 2026-09-08
 
 ### 🌟 Added
 - **Passkeys Support (FIDO2 / WebAuthn)**:

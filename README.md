@@ -1,7 +1,7 @@
 # Decryptum 🔐
 
 <p align="center">
-  <a href="https://github.com/Doffi4/Decryptum/releases/tag/v0.10.0"><img src="https://img.shields.io/badge/Release-v0.10.0%20Beta-orange.svg" alt="Version"></a>
+  <a href="https://github.com/Doffi4/Decryptum/releases/tag/v1.0.0"><img src="https://img.shields.io/badge/Release-v1.0.0-brightgreen.svg" alt="Version"></a>
   <a href="https://www.gnu.org/licenses/gpl-3.0"><img src="https://img.shields.io/badge/License-GPLv3-blue.svg" alt="License: GPL v3"></a>
   <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Platform-Android%208.0%2B-green.svg" alt="Platform: Android"></a>
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Language-Kotlin%202.2-purple.svg" alt="Language: Kotlin"></a>
@@ -82,10 +82,10 @@
 
 ### 📥 Download & Releases
 Pre-built, signed APKs and release notes are available on the [**GitHub Releases**](https://github.com/Doffi4/Decryptum/releases) page:
-- **`Decryptum-v0.10.0-release.apk`**: Production release signed and optimized with R8.
-- **`Decryptum-v0.10.0-debug.apk`**: Debug build with extended logging and diagnostics enabled.
+- **`Decryptum-v1.0.0-release.apk`**: Production release signed and optimized with R8.
+- **`Decryptum-v1.0.0-debug.apk`**: Debug build with extended logging and diagnostics enabled.
 
-> ℹ️ *Note: Decryptum is currently in **v0.10.0 Beta**. Passkeys, 2FA/TOTP authenticator, SQLCipher encrypted vault, password generator, and autofill core are fully functional and production-ready.*
+> ℹ️ *Note: Decryptum has officially launched version **v1.0.0**. Cryptographic storage, Passkeys, 2FA/TOTP authenticator, and autofill core are fully functional, verified, and production-ready.*
 
 ---
 
@@ -181,8 +181,10 @@ Distributed under the **GNU General Public License v3.0 (GPLv3)**. See [LICENSE]
 
 ### 📥 Завантаження та релізи
 Готові підписані файли APK доступні на сторінці [**GitHub Releases**](https://github.com/Doffi4/Decryptum/releases):
-- **`Decryptum-v0.10.0-release.apk`**: Оптимізована релізна збірка.
-- **`Decryptum-v0.10.0-debug.apk`**: Дебаг-збірка для діагностики та тестування.
+- **`Decryptum-v1.0.0-release.apk`**: Оптимізована релізна збірка.
+- **`Decryptum-v1.0.0-debug.apk`**: Дебаг-збірка для діагностики та тестування.
+
+> ℹ️ *Примітка: Decryptum офіційно вийшов у реліз версії **v1.0.0**. Криптографічне сховище, Passkeys, 2FA/TOTP аутентифікатор та автозаповнення повністю стабільні і готові до щоденного використання.*
 
 ### 📄 Ліцензія
 Поширюється за ліцензією **GNU General Public License v3.0 (GPLv3)**. Деталі у файлі [LICENSE](LICENSE).
@@ -246,8 +248,10 @@ Distributed under the **GNU General Public License v3.0 (GPLv3)**. See [LICENSE]
 
 ### 📥 Скачать приложение
 Готовые установочные файлы (APK) доступны в разделе [**GitHub Releases**](https://github.com/Doffi4/Decryptum/releases):
-- **`Decryptum-v0.10.0-release.apk`**: Релизный оптимизированный APK.
-- **`Decryptum-v0.10.0-debug.apk`**: Дебаг-версия для разработчиков с логами.
+- **`Decryptum-v1.0.0-release.apk`**: Релизный оптимизированный APK.
+- **`Decryptum-v1.0.0-debug.apk`**: Дебаг-версия для разработчиков с логами.
+
+> ℹ️ *Примечание: Decryptum официально вышел в релиз версии **v1.0.0**. Криптографическое хранилище, Passkeys, 2FA/TOTP аутентификатор и ядро автозаполнения полностью стабильны и готовы к повседневному использованию.*
 
 ### 📄 Лицензия
 Распространяется под лицензией **GNU General Public License v3.0 (GPLv3)**. Подробности в файле [LICENSE](LICENSE).
