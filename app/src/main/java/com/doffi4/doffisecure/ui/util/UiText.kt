@@ -12,7 +12,7 @@ import androidx.compose.ui.res.stringResource
 sealed interface UiText {
     data class DynamicString(val value: String) : UiText
     class StringResource(
-        @StringRes val resId: Int,
+        @param:StringRes val resId: Int,
         vararg val args: Any
     ) : UiText {
         override fun equals(other: Any?): Boolean {
@@ -32,11 +32,29 @@ sealed interface UiText {
     @Composable
     fun asString(): String = when (this) {
         is DynamicString -> value
-        is StringResource -> stringResource(resId, *args)
+        is StringResource -> {
+            val flattened: Array<out Any> = args.flatMap {
+                when (it) {
+                    is Array<*> -> it.filterNotNull()
+                    is Collection<*> -> it.filterNotNull()
+                    else -> listOf(it)
+                }
+            }.toTypedArray()
+            stringResource(resId, *flattened)
+        }
     }
 
     fun asString(context: Context): String = when (this) {
         is DynamicString -> value
-        is StringResource -> context.getString(resId, *args)
+        is StringResource -> {
+            val flattened: Array<out Any> = args.flatMap {
+                when (it) {
+                    is Array<*> -> it.filterNotNull()
+                    is Collection<*> -> it.filterNotNull()
+                    else -> listOf(it)
+                }
+            }.toTypedArray()
+            context.getString(resId, *flattened)
+        }
     }
 }

@@ -4,6 +4,7 @@ package com.doffi4.doffisecure.ui.password
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,10 +17,19 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.clip
+import com.doffi4.doffisecure.ui.components.BreachAuditBottomSheet
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
@@ -33,16 +43,11 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 
 import androidx.compose.ui.graphics.Color
-import coil.imageLoader
-import coil.request.ImageRequest
-import kotlinx.coroutines.delay
-import com.doffi4.doffisecure.domain.model.DomainUtils
 import com.doffi4.doffisecure.domain.model.Password
 import com.doffi4.doffisecure.domain.model.SiteGroup
 import com.doffi4.doffisecure.domain.model.groupBySite
 import android.os.SystemClock
 import android.app.Activity
-import android.os.Build
 import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.material.icons.filled.Build
@@ -60,7 +65,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.ui.components.PasswordStrengthBadge
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Dev-mode pill that shows the live vault warm-up percentage. Extracted as its
@@ -77,16 +81,16 @@ private fun DevWarmupPill(
     Surface(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.tertiaryContainer
+        color = MaterialTheme.colorScheme.tertiaryContainer,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = stringResource(R.string.lock_warmup_progress, warmupProgress),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onTertiaryContainer
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
             )
         }
     }
@@ -106,12 +110,6 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 private const val DEV_TAPS_REQUIRED = 6
 /** Max gap (ms) between taps; a slower sequence restarts the counter. */
 private const val DEV_TAP_WINDOW_MS = 1500L
-/** Favicons enqueued immediately on list load (visible area + margin). */
-private const val FAVICON_QUICK_WARM = 16
-/** Remaining favicons are warmed in batches to avoid a network storm. */
-private const val FAVICON_BATCH_SIZE = 8
-/** Pause between warm-up batches so the main thread stays responsive. */
-private val FAVICON_BATCH_DELAY = 90.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,14 +124,15 @@ fun PasswordScreen(
     val showAddDialog by viewModel.showAddDialog.collectAsState()
     var searchQuery by remember { mutableStateOf("") }
     val totalPasswordsCount by viewModel.totalPasswordsCount.collectAsState()
+    val loadFavicons by viewModel.loadFavicons.collectAsState()
 
     // Report the first interactive (fully-drawn) frame so startup-latency tooling
     // and baseline-profile generation can measure the real time to content
     // instead of just the Activity launch. Idempotent per composition.
-    var reportedFullyDrawn by remember { mutableStateOf(false) }
+    var reportedFullyDrawn by remember { mutableStateOf(value = false) }
     val fullyDrawnActivity = LocalContext.current.findActivity()
     LaunchedEffect(uiState) {
-        if (!reportedFullyDrawn && uiState is PasswordUiState.Success) {
+        if (!reportedFullyDrawn && (uiState is PasswordUiState.Success)) {
             reportedFullyDrawn = true
             fullyDrawnActivity?.reportFullyDrawn()
         }
@@ -146,6 +145,10 @@ fun PasswordScreen(
     val showDevWarmupProgress by viewModel.showDevWarmupProgress.collectAsState()
     val showPasswordStrength by viewModel.showPasswordStrength.collectAsState()
     val devPrefetchCount by viewModel.devPrefetchCount.collectAsState()
+    val allPasskeys by viewModel.allPasskeys.collectAsState()
+    val breachedAccounts by viewModel.breachedAccounts.collectAsState()
+    val isAuditingBreaches by viewModel.isAuditingBreaches.collectAsState()
+    var showBreachAuditSheet by remember { mutableStateOf(value = false) }
     var devTaps by remember { mutableIntStateOf(0) }
     var lastDevTapTime by remember { mutableLongStateOf(0L) }
 
@@ -161,10 +164,10 @@ fun PasswordScreen(
     }
 
     // --- Developer-mode unlock dialog (6 taps on the "Decryptum" title) ---
-    var showDevPasswordDialog by remember { mutableStateOf(false) }
+    var showDevPasswordDialog by remember { mutableStateOf(value = false) }
     var devPasswordInput by remember { mutableStateOf("") }
-    var devPasswordWrong by remember { mutableStateOf(false) }
-    var devPasswordVisible by remember { mutableStateOf(false) }
+    var devPasswordWrong by remember { mutableStateOf(value = false) }
+    var devPasswordVisible by remember { mutableStateOf(value = false) }
 
     val submitDevPassword: () -> Unit = {
         if (viewModel.enableDeveloperMode(devPasswordInput)) {
@@ -191,7 +194,7 @@ fun PasswordScreen(
                     Text(
                         text = stringResource(R.string.dev_dialog_prompt),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
@@ -267,7 +270,7 @@ fun PasswordScreen(
                         modifier = Modifier.clickable {
                             // 6 quick taps unlock developer mode (password dialog)
                             val now = SystemClock.uptimeMillis()
-                            if (now - lastDevTapTime > DEV_TAP_WINDOW_MS) devTaps = 0
+                            if ((now - lastDevTapTime) > DEV_TAP_WINDOW_MS) devTaps = 0
                             lastDevTapTime = now
                             devTaps++
                             if (devTaps >= DEV_TAPS_REQUIRED) {
@@ -304,7 +307,7 @@ fun PasswordScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    viewModel.onShowAddDialog(true)
+                    viewModel.onShowAddDialog(show = true)
                 },
                 // Keep the FAB clear of the floating bottom-navigation capsule:
                 // it floats just above it instead of being hidden underneath.
@@ -330,10 +333,12 @@ fun PasswordScreen(
                 leadingIcon = { Icon(Icons.Default.Search, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { 
-                            searchQuery = ""
-                            viewModel.searchPassword("") 
-                        }) {
+                        IconButton(
+                            onClick = { 
+                                searchQuery = ""
+                                viewModel.searchPassword("") 
+                            },
+                        ) {
                             Icon(Icons.Default.Close, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -351,6 +356,71 @@ fun PasswordScreen(
                     unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
+
+            // Breach Monitoring Banner (smoothly appears when compromised passwords exist)
+            AnimatedVisibility(
+                visible = breachedAccounts.isNotEmpty(),
+                enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
+                exit = fadeOut(animationSpec = tween(200)) + shrinkVertically(animationSpec = tween(200)),
+            ) {
+                val breachCount = breachedAccounts.size
+                val label = when {
+                    (breachCount % 10 == 1) && (breachCount % 100 != 11) -> stringResource(R.string.breach_banner_label_one, breachCount)
+                    (breachCount % 10 in 2..4) && (breachCount % 100 !in 12..14) -> stringResource(R.string.breach_banner_label_few, breachCount)
+                    else -> stringResource(R.string.breach_banner_label_many, breachCount)
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = Color(0xFF261514),
+                    border = BorderStroke(1.dp, Color(0x33FF8A65)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .clip(CircleShape)
+                        .clickable { showBreachAuditSheet = true },
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFF3E1F1D),
+                            modifier = Modifier.size(28.dp),
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Security,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFF8B77),
+                                    modifier = Modifier.size(16.dp),
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFFFCCBC),
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = Color(0xFFFFAB91).copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+            }
 
             // Developer pill: live password count (enabled in Settings > Developer)
             AnimatedVisibility(visible = devModeEnabled && showDevPasswordCount) {
@@ -404,30 +474,6 @@ fun PasswordScreen(
                             // level so the account entries can be rebuilt on toggle.
                             var expandedDomains by remember { mutableStateOf(emptySet<String>()) }
 
-                            // Warm the favicon caches in batches: the first groups are enqueued
-                            // immediately, the rest in small chunks with short pauses.
-                            // This way the very first scroll pass is largely cache hits
-                            // (60 fps) instead of triggering loads while scrolling.
-                            val context = LocalContext.current
-                            LaunchedEffect(groups) {
-                                val loader = context.imageLoader
-                                val urls = groups.mapNotNull { it.faviconUrl.takeIf(String::isNotBlank) }
-                                urls.take(FAVICON_QUICK_WARM).forEach { url ->
-                                    loader.enqueue(
-                                        ImageRequest.Builder(context).data(url).size(160).build()
-                                    )
-                                }
-                                urls.asSequence().drop(FAVICON_QUICK_WARM)
-                                    .chunked(FAVICON_BATCH_SIZE)
-                                    .forEach { chunk ->
-                                        chunk.forEach { url ->
-                                            loader.enqueue(
-                                                ImageRequest.Builder(context).data(url).size(160).build()
-                                            )
-                                        }
-                                        kotlinx.coroutines.delay(FAVICON_BATCH_DELAY)
-                                    }
-                            }
                             // Flatten groups into top-level lazy entries: every account
                             // becomes its own LazyColumn item, so a site with 80+ rows
                             // is virtualized and stays smooth even when fully expanded.
@@ -481,6 +527,7 @@ fun PasswordScreen(
                                             SiteGroupHeader(
                                                 group = group,
                                                 expanded = expanded,
+                                                loadFavicons = loadFavicons,
                                                 onToggle = {
                                                     expandedDomains = if (expanded) {
                                                         expandedDomains - group.domain
@@ -493,15 +540,22 @@ fun PasswordScreen(
                                         }
                                         is PasswordListEntry.Account -> {
                                             val isFirst =
-                                                index == 0 || entries[index - 1] !is PasswordListEntry.Account
+                                                (index == 0) || (entries[index - 1] !is PasswordListEntry.Account)
+                                            val hasPasskey = remember(allPasskeys, entry.pwd.id) {
+                                                allPasskeys.any {
+                                                    (it.linkedPasswordId == entry.pwd.id) ||
+                                                        (it.userName.equals(entry.pwd.username, ignoreCase = true) && it.rpId.contains(entry.pwd.service, ignoreCase = true))
+                                                }
+                                            }
                                             AccountRow(
                                                 pwd = entry.pwd,
+                                                hasPasskey = hasPasskey,
                                                 isFirst = isFirst,
                                                 isLast = entry.isLastInGroup,
                                                 onCopyUsername = handleCopyUsername,
                                                 onCopyPassword = handleCopyPassword,
                                                 onClick = { onNavigateToDetail(entry.pwd.id) },
-                                                modifier = Modifier.animateItem()
+                                                modifier = Modifier.animateItem(),
                                             )
                                         }
                                     }
@@ -522,6 +576,16 @@ fun PasswordScreen(
                 }
             )
         }
+
+        if (showBreachAuditSheet) {
+            BreachAuditBottomSheet(
+                breachedAccounts = breachedAccounts,
+                isAuditing = isAuditingBreaches,
+                onRescanRequested = { viewModel.auditVaultBreaches(forceRefresh = true) },
+                onSelectPassword = onNavigateToDetail,
+                onDismiss = { showBreachAuditSheet = false },
+            )
+        }
     }
 }
 
@@ -531,6 +595,7 @@ fun SiteGroupHeader(
     expanded: Boolean,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
+    loadFavicons: Boolean = true,
 ) {
     val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
     // The header is the top edge of the group card: while expanded the bottom
@@ -562,7 +627,13 @@ fun SiteGroupHeader(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SiteAvatar(displayName = group.displayName, faviconUrl = group.faviconUrl)
+            SiteAvatar(
+                displayName = group.displayName,
+                faviconUrl = group.faviconUrl,
+                isLocalNetwork = group.parsedDomain.isLocalNetwork,
+                apexDomain = group.parsedDomain.apexDomain,
+                enabled = loadFavicons
+            )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
@@ -622,6 +693,7 @@ private fun AccountRow(
     onCopyPassword: (Long) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    hasPasskey: Boolean = false,
 ) {
     val cardColor = MaterialTheme.colorScheme.surfaceContainerLow
     val cardShape = RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp)
@@ -659,49 +731,66 @@ private fun AccountRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = pwd.username,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = "••••••••",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            // Copy username: person icon + mini copy badge (bottom-right corner)
-            QuickCopyButton(
-                icon = Icons.Default.Person,
-                contentDescription = stringResource(R.string.cd_copy_username),
-                onClick = { onCopyUsername(pwd.username) }
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            // Copy password: key icon + mini copy badge (bottom-right corner)
-            QuickCopyButton(
-                icon = Icons.Default.Key,
-                contentDescription = stringResource(R.string.cd_copy_password),
-                onClick = { onCopyPassword(pwd.id) }
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                contentDescription = stringResource(R.string.view_details),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier.size(20.dp)
-            )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = pwd.username,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (hasPasskey) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.passkey_badge),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                            )
+                        }
+                    }
+                }
+                Text(
+                    text = if (pwd.password.isEmpty() && hasPasskey) stringResource(R.string.passkey_login_only) else "••••••••",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Copy username: person icon + mini copy badge (bottom-right corner)
+                QuickCopyButton(
+                    icon = Icons.Default.Person,
+                    contentDescription = stringResource(R.string.cd_copy_username),
+                ) { onCopyUsername(pwd.username) }
+                Spacer(modifier = Modifier.width(4.dp))
+                // Copy password (only if password exists)
+                if (pwd.password.isNotEmpty()) {
+                    QuickCopyButton(
+                        icon = Icons.Default.Key,
+                        contentDescription = stringResource(R.string.cd_copy_password),
+                    ) { onCopyPassword(pwd.id) }
+                    Spacer(modifier = Modifier.width(4.dp))
+                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = stringResource(R.string.view_details),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier.size(20.dp)
+                )
         }
     }
     }
 }
 
 /**
- * Round quick-copy action: a main icon (person/key) with a small "copy" badge
- * pinned to the lower-right corner of the button.
+ * Quick-copy action button: a main icon (person/key) with a small "copy" badge
+ * pinned cleanly in the lower-right corner of a rounded squircle button.
  */
 @Composable
 private fun QuickCopyButton(
@@ -712,7 +801,7 @@ private fun QuickCopyButton(
     Box(
         modifier = Modifier
             .size(36.dp)
-            .clip(CircleShape)
+            .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             .clickable { onClick() },
         contentAlignment = Alignment.Center
@@ -721,15 +810,18 @@ private fun QuickCopyButton(
             imageVector = icon,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier
+                .size(18.dp)
+                .offset(x = (-1.5).dp, y = (-1.5).dp)
         )
-        // Mini copy badge in the lower-right corner
+        // Mini copy badge in the lower-right corner (never clipped by squircle shape)
         Box(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .size(13.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primary),
+                .padding(end = 1.5.dp, bottom = 1.5.dp)
+                .size(14.dp)
+                .background(MaterialTheme.colorScheme.primary, CircleShape)
+                .border(1.5.dp, MaterialTheme.colorScheme.surfaceContainerHighest, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(

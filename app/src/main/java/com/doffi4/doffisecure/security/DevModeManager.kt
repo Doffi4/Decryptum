@@ -16,10 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * Backed by SharedPreferences so the state survives app restarts, and exposed
  * as StateFlows so Compose can collect changes reactively from any screen.
  */
-class DevModeManager(context: Context) {
-
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("doffisecure_dev", Context.MODE_PRIVATE)
+class DevModeManager(private val prefs: SharedPreferences) {
+    constructor(context: Context) : this(context.getSharedPreferences("doffisecure_dev", Context.MODE_PRIVATE))
 
     private companion object {
         /** Unlock code for the developer mode (shared with the test account). */

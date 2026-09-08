@@ -27,7 +27,6 @@ import org.koin.androidx.compose.koinViewModel
 class MainActivity : FragmentActivity() {
 
     private val refreshRateController: RefreshRateController by inject()
-    private val userSettings: UserSettingsManager by inject()
 
     override fun attachBaseContext(newBase: Context) {
         val savedLang = UserSettingsManager.getSavedLanguage(newBase)

@@ -5,45 +5,49 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.security.MessageDigest
-import java.security.SecureRandom
 
 /**
- * Manages the application lock: master‑password backup (salted SHA‑256 hash)
- * and auto‑lock timeout.
+ * Manages the application lock, auto-lock timeout, and delegates DEK unlocking
+ * to [PasswordCrypto].
  */
-class AppLockManager(context: Context) {
-
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences("doffisecure_lock", Context.MODE_PRIVATE)
+class AppLockManager(
+    private val prefs: SharedPreferences,
+    private val passwordCrypto: PasswordCrypto
+) {
+    constructor(context: Context, passwordCrypto: PasswordCrypto = PasswordCrypto(context)) :
+        this(context.getSharedPreferences("doffisecure_lock", Context.MODE_PRIVATE), passwordCrypto)
 
     /**
      * Observable mirror of [isLocked]: lets the UI (AppLockViewModel) react
      * immediately when the lock state changes from anywhere (e.g. the dev-mode
      * "Lock now" quick action), not just on app start.
      */
-    private val _isLocked = MutableStateFlow(prefs.getBoolean(KEY_IS_LOCKED, true))
+    private val _isLocked = MutableStateFlow(prefs.getBoolean(KEY_IS_LOCKED, true) || !passwordCrypto.isUnlocked())
     val isLockedFlow: StateFlow<Boolean> = _isLocked.asStateFlow()
 
     private companion object {
-        const val KEY_HASH = "master_password_hash"
-        const val KEY_SALT = "master_password_salt"
         const val KEY_HAS_PASSWORD = "has_master_password"
         const val KEY_IS_LOCKED = "is_locked"
         const val KEY_LOCK_TIMEOUT = "lock_timeout_seconds"
         const val KEY_LAST_ACTIVE = "last_active_timestamp"
         const val KEY_ALLOW_SCREENSHOTS = "allow_screenshots"
-        const val PBKDF_ITERATIONS = 10_000
-        const val SALT_BYTES = 16
+        const val KEY_LOCKOUT_UNTIL = "lockout_until_timestamp"
+        const val KEY_FAILED_ATTEMPTS = "failed_attempts_count"
         const val DEFAULT_TIMEOUT_SEC = 30
     }
 
     // ---- Master password ----
 
-    fun hasMasterPassword(): Boolean = prefs.getBoolean(KEY_HAS_PASSWORD, false)
-    fun isLocked(): Boolean = prefs.getBoolean(KEY_IS_LOCKED, true)
+    fun hasMasterPassword(): Boolean =
+        prefs.getBoolean(KEY_HAS_PASSWORD, false) || passwordCrypto.hasVault()
+
+    fun isLocked(): Boolean =
+        prefs.getBoolean(KEY_IS_LOCKED, true) || !passwordCrypto.isUnlocked()
 
     fun setLocked(locked: Boolean) {
+        if (locked) {
+            passwordCrypto.lock()
+        }
         prefs.edit().putBoolean(KEY_IS_LOCKED, locked).apply()
         _isLocked.value = locked
         if (!locked) touchLastActive()
@@ -51,11 +55,10 @@ class AppLockManager(context: Context) {
 
     fun setMasterPassword(password: String): Boolean {
         if (hasMasterPassword() || password.isEmpty()) return false
-        val salt = ByteArray(SALT_BYTES).also { SecureRandom().nextBytes(it) }
-        val hash = hashPassword(password, salt)
+        val success = passwordCrypto.setupMasterPassword(password)
+        if (!success) return false
+
         prefs.edit()
-            .putString(KEY_SALT, salt.toBase64())
-            .putString(KEY_HASH, hash)
             .putBoolean(KEY_HAS_PASSWORD, true)
             .putBoolean(KEY_IS_LOCKED, false)
             .apply()
@@ -65,15 +68,26 @@ class AppLockManager(context: Context) {
     }
 
     fun verifyPassword(password: String): Boolean {
-        if (!hasMasterPassword()) return false
-        val storedSalt = prefs.getString(KEY_SALT, null) ?: return false
-        val storedHash = prefs.getString(KEY_HASH, null) ?: return false
-        return hashPassword(password, storedSalt.fromBase64()) == storedHash
+        if (!hasMasterPassword() || password.isEmpty()) return false
+
+        val success = passwordCrypto.unlockWithPassword(password)
+        if (success) {
+            setLocked(false)
+            return true
+        }
+        return false
     }
 
     fun resetLock() {
+        passwordCrypto.lock()
+        passwordCrypto.disableBiometric()
         prefs.edit().clear().putBoolean(KEY_IS_LOCKED, true).apply()
         _isLocked.value = true
+    }
+
+    fun resetVault() {
+        passwordCrypto.resetVault()
+        resetLock()
     }
 
     // ---- Auto‑lock timeout ----
@@ -108,13 +122,21 @@ class AppLockManager(context: Context) {
         prefs.edit().putBoolean(KEY_ALLOW_SCREENSHOTS, allow).apply()
     }
 
-    private fun hashPassword(password: String, salt: ByteArray): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        var buf = salt + password.toByteArray(Charsets.UTF_8)
-        repeat(PBKDF_ITERATIONS) { buf = digest.digest(buf) }
-        return buf.toBase64()
+    // ---- Rate limiting & Lockout ----
+
+    fun getLockoutUntilTimestamp(): Long = prefs.getLong(KEY_LOCKOUT_UNTIL, 0L)
+
+    fun setLockoutUntilTimestamp(timestamp: Long) {
+        prefs.edit().putLong(KEY_LOCKOUT_UNTIL, timestamp).apply()
     }
 
-    private fun ByteArray.toBase64(): String = android.util.Base64.encodeToString(this, android.util.Base64.NO_WRAP)
-    private fun String.fromBase64(): ByteArray = android.util.Base64.decode(this, android.util.Base64.NO_WRAP)
+    fun clearLockout() {
+        prefs.edit().remove(KEY_LOCKOUT_UNTIL).apply()
+    }
+
+    fun getFailedAttempts(): Int = prefs.getInt(KEY_FAILED_ATTEMPTS, 0)
+
+    fun setFailedAttempts(count: Int) {
+        prefs.edit().putInt(KEY_FAILED_ATTEMPTS, count).apply()
+    }
 }

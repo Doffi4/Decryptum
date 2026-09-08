@@ -38,7 +38,9 @@ fun LockScreen(
 ) {
     val lockState by viewModel.lockState.collectAsState()
     val input by viewModel.input.collectAsState()
-    var showPassword by remember { mutableStateOf(false) }
+    val lockoutSeconds by viewModel.lockoutSecondsRemaining.collectAsState()
+    val isLockedOut = lockoutSeconds > 0
+    var showPassword by remember { mutableStateOf(value = false) }
 
     val isSetup = lockState == LockState.NeedsSetup
 
@@ -68,6 +70,11 @@ fun LockScreen(
         }
     }
 
+    val promptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
+    val actionCancel = stringResource(R.string.action_cancel)
+    val biometricUnavailableError = stringResource(R.string.biometric_error_unavailable)
+    val biometricLaunchFailedError = stringResource(R.string.biometric_error_launch_failed)
+
     // Safe biometric prompt creation
     val prompt = remember {
         try {
@@ -76,41 +83,46 @@ fun LockScreen(
                 activity, executor,
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        viewModel.onBiometricSuccess()
+                        viewModel.onBiometricSuccess(result.cryptoObject?.cipher)
                     }
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                        if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
-                            errorCode != BiometricPrompt.ERROR_USER_CANCELED
+                        if ((errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) &&
+                            (errorCode != BiometricPrompt.ERROR_USER_CANCELED)
                         ) { viewModel.onBiometricError(errString.toString()) }
                     }
                     override fun onAuthenticationFailed() {
                         viewModel.onBiometricError(activity.getString(R.string.biometric_error_not_recognized))
                     }
-                }
+                },
             )
         } catch (_: Exception) {
             null
         }
     }
 
-    val promptSubtitle = stringResource(R.string.biometric_prompt_subtitle)
-    val biometricUnavailableError = stringResource(R.string.biometric_error_unavailable)
-    val biometricLaunchFailedError = stringResource(R.string.biometric_error_launch_failed)
+    val launchBiometric: () -> Unit = {
+        if (biometricAvailable && !isSetup && prompt != null && viewModel.isBiometricEnrolled()) {
+            val cryptoObject = viewModel.getBiometricCryptoObject()
+            if (cryptoObject != null) {
+                try {
+                    val promptInfo = BiometricPrompt.PromptInfo.Builder()
+                        .setTitle("Decryptum")
+                        .setSubtitle(promptSubtitle)
+                        .setNegativeButtonText(actionCancel)
+                        .setAllowedAuthenticators(BIOMETRIC_STRONG)
+                        .build()
+                    prompt.authenticate(promptInfo, cryptoObject)
+                } catch (_: Exception) {
+                    viewModel.onBiometricError(biometricLaunchFailedError)
+                }
+            }
+        }
+    }
 
     // Only authenticate if biometric is available AND prompt was created successfully
     LaunchedEffect(lockState) {
-        if (lockState == LockState.Locked && biometricAvailable && !isSetup && prompt != null) {
-            try {
-                prompt.authenticate(
-                    BiometricPrompt.PromptInfo.Builder()
-                        .setTitle("Decryptum")
-                        .setSubtitle(promptSubtitle)
-                        .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-                        .build()
-                )
-            } catch (_: Exception) {
-                viewModel.onBiometricError(biometricUnavailableError)
-            }
+        if (lockState == LockState.Locked && !isSetup && viewModel.isBiometricEnrolled()) {
+            launchBiometric()
         }
     }
 
@@ -165,13 +177,14 @@ fun LockScreen(
             OutlinedTextField(
                 value = input.password,
                 onValueChange = viewModel::onPasswordChange,
+                enabled = !isLockedOut,
                 label = { Text(stringResource(R.string.lock_field_master_password)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = if (isSetup) ImeAction.Next else ImeAction.Done
                 ),
-                keyboardActions = KeyboardActions(onDone = { if (!isSetup) viewModel.submit() }),
+                keyboardActions = KeyboardActions(onDone = { if (!isSetup && !isLockedOut) viewModel.submit() }),
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { showPassword = !showPassword }) {
@@ -199,7 +212,7 @@ fun LockScreen(
             // Non-blocking strength hint: the user may pick ANY password, but we
             // gently recommend something stronger when it lands in the red zone.
             if (isSetup && input.password.isNotBlank() &&
-                PasswordStrength.fromPassword(input.password) == PasswordStrength.WEAK
+                (PasswordStrength.fromPassword(input.password) == PasswordStrength.WEAK)
             ) {
                 Text(
                     text = stringResource(R.string.lock_weak_password_warning),
@@ -225,28 +238,17 @@ fun LockScreen(
 
             Button(
                 onClick = viewModel::submit,
+                enabled = !isLockedOut,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (isSetup) stringResource(R.string.lock_btn_create_and_unlock) else stringResource(R.string.action_unlock), fontSize = 16.sp)
             }
 
             // Biometric unlock button (only when locked, not during setup)
-            if (!isSetup && biometricAvailable && prompt != null) {
+            if (!isSetup && biometricAvailable && prompt != null && viewModel.isBiometricEnrolled()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedButton(
-                    onClick = {
-                        try {
-                            prompt?.authenticate(
-                                BiometricPrompt.PromptInfo.Builder()
-                                    .setTitle("Decryptum")
-                                    .setSubtitle(promptSubtitle)
-                                    .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
-                                    .build()
-                            )
-                        } catch (_: Exception) {
-                            viewModel.onBiometricError(biometricLaunchFailedError)
-                        }
-                    },
+                    onClick = launchBiometric,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(

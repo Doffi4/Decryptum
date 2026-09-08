@@ -16,6 +16,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
+import androidx.biometric.BiometricPrompt
+import com.doffi4.doffisecure.domain.usecase.DeleteAllPasswordsUseCase
+import com.doffi4.doffisecure.security.PasswordCrypto
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import javax.crypto.Cipher
+
 sealed interface LockState {
     object NeedsSetup : LockState
     object Locked : LockState
@@ -36,7 +44,9 @@ data class LockInputState(
 class AppLockViewModel(
     private val lockManager: AppLockManager,
     private val vaultWarmup: VaultWarmup,
-    private val devModeManager: DevModeManager
+    private val devModeManager: DevModeManager,
+    private val passwordCrypto: PasswordCrypto,
+    private val deleteAllPasswordsUseCase: DeleteAllPasswordsUseCase
 ) : ViewModel() {
 
     // Dev-mode warm-up progress (delegated from the shared singletons so the
@@ -54,7 +64,34 @@ class AppLockViewModel(
     )
     val lockState: StateFlow<LockState> = _lockState.asStateFlow()
 
+    companion object {
+        const val MAX_FAILED_ATTEMPTS = 5
+        const val LOCKOUT_DURATION_SECONDS = 30
+    }
+
+    private var failedAttempts = lockManager.getFailedAttempts()
+    private var lockoutJob: Job? = null
+    private val _lockoutSecondsRemaining = MutableStateFlow(0)
+    val lockoutSecondsRemaining: StateFlow<Int> = _lockoutSecondsRemaining.asStateFlow()
+
+    private val _input = MutableStateFlow(LockInputState())
+    val input: StateFlow<LockInputState> = _input.asStateFlow()
+
+    private val _biometricEvent = MutableSharedFlow<BiometricEvent>()
+    val biometricEvent: SharedFlow<BiometricEvent> = _biometricEvent.asSharedFlow()
+
     init {
+        // Restore lockout state if active across process recreation
+        val lockoutUntil = lockManager.getLockoutUntilTimestamp()
+        val remainingMs = lockoutUntil - System.currentTimeMillis()
+        if (remainingMs > 0) {
+            startLockout((remainingMs / 1000).toInt() + 1)
+        } else if (lockoutUntil > 0) {
+            lockManager.clearLockout()
+            failedAttempts = 0
+            lockManager.setFailedAttempts(0)
+        }
+
         // React immediately to lock state changes made outside this ViewModel,
         // such as the dev-mode "Lock now" or "Reset master password" actions.
         viewModelScope.launch {
@@ -68,13 +105,8 @@ class AppLockViewModel(
         }
     }
 
-    private val _input = MutableStateFlow(LockInputState())
-    val input: StateFlow<LockInputState> = _input.asStateFlow()
-
-    private val _biometricEvent = MutableSharedFlow<BiometricEvent>()
-    val biometricEvent: SharedFlow<BiometricEvent> = _biometricEvent.asSharedFlow()
-
     fun onPasswordChange(value: String) {
+        if (_lockoutSecondsRemaining.value > 0) return
         _input.value = _input.value.copy(password = value, error = null)
     }
 
@@ -89,21 +121,41 @@ class AppLockViewModel(
         }
     }
 
+    fun getBiometricCryptoObject(): BiometricPrompt.CryptoObject? {
+        val cipher = passwordCrypto.getBiometricDecryptCipher() ?: return null
+        return BiometricPrompt.CryptoObject(cipher)
+    }
+
     /**
      * Called by the UI after a successful biometric authentication.
-     * Unlocks the app without requiring the master password.
+     * Unlocks the DEK via the authenticated Cipher and unlocks the app.
      */
-    fun onBiometricSuccess() {
-        lockManager.setLocked(false)
-        lockManager.touchLastActive()
-        _lockState.value = LockState.Unlocked
-        clearInput()
+    fun onBiometricSuccess(cipher: Cipher?) {
+        if (cipher != null) {
+            val unwrapped = passwordCrypto.unlockWithBiometricCipher(cipher)
+            if (!unwrapped) {
+                _input.value = _input.value.copy(
+                    error = UiText.StringResource(R.string.biometric_error_key_invalidated)
+                )
+                return
+            }
+            failedAttempts = 0
+            lockManager.setFailedAttempts(0)
+            stopLockout()
+            unlock()
+        } else {
+            _input.value = _input.value.copy(
+                error = UiText.StringResource(R.string.biometric_error_unavailable)
+            )
+        }
     }
+
+    fun isBiometricEnrolled(): Boolean = passwordCrypto.isBiometricEnabled()
 
     /** Called by the UI on biometric failure (user can fall back to password). */
     fun onBiometricError(errorMessage: String) {
         _input.value = _input.value.copy(
-            error = UiText.StringResource(R.string.error_biometric_prefix, arrayOf(errorMessage))
+            error = UiText.StringResource(R.string.error_biometric_prefix, errorMessage)
         )
     }
 
@@ -124,16 +176,36 @@ class AppLockViewModel(
                     return
                 }
                 if (lockManager.setMasterPassword(text.password)) {
-                    _lockState.value = LockState.Unlocked
-                    clearInput()
+                    unlock()
                 }
             }
             is LockState.Locked -> {
+                if (_lockoutSecondsRemaining.value > 0) {
+                    _input.value = _input.value.copy(
+                        error = UiText.StringResource(
+                            R.string.lock_too_many_attempts,
+                            _lockoutSecondsRemaining.value
+                        )
+                    )
+                    return
+                }
+
                 val text = _input.value
                 if (lockManager.verifyPassword(text.password)) {
+                    failedAttempts = 0
+                    lockManager.setFailedAttempts(0)
+                    stopLockout()
                     unlock()
                 } else {
-                    _input.value = text.copy(error = UiText.StringResource(R.string.error_password_incorrect))
+                    failedAttempts++
+                    lockManager.setFailedAttempts(failedAttempts)
+                    if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+                        val lockoutUntil = System.currentTimeMillis() + (LOCKOUT_DURATION_SECONDS * 1000L)
+                        lockManager.setLockoutUntilTimestamp(lockoutUntil)
+                        startLockout(LOCKOUT_DURATION_SECONDS)
+                    } else {
+                        _input.value = text.copy(error = UiText.StringResource(R.string.error_password_incorrect))
+                    }
                 }
             }
             is LockState.Unlocked -> Unit
@@ -169,11 +241,56 @@ class AppLockViewModel(
     /** Whether the user has enabled screenshots in Settings. */
     fun isScreenshotsAllowed(): Boolean = lockManager.getAllowScreenshots()
 
+    fun resetVault() {
+        viewModelScope.launch {
+            try {
+                deleteAllPasswordsUseCase()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {}
+            failedAttempts = 0
+            lockManager.setFailedAttempts(0)
+            stopLockout()
+            lockManager.resetVault()
+            _input.value = LockInputState()
+        }
+    }
+
+    private fun startLockout(durationSeconds: Int) {
+        lockoutJob?.cancel()
+        _lockoutSecondsRemaining.value = durationSeconds
+        _input.value = _input.value.copy(
+            error = UiText.StringResource(R.string.lock_too_many_attempts, durationSeconds)
+        )
+        lockoutJob = viewModelScope.launch {
+            for (sec in durationSeconds downTo 1) {
+                _lockoutSecondsRemaining.value = sec
+                _input.value = _input.value.copy(
+                    error = UiText.StringResource(R.string.lock_too_many_attempts, sec)
+                )
+                delay(1000L)
+            }
+            _lockoutSecondsRemaining.value = 0
+            failedAttempts = 0
+            lockManager.setFailedAttempts(0)
+            lockManager.clearLockout()
+            _input.value = _input.value.copy(error = null)
+        }
+    }
+
+    private fun stopLockout() {
+        lockoutJob?.cancel()
+        lockoutJob = null
+        _lockoutSecondsRemaining.value = 0
+        lockManager.clearLockout()
+    }
+
     private fun unlock() {
         lockManager.setLocked(false)
         lockManager.touchLastActive()
         _lockState.value = LockState.Unlocked
         clearInput()
+        vaultWarmup.warm()
     }
 
     private fun clearInput() {

@@ -106,8 +106,10 @@ fun GeneratorScreen(
 
     LaunchedEffect(Unit) {
         viewModel.event.collect { event ->
-            if (event is GeneratorEvent.ShowToast) {
-                snackbarHostState.showSnackbar(event.message.asString(context))
+            when (event) {
+                is GeneratorEvent.ShowToast -> {
+                    snackbarHostState.showSnackbar(event.message.asString(context))
+                }
             }
         }
     }
@@ -122,7 +124,7 @@ fun GeneratorScreen(
                     Text(stringResource(R.string.generator_title), fontWeight = FontWeight.SemiBold)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.surface,
                 )
             )
         },
@@ -298,7 +300,7 @@ private fun PresetsCard(onPreset: (PasswordPreset) -> Unit) {
  */
 @Composable
 private fun LengthCard(length: Int, onLengthChange: (Int) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(value = false) }
     val caretRotation by animateFloatAsState(
         targetValue = if (expanded) 180f else 0f,
         label = "lengthCaret"

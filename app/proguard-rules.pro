@@ -29,3 +29,48 @@
 
 # Autofill & Credential Provider services and activities
 -keep class com.doffi4.doffisecure.autofill.** { *; }
+
+# Argon2Kt JNI native bindings and classes
+-keep class com.lambdapioneer.argon2kt.** { *; }
+-dontwarn com.lambdapioneer.argon2kt.**
+
+# SQLCipher native bindings and classes
+-keep class net.zetetic.** { *; }
+-dontwarn net.zetetic.**
+
+# ML Kit Barcode Scanning & Vision Rules
+-keep class com.google.mlkit.** { *; }
+-dontwarn com.google.mlkit.**
+
+-keep class com.google.android.gms.internal.mlkit_vision_barcode.** { *; }
+-keep class com.google.android.gms.internal.mlkit_vision_barcode_bundled.** { *; }
+-keep class com.google.android.gms.vision.** { *; }
+-dontwarn com.google.android.gms.**
+
+-keepclassmembers class * extends com.google.android.gms.internal.mlkit_vision_barcode_bundled.zzeh {
+    <fields>;
+}
+
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+-keepclassmembers class * {
+    native <methods>;
+}
+
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+# CameraX
+-keep class androidx.camera.** { *; }
+-dontwarn androidx.camera.**
+
+# ZXing
+-keep class com.google.zxing.** { *; }
+-dontwarn com.google.zxing.**
+

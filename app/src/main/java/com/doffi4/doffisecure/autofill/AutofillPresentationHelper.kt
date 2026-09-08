@@ -34,15 +34,14 @@ object AutofillPresentationHelper {
         domainOrUrl: String,
         sizeDp: Int = 38
     ): Bitmap? {
-        val domain = DomainUtils.extract(domainOrUrl)
-        if (domain.isBlank()) return null
-        val url = DomainUtils.faviconUrl(domain, size = 128)
+        val parsed = DomainUtils.parse(domainOrUrl)
+        if (parsed.host.isBlank() || parsed.isLocalNetwork) return null
         return try {
             val loader = Coil.imageLoader(context)
             val density = context.resources.displayMetrics.density
             val px = (sizeDp * density).toInt().coerceAtLeast(1)
             val request = ImageRequest.Builder(context)
-                .data(url)
+                .data(com.doffi4.doffisecure.security.FaviconRequest(host = parsed.host, apexDomain = parsed.apexDomain))
                 .size(px)
                 .allowHardware(false) // RemoteViews IPC requires software Bitmaps!
                 .build()
@@ -51,7 +50,7 @@ object AutofillPresentationHelper {
                 getCircularBitmap(src)
             }
         } catch (e: Throwable) {
-            android.util.Log.e("DecryptumAutofill", "Failed to load favicon for $domain: ${e.message}")
+            android.util.Log.e("DecryptumAutofill", "Failed to load favicon for ${parsed.host}: ${e.message}")
             null
         }
     }

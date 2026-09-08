@@ -23,6 +23,7 @@ class UserSettingsManager(context: Context) {
         const val KEY_SHOW_PASSWORD_STRENGTH = "show_password_strength"
         const val KEY_APP_LANGUAGE = "app_language"
         const val KEY_AUTOFILL_ALWAYS_REQUIRE_AUTH = "autofill_always_require_auth"
+        const val KEY_LOAD_FAVICONS = "load_site_favicons"
 
         fun getSavedLanguage(context: Context): String {
             val p = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -58,5 +59,15 @@ class UserSettingsManager(context: Context) {
     fun setAutofillAlwaysRequireAuth(alwaysRequire: Boolean) {
         _autofillAlwaysRequireAuth.value = alwaysRequire
         prefs.edit { putBoolean(KEY_AUTOFILL_ALWAYS_REQUIRE_AUTH, alwaysRequire) }
+    }
+
+    /** Whether website favicons are downloaded directly from sites and cached (default: true). */
+    private val _loadFavicons =
+        MutableStateFlow(prefs.getBoolean(KEY_LOAD_FAVICONS, true))
+    val loadFavicons: StateFlow<Boolean> = _loadFavicons.asStateFlow()
+
+    fun setLoadFavicons(enabled: Boolean) {
+        _loadFavicons.value = enabled
+        prefs.edit { putBoolean(KEY_LOAD_FAVICONS, enabled) }
     }
 }

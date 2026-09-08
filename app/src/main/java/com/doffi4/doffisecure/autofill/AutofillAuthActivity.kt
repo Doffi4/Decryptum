@@ -30,12 +30,14 @@ import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.domain.repository.IPasswordRepository
 import com.doffi4.doffisecure.security.AppLockManager
 import com.doffi4.doffisecure.security.AppLocaleManager
+import com.doffi4.doffisecure.security.PasswordCrypto
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 
 class AutofillAuthActivity : FragmentActivity() {
 
     private val lockManager: AppLockManager by inject()
+    private val passwordCrypto: PasswordCrypto by inject()
     private val passwordRepository: IPasswordRepository by inject()
 
     override fun attachBaseContext(newBase: Context) {
@@ -52,20 +54,21 @@ class AutofillAuthActivity : FragmentActivity() {
         @Suppress("DEPRECATION")
         val passwordFieldId: AutofillId? = intent.getParcelableExtra(EXTRA_PASSWORD_FIELD_ID)
 
-        if (passwordId == -1L || (usernameId == null && passwordFieldId == null)) {
-            setResult(Activity.RESULT_CANCELED)
+        if (passwordId == -1L || ((usernameId == null) && (passwordFieldId == null))) {
+            setResult(RESULT_CANCELED)
             finish()
             return
         }
 
-        // Try biometric prompt first if available
+        // Try biometric prompt first if available and configured
         val biometricManager = BiometricManager.from(this)
         val canAuth = biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
         )
 
-        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
-            showBiometricPrompt(passwordId, usernameId, passwordFieldId)
+        val bioCipher = passwordCrypto.getBiometricDecryptCipher()
+        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS && bioCipher != null) {
+            showBiometricPrompt(passwordId, usernameId, passwordFieldId, bioCipher)
         } else {
             showMasterPasswordFallback(passwordId, usernameId, passwordFieldId)
         }
@@ -74,7 +77,8 @@ class AutofillAuthActivity : FragmentActivity() {
     private fun showBiometricPrompt(
         passwordId: Long,
         usernameId: AutofillId?,
-        passwordFieldId: AutofillId?
+        passwordFieldId: AutofillId?,
+        bioCipher: javax.crypto.Cipher
     ) {
         val executor = ContextCompat.getMainExecutor(this)
         val prompt = BiometricPrompt(
@@ -82,14 +86,24 @@ class AutofillAuthActivity : FragmentActivity() {
             executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                    onAuthSuccess(passwordId, usernameId, passwordFieldId)
+                    val cipher = result.cryptoObject?.cipher
+                    val unlocked = if (cipher != null) {
+                        passwordCrypto.unlockWithBiometricCipher(cipher)
+                    } else {
+                        false
+                    }
+                    if (unlocked && passwordCrypto.isUnlocked()) {
+                        onAuthSuccess(passwordId, usernameId, passwordFieldId)
+                    } else {
+                        showMasterPasswordFallback(passwordId, usernameId, passwordFieldId)
+                    }
                 }
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
                         errorCode == BiometricPrompt.ERROR_USER_CANCELED
                     ) {
-                        setResult(Activity.RESULT_CANCELED)
+                        setResult(RESULT_CANCELED)
                         finish()
                     } else {
                         showMasterPasswordFallback(passwordId, usernameId, passwordFieldId)
@@ -108,7 +122,7 @@ class AutofillAuthActivity : FragmentActivity() {
             .setNegativeButtonText(getString(R.string.autofill_auth_enter_pin))
             .build()
 
-        prompt.authenticate(promptInfo)
+        prompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(bioCipher))
     }
 
     private fun showMasterPasswordFallback(
@@ -197,13 +211,13 @@ class AutofillAuthActivity : FragmentActivity() {
         usernameId: AutofillId?,
         passwordFieldId: AutofillId?
     ) {
-        lockManager.setLocked(false)
+        lockManager.setLocked(locked = false)
         lockManager.touchLastActive()
 
         lifecycleScope.launch {
             val pass = passwordRepository.getPasswordById(passwordId)
             if (pass == null) {
-                setResult(Activity.RESULT_CANCELED)
+                setResult(RESULT_CANCELED)
                 finish()
                 return@launch
             }
@@ -216,18 +230,18 @@ class AutofillAuthActivity : FragmentActivity() {
                 isLocked = false
             )
 
-            if (usernameId != null) {
+            usernameId?.let { id ->
                 AutofillPresentationHelper.setDatasetValue(
                     builder = datasetBuilder,
-                    id = usernameId,
+                    id = id,
                     value = AutofillValue.forText(pass.username),
                     presentation = presentation
                 )
             }
-            if (passwordFieldId != null) {
+            passwordFieldId?.let { id ->
                 AutofillPresentationHelper.setDatasetValue(
                     builder = datasetBuilder,
-                    id = passwordFieldId,
+                    id = id,
                     value = AutofillValue.forText(pass.password),
                     presentation = presentation
                 )
@@ -236,7 +250,7 @@ class AutofillAuthActivity : FragmentActivity() {
             val reply = Intent().apply {
                 putExtra(AutofillManager.EXTRA_AUTHENTICATION_RESULT, datasetBuilder.build())
             }
-            setResult(Activity.RESULT_OK, reply)
+            setResult(RESULT_OK, reply)
             finish()
         }
     }

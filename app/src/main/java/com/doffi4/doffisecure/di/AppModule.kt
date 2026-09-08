@@ -2,11 +2,16 @@ package com.doffi4.doffisecure.di
 
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.doffi4.doffisecure.data.local.dao.PasswordDao
 import com.doffi4.doffisecure.data.local.database.AppDatabase
 import com.doffi4.doffisecure.data.repository.PasswordRepositoryImpl
+import com.doffi4.doffisecure.data.repository.PasskeyRepositoryImpl
+import com.doffi4.doffisecure.data.repository.IPwnedPasswordsRepository
+import com.doffi4.doffisecure.data.repository.PwnedPasswordsRepository
 import com.doffi4.doffisecure.domain.repository.IPasswordRepository
+import com.doffi4.doffisecure.domain.repository.IPasskeyRepository
+import com.doffi4.doffisecure.security.webauthn.WebAuthnCryptoEngine
 import com.doffi4.doffisecure.domain.usecase.AddPasswordUseCase
+import com.doffi4.doffisecure.domain.usecase.CheckPasswordBreachUseCase
 import com.doffi4.doffisecure.domain.usecase.CheckEncryptionIntegrityUseCase
 import com.doffi4.doffisecure.domain.usecase.CountEncryptedPasswordsUseCase
 import com.doffi4.doffisecure.domain.usecase.CountPasswordsUseCase
@@ -22,12 +27,16 @@ import com.doffi4.doffisecure.domain.usecase.SearchPasswordsUseCase
 import com.doffi4.doffisecure.domain.usecase.UpdatePasswordUseCase
 import com.doffi4.doffisecure.dev.CpuMonitor
 import com.doffi4.doffisecure.dev.RefreshRateController
+import com.doffi4.doffisecure.data.local.database.DatabaseMigrator
 import com.doffi4.doffisecure.security.AppLockManager
+import com.doffi4.doffisecure.security.DatabaseKeyManager
 import com.doffi4.doffisecure.security.DevModeManager
 import com.doffi4.doffisecure.security.PasswordCrypto
 import com.doffi4.doffisecure.security.SecureClipboard
 import com.doffi4.doffisecure.security.UserSettingsManager
 import com.doffi4.doffisecure.security.VaultWarmup
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
+
 import com.doffi4.doffisecure.ui.lock.AppLockViewModel
 import com.doffi4.doffisecure.ui.password.DevToolsViewModel
 import com.doffi4.doffisecure.ui.password.GeneratorViewModel
@@ -42,7 +51,7 @@ val appModule = module {
     single { PasswordCrypto(androidContext()) }
 
     // Application lock (master password)
-    single { AppLockManager(androidContext()) }
+    single { AppLockManager(androidContext(), get()) }
 
     // Hidden developer mode (toggled by tapping the app title 6 times)
     single { DevModeManager(androidContext()) }
@@ -53,9 +62,8 @@ val appModule = module {
     // Secure clipboard with auto-clear
     single { SecureClipboard(androidContext()) }
 
-    // Cold-start warm-up: converts legacy rows and prefetches the vault while
-    // the lock screen is visible, so the main screen opens smooth.
-    single { VaultWarmup(androidContext(), get()) }
+    // Vault warm-up: pre-warms cache and prefetches favicons once unlocked
+    single { VaultWarmup(androidContext(), get(), get()) }
 
     // Idle frame-rate governor: steps the app down 120 -> 60 -> 30 fps when
     // nothing is pressed and applies Android 15 LTPO power-savings hints.
@@ -65,22 +73,47 @@ val appModule = module {
     // developer tools (no Android APIs involved, so it lives as a plain single).
     single { CpuMonitor() }
 
-    // Database instance. WAL keeps reads cheap and headlines writes during the
-    // bulk import / one-time VaultWarmup reads of large vaults (500+ rows).
+    // Database key manager & migration
+    single { DatabaseKeyManager(androidContext()) }
+    single { DatabaseMigrator() }
+
+    // Database instance. Encrypted at rest via SQLCipher. WAL keeps reads cheap
+    // and headlines writes during bulk import / VaultWarmup reads.
     single {
+        val context = androidContext()
+        val keyManager = get<DatabaseKeyManager>()
+        val migrator = get<DatabaseMigrator>()
+        val passphrase = keyManager.getPassphrase()
+
+        // Migrate any existing unencrypted database before Room initializes
+        migrator.migrateIfNeeded(context, passphrase)
+
+        val hexKey = passphrase.joinToString("") { "%02x".format(it) }
+        val rawKeyBytes = "x'$hexKey'".toByteArray(Charsets.US_ASCII)
+        val factory = SupportOpenHelperFactory(rawKeyBytes)
         Room.databaseBuilder(
-            androidContext(),
+            context,
             AppDatabase::class.java,
-            "password_db"
-        ).setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+            "password_db",
+        )
+            .openHelperFactory(factory)
+            .addMigrations(AppDatabase.MIGRATION_2_3, AppDatabase.MIGRATION_3_4)
+            .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
             .build()
     }
 
-    // DAO instance
-    single { get<AppDatabase>().passwordDao() }
 
-    // Repository implementation
+    // DAO instances
+    single { get<AppDatabase>().passwordDao() }
+    single { get<AppDatabase>().passkeyDao() }
+
+    // Repository implementations
     single<IPasswordRepository> { PasswordRepositoryImpl(get(), get()) }
+    single<IPasskeyRepository> { PasskeyRepositoryImpl(get()) }
+    single<IPwnedPasswordsRepository> { PwnedPasswordsRepository() }
+
+    // WebAuthn Crypto Engine
+    single { WebAuthnCryptoEngine(get()) }
 
     // Use Cases
     factory { GetPasswordsUseCase(get()) }
@@ -97,19 +130,44 @@ val appModule = module {
     factory { SearchPasswordsUseCase(get()) }
     factory { UpdatePasswordUseCase(get()) }
     factory { GeneratePasswordUseCase() }
+    factory { CheckPasswordBreachUseCase(get()) }
 
     // ViewModels
-    viewModel { AppLockViewModel(get(), get(), get()) }
+    viewModel { AppLockViewModel(get(), get(), get(), get(), get()) }
     viewModel {
         PasswordViewModel(
-            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
+            getPasswordsUseCase = get(),
+            getPasswordByIdUseCase = get(),
+            addPasswordUseCase = get(),
+            deletePasswordUseCase = get(),
+            searchPasswordsUseCase = get(),
+            updatePasswordUseCase = get(),
+            countPasswordsUseCase = get(),
+            secureClipboard = get(),
+            devModeManager = get(),
+            vaultWarmup = get(),
+            refreshRateController = get(),
+            userSettings = get(),
+            passkeyRepository = get(),
+            checkPasswordBreachUseCase = get(),
         )
     }
     viewModel { GeneratorViewModel(get(), get(), get()) }
-    viewModel { SettingsViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel {
+        SettingsViewModel(
+            lockManager = get(),
+            getPasswordsUseCase = get(),
+            importPasswordsUseCase = get(),
+            deleteAllPasswordsUseCase = get(),
+            devModeManager = get(),
+            userSettings = get(),
+            passkeyRepository = get(),
+            passwordCrypto = get(),
+        )
+    }
     viewModel {
         DevToolsViewModel(
-            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get()
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
         )
     }
 }

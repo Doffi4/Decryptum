@@ -33,7 +33,7 @@ data class PasswordGeneratorOptions(
  * character sets so the result lands in the matching strength bracket.
  */
 enum class PasswordPreset(
-    @StringRes val labelRes: Int,
+    @param:StringRes val labelRes: Int,
     val options: PasswordGeneratorOptions,
     val label: String = ""
 ) {

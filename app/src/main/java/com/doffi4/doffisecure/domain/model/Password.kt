@@ -12,5 +12,6 @@ data class Password(
     val username: String,
     val password: String,
     val url: String?,
-    val createdAt: Long
+    val createdAt: Long,
+    val totpSecret: String? = null
 )

@@ -39,11 +39,21 @@
     <string name="biometric_error_setup_first">Сначала настройте отпечаток или блокировку экрана</string>
     <string name="biometric_error_not_recognized">Биометрия не распознана.</string>
     <string name="biometric_error_launch_failed">Ошибка запуска биометрии</string>
+    <string name="biometric_error_key_invalidated">Биометрический ключ устарел. Войдите по мастер-паролю для повторной активации.</string>
     <string name="error_password_empty">Пароль не может быть пустым</string>
     <string name="error_passwords_mismatch">Пароли не совпадают</string>
     <string name="error_password_too_short">Пароль должен содержать минимум 4 символа</string>
     <string name="error_password_incorrect">Неверный пароль</string>
+    <string name="lock_too_many_attempts">Слишком много неудачных попыток. Попробуйте через %1$d сек.</string>
     <string name="error_biometric_prefix">Биометрия: %1$s</string>
+    <string name="lock_btn_forgot_password">Забыли пароль?</string>
+    <string name="lock_forgot_password_title">Забыли мастер-пароль?</string>
+    <string name="lock_forgot_password_message">Мастер-пароль защищает хранилище сквозным шифрованием с нулевым разглашением. Восстановить его невозможно.\n\nЕсли у вас настроена биометрия, вы можете войти по отпечатку пальца и изменить пароль в Настройках.\n\nЕсли доступа по биометрии нет, продолжить работу можно только полностью сбросив хранилище. Все сохранённые пароли будут безвозвратно удалены.</string>
+    <string name="lock_forgot_password_btn_reset">Сбросить хранилище…</string>
+    <string name="lock_reset_confirm_title">Безвозвратно удалить данные?</string>
+    <string name="lock_reset_confirm_message">Вы действительно хотите удалить все пароли и сбросить мастер-пароль? Это действие нельзя отменить.</string>
+    <string name="lock_reset_confirm_action">Удалить всё и сбросить</string>
+    <string name="lock_biometric_first_unlock_hint">Для активации биометрии выполните вход по мастер-паролю</string>
 
     <!-- Password List & Search -->
     <string name="search_placeholder">Поиск...</string>
@@ -132,11 +142,19 @@
     <string name="setting_screenshots_desc">Разрешить снимки и запись экрана (менее безопасно)</string>
     <string name="setting_password_strength">Оценка сложности паролей</string>
     <string name="setting_password_strength_desc">Показывать индикатор надежности при создании и просмотре паролей</string>
+    <string name="setting_load_favicons">Загрузка иконок сайтов</string>
+    <string name="setting_load_favicons_desc">Загружать иконки напрямую с сайтов и кешировать на устройстве</string>
     <string name="section_data_management">Управление данными</string>
     <string name="setting_export">Экспорт паролей</string>
     <string name="setting_export_desc">Сохранить пароли в файл .csv</string>
     <string name="setting_import">Импорт паролей</string>
     <string name="setting_import_desc">Загрузить пароли из файла .csv</string>
+    <string name="setting_clear_favicons">Очистить кеш иконок</string>
+    <string name="setting_clear_favicons_desc">Удалить сохраненные иконки сайтов и загрузить их заново</string>
+    <string name="action_refresh_favicon">Обновить иконку</string>
+    <string name="favicon_refreshed">Иконка обновлена</string>
+    <string name="favicon_cache_cleared">Кеш иконок очищен</string>
+    <string name="local_network_label">Локальная сеть</string>
     <string name="section_danger_zone">Опасная зона</string>
     <string name="setting_delete_all">Удалить все пароли</string>
     <string name="setting_delete_all_desc">Безвозвратно удаляет все сохраненные пароли</string>
@@ -295,4 +313,83 @@
     <string name="autofill_chrome_tip">Для Google Chrome: в Chrome откройте Меню (⋮) → Настройки → Службы автозаполнения → выберите «Использовать другую службу» → Перезапустите Chrome.</string>
     <string name="autofill_xiaomi_tip">Для Xiaomi / HyperOS: Настройки → Расширенные (Дополнительные) настройки → Язык и ввод → Автозаполнение → Выберите Decryptum (или найдите «Автозаполнение» в поиске настроек).</string>
     <string name="autofill_header_subtitle">Автозаполнение Decryptum</string>
+
+    <!-- Passkeys (FIDO2 / WebAuthn) -->
+    <string name="passkey_label">Passkey</string>
+    <string name="passkey_badge">Passkey</string>
+    <string name="passkey_save_title">Сохранить Passkey в Decryptum?</string>
+    <string name="passkey_save_desc">Создать и сохранить ключ Passkey для %1$s</string>
+    <string name="passkey_auth_prompt">Вход с помощью Passkey</string>
+    <string name="passkey_details_title">Passkey (FIDO2 / WebAuthn)</string>
+    <string name="passkey_rp_id">Сервис: %1$s</string>
+    <string name="passkey_algorithm">Алгоритм: %1$s</string>
+    <string name="passkey_sign_count">Счётчик входов: %1$d</string>
+    <string name="passkey_delete">Удалить Passkey</string>
+    <string name="passkey_delete_confirm">Вы уверены, что хотите удалить этот Passkey? Вы больше не сможете войти с его помощью.</string>
+    <string name="passkey_saved_toast">Passkey сохранен в Decryptum</string>
+    <string name="passkey_deleted_toast">Passkey удален</string>
+    <string name="passkey_login_only">Вход по Passkey</string>
+
+    <!-- Breach Monitoring (HIBP) -->
+    <string name="breach_status_title">Мониторинг утечек</string>
+    <string name="breach_status_checking">Проверка в базах утечек (k-Anonymity)…</string>
+    <string name="breach_status_clean">Пароль не обнаружен в известных утечках</string>
+    <string name="breach_status_compromised">Скомпрометирован! Найден в %1$d утечке(ах). Срочно смените этот пароль!</string>
+    <string name="breach_status_error">Не удалось проверить (ошибка сети)</string>
+    <string name="breach_action_retry">Повторить</string>
+    <string name="breach_action_refresh">Перепроверить</string>
+
+    <!-- 2FA / TOTP Authenticator -->
+    <string name="totp_title">Двухфакторная аутентификация (2FA)</string>
+    <string name="totp_btn_add">Настроить 2FA / TOTP</string>
+    <string name="totp_btn_scan_qr">Сканировать QR-код</string>
+    <string name="totp_btn_enter_manually">Ввести ключ вручную</string>
+    <string name="totp_copied_toast">Код 2FA скопирован: %1$s</string>
+    <string name="totp_delete_title">Удалить ключ 2FA?</string>
+    <string name="totp_delete_confirm">Вы уверены, что хотите удалить ключ двухфакторной аутентификации? Вы можете потерять доступ к сервисам с включенным 2FA.</string>
+    <string name="totp_dialog_enter_key_title">Ввод ключа 2FA</string>
+    <string name="totp_field_secret_hint">Вставьте Base32 ключ или ссылку otpauth://</string>
+    <string name="totp_error_invalid_key">Неверный формат. Введите корректный Base32 ключ или ссылку otpauth://</string>
+    <string name="totp_camera_permission_title">Требуется доступ к камере</string>
+    <string name="totp_camera_permission_desc">Decryptum требуется доступ к камере для мгновенного считывания QR-кодов двухфакторной аутентификации.</string>
+    <string name="totp_camera_grant_btn">Разрешить</string>
+    <string name="totp_scanner_title">Сканирование QR-кода 2FA</string>
+    <string name="totp_meta_format">%1$d сек · %2$s · %3$d цифр</string>
+
+    <!-- Navigation -->
+    <string name="nav_2fa">2FA Коды</string>
+
+    <!-- Breach Banner & Audit -->
+    <string name="breach_banner_label_one">%1$d Утечка</string>
+    <string name="breach_banner_label_few">%1$d Утечки</string>
+    <string name="breach_banner_label_many">%1$d Утечек</string>
+    <string name="breach_audit_title">Аудит безопасности</string>
+    <string name="breach_audit_subtitle">Эти пароли найдены в публичных базах утечек. Рекомендуем сменить их как можно скорее.</string>
+    <string name="breach_audit_clean_title">Все пароли в безопасности</string>
+    <string name="breach_audit_clean_desc">Ни один из ваших сохранённых паролей не найден в публичных утечках.</string>
+    <string name="breach_audit_rescan">Повторить аудит</string>
+    <string name="breach_audit_checking">Проверка хранилища на утечки…</string>
+    <string name="breach_count_badge">В %1$d базах</string>
+    <string name="breach_action_change_pwd">Сменить</string>
+
+    <!-- 2FA Screen -->
+    <string name="totp_screen_title">2FA Коды</string>
+    <string name="totp_search_placeholder">Поиск по сервису или логину…</string>
+    <string name="totp_empty_title">Нет 2FA кодов</string>
+    <string name="totp_empty_desc">Добавьте двухфакторную аутентификацию для быстрого получения одноразовых паролей.</string>
+    <string name="totp_add_button">Добавить 2FA код</string>
+    <string name="totp_select_account_title">Выберите аккаунт</string>
+    <string name="totp_scanner_hint">Наведите камеру на QR-код</string>
+    <string name="empty_search_results">Ничего не найдено</string>
+
+    <!-- Google Authenticator Import -->
+    <string name="totp_import_dialog_title">Импорт из Google Authenticator</string>
+    <string name="totp_import_dialog_count">Найдено: %1$d аккаунтов</string>
+    <string name="totp_import_dialog_desc">Decryptum распознал QR-код переноса данных. Следующие аккаунты будут добавлены в ваше защищённое хранилище:</string>
+    <string name="totp_import_btn_confirm">Импортировать все (%1$d)</string>
+    <string name="totp_import_success">Импортировано аккаунтов: %1$d</string>
+    <string name="totp_btn_scan_qr_subtitle">Поддерживает Google Authenticator</string>
+    <string name="totp_btn_pick_gallery">Выбрать из галереи</string>
+    <string name="totp_btn_pick_gallery_subtitle">Распознать QR-код со скриншота</string>
+    <string name="totp_error_no_qr_found">QR-код на изображении не найден</string>
 </resources>

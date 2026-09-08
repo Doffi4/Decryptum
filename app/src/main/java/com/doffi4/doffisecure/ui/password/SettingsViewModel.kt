@@ -14,7 +14,10 @@ import com.doffi4.doffisecure.security.AppLockManager
 import com.doffi4.doffisecure.security.AppLocaleManager
 import com.doffi4.doffisecure.security.CsvManager
 import com.doffi4.doffisecure.security.DevModeManager
+import com.doffi4.doffisecure.security.FaviconFetcher
 import com.doffi4.doffisecure.security.UserSettingsManager
+import com.doffi4.doffisecure.domain.repository.IPasskeyRepository
+import com.doffi4.doffisecure.security.PasswordCrypto
 import com.doffi4.doffisecure.ui.util.UiText
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +41,9 @@ class SettingsViewModel(
     private val importPasswordsUseCase: ImportPasswordsUseCase,
     private val deleteAllPasswordsUseCase: DeleteAllPasswordsUseCase,
     private val devModeManager: DevModeManager,
-    private val userSettings: UserSettingsManager
+    private val userSettings: UserSettingsManager,
+    private val passkeyRepository: IPasskeyRepository? = null,
+    private val passwordCrypto: PasswordCrypto? = null
 ) : ViewModel() {
 
     private val _lockTimeout = MutableStateFlow(lockManager.getLockTimeoutSeconds())
@@ -52,6 +57,21 @@ class SettingsViewModel(
     }
 
     val allowScreenshots = MutableStateFlow(lockManager.getAllowScreenshots())
+
+    // ---- Favicons / privacy settings ----
+    val loadFavicons: StateFlow<Boolean> = userSettings.loadFavicons
+
+    fun setLoadFavicons(enabled: Boolean) {
+        userSettings.setLoadFavicons(enabled)
+    }
+
+    fun clearFaviconCache(context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            FaviconFetcher.clearDiskCache(context)
+            coil.Coil.imageLoader(context).memoryCache?.clear()
+            _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.favicon_cache_cleared)))
+        }
+    }
 
     // ---- Language selection ----
     val appLanguage: StateFlow<String> = userSettings.appLanguage
@@ -153,11 +173,12 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 val passwords = getPasswordsUseCase().first()
-                if (passwords.isEmpty()) {
+                val passkeys = passkeyRepository?.getAllPasskeys()?.first() ?: emptyList()
+                if (passwords.isEmpty() && passkeys.isEmpty()) {
                     _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.passwords_empty)))
                     return@launch
                 }
-                val count = CsvManager.export(context, uri, passwords)
+                val count = CsvManager.export(context, uri, passwords, passkeys, passwordCrypto)
                 _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_export_success, arrayOf(count))))
             } catch (e: CancellationException) {
                 throw e
@@ -171,18 +192,40 @@ class SettingsViewModel(
     fun importPasswords(context: Context, uri: Uri) {
         viewModelScope.launch {
             try {
-                val passwords = withContext(Dispatchers.Default) {
-                    CsvManager.import(context, uri)
+                android.util.Log.i("SettingsViewModel", "Starting import from $uri")
+                val vaultData = withContext(Dispatchers.Default) {
+                    CsvManager.importVault(context, uri, passwordCrypto)
                 }
-                if (passwords.isEmpty()) {
+                if (vaultData.passwords.isEmpty() && vaultData.passkeys.isEmpty()) {
                     _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.passwords_empty)))
                     return@launch
                 }
-                val imported = importPasswordsUseCase(passwords)
+                var imported = 0
+                if (vaultData.passwords.isNotEmpty()) {
+                    imported += importPasswordsUseCase(vaultData.passwords)
+                }
+                if (vaultData.passkeys.isNotEmpty() && passkeyRepository != null) {
+                    val currentPasswords = getPasswordsUseCase().first()
+                    for (passkey in vaultData.passkeys) {
+                        val matchedPassword = currentPasswords.firstOrNull {
+                            it.username.equals(passkey.userName, ignoreCase = true) &&
+                                (it.service.contains(passkey.rpId, ignoreCase = true) || passkey.rpId.contains(it.service, ignoreCase = true))
+                        }
+                        val toSave = if (matchedPassword != null) {
+                            passkey.copy(linkedPasswordId = matchedPassword.id)
+                        } else {
+                            passkey
+                        }
+                        passkeyRepository.addPasskey(toSave)
+                        imported++
+                    }
+                }
+                android.util.Log.i("SettingsViewModel", "Import finished. Saved: $imported")
                 _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_import_success, arrayOf(imported))))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
+                android.util.Log.e("SettingsViewModel", "Import failed", e)
                 val reason = e.message ?: e.javaClass.simpleName
                 _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_import_failed, arrayOf(reason))))
             }
@@ -193,6 +236,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             try {
                 deleteAllPasswordsUseCase()
+                passkeyRepository?.deleteAllPasskeys()
                 _event.emit(SettingsEvent.ShowToast(UiText.StringResource(R.string.toast_delete_all_success)))
             } catch (e: Exception) {
                 val reason = e.message ?: e.javaClass.simpleName

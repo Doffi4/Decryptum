@@ -6,5 +6,6 @@ data class PasswordEntity(
     val username: String,
     val password: String,
     val url: String? = null,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val totpSecret: String? = null
 )

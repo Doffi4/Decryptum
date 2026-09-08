@@ -107,7 +107,7 @@ class AutofillPickerActivity : FragmentActivity() {
                 val context = LocalContext.current
                 var allPasswords by remember { mutableStateOf<List<Password>>(emptyList()) }
                 var isSearchExpanded by remember {
-                    mutableStateOf(preselectedPasswordId == -1L && webDomain.isNullOrBlank() && packageNameArg.isNullOrBlank() && serviceNameArg.isNullOrBlank())
+                    mutableStateOf((preselectedPasswordId == -1L) && webDomain.isNullOrBlank() && packageNameArg.isNullOrBlank() && serviceNameArg.isNullOrBlank())
                 }
                 var searchQuery by remember { mutableStateOf("") }
 
@@ -128,13 +128,10 @@ class AutofillPickerActivity : FragmentActivity() {
                         emptyList()
                     }
 
-                    // If a preselected password ID was passed, ensure it is prioritized at top
                     if (preselectedPasswordId != -1L) {
-                        val preselected = allPasswords.firstOrNull { it.id == preselectedPasswordId }
-                        if (preselected != null && preselected !in matches) {
+                        val preselected = allPasswords.find { it.id == preselectedPasswordId }
+                        if (preselected != null && !matches.any { it.id == preselected.id }) {
                             listOf(preselected) + matches
-                        } else if (preselected != null) {
-                            listOf(preselected) + (matches - preselected)
                         } else {
                             matches
                         }
@@ -156,7 +153,7 @@ class AutofillPickerActivity : FragmentActivity() {
                 }
 
                 val serviceFavicon = remember(displayTitle) {
-                    displayTitle?.let { DomainUtils.faviconUrl(DomainUtils.extract(it)) }
+                    displayTitle?.let { DomainUtils.parse(it) }
                 }
 
                 // Passwords filtered in expanded search mode
@@ -177,7 +174,7 @@ class AutofillPickerActivity : FragmentActivity() {
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            setResult(Activity.RESULT_CANCELED)
+                            setResult(RESULT_CANCELED)
                             finish()
                         },
                     contentAlignment = Alignment.BottomCenter
@@ -235,7 +232,9 @@ class AutofillPickerActivity : FragmentActivity() {
                                         if (serviceFavicon != null || displayTitle != null) {
                                             SiteAvatar(
                                                 displayName = displayTitle ?: stringResource(R.string.app_name),
-                                                faviconUrl = serviceFavicon.orEmpty(),
+                                                faviconUrl = serviceFavicon?.host.orEmpty(),
+                                                isLocalNetwork = serviceFavicon?.isLocalNetwork == true,
+                                                apexDomain = serviceFavicon?.apexDomain,
                                                 size = 32.dp
                                             )
                                             Spacer(Modifier.width(10.dp))
@@ -295,8 +294,8 @@ class AutofillPickerActivity : FragmentActivity() {
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         items(matchingPasswords, key = { it.id }) { item ->
-                                            val favicon = remember(item) {
-                                                DomainUtils.faviconUrl(DomainUtils.extract(item.url ?: item.service))
+                                            val parsed = remember(item) {
+                                                DomainUtils.parse(item.url ?: item.service)
                                             }
 
                                             Card(
@@ -316,7 +315,9 @@ class AutofillPickerActivity : FragmentActivity() {
                                                 ) {
                                                     SiteAvatar(
                                                         displayName = item.service,
-                                                        faviconUrl = favicon,
+                                                        faviconUrl = parsed.host,
+                                                        isLocalNetwork = parsed.isLocalNetwork,
+                                                        apexDomain = parsed.apexDomain,
                                                         size = 38.dp
                                                     )
 
@@ -499,8 +500,8 @@ class AutofillPickerActivity : FragmentActivity() {
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         items(filteredAll, key = { it.id }) { item ->
-                                            val favicon = remember(item) {
-                                                DomainUtils.faviconUrl(DomainUtils.extract(item.url ?: item.service))
+                                            val parsed = remember(item) {
+                                                DomainUtils.parse(item.url ?: item.service)
                                             }
 
                                             Card(
@@ -520,7 +521,9 @@ class AutofillPickerActivity : FragmentActivity() {
                                                 ) {
                                                     SiteAvatar(
                                                         displayName = item.service,
-                                                        faviconUrl = favicon,
+                                                        faviconUrl = parsed.host,
+                                                        isLocalNetwork = parsed.isLocalNetwork,
+                                                        apexDomain = parsed.apexDomain,
                                                         size = 40.dp
                                                     )
 
@@ -595,7 +598,7 @@ class AutofillPickerActivity : FragmentActivity() {
                 executor,
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        lockManager.setLocked(false)
+                        lockManager.setLocked(locked = false)
                         lockManager.touchLastActive()
                         fillAndFinish(password)
                     }
@@ -604,7 +607,7 @@ class AutofillPickerActivity : FragmentActivity() {
                         if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
                             errorCode == BiometricPrompt.ERROR_USER_CANCELED
                         ) {
-                            setResult(Activity.RESULT_CANCELED)
+                            setResult(RESULT_CANCELED)
                             finish()
                         }
                     }
@@ -649,18 +652,18 @@ class AutofillPickerActivity : FragmentActivity() {
                 isLocked = false
             )
 
-            if (uId != null) {
+            uId?.let { id ->
                 AutofillPresentationHelper.setDatasetValue(
                     builder = datasetBuilder,
-                    id = uId,
+                    id = id,
                     value = AutofillValue.forText(password.username),
                     presentation = presentation
                 )
             }
-            if (pId != null) {
+            pId?.let { id ->
                 AutofillPresentationHelper.setDatasetValue(
                     builder = datasetBuilder,
-                    id = pId,
+                    id = id,
                     value = AutofillValue.forText(password.password),
                     presentation = presentation
                 )

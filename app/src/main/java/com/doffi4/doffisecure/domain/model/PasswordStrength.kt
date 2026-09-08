@@ -13,7 +13,7 @@ import com.doffi4.doffisecure.R
  */
 enum class PasswordStrength(
     val level: Int,
-    @StringRes val labelRes: Int,
+    @param:StringRes val labelRes: Int,
     val label: String = ""
 ) {
     WEAK(1, R.string.strength_weak, "Weak"),

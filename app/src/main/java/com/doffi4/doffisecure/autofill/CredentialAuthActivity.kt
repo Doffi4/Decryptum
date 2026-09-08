@@ -18,6 +18,7 @@ import com.doffi4.doffisecure.domain.model.Password
 import com.doffi4.doffisecure.domain.repository.IPasswordRepository
 import com.doffi4.doffisecure.security.AppLocaleManager
 import com.doffi4.doffisecure.security.AppLockManager
+import com.doffi4.doffisecure.security.PasswordCrypto
 import com.doffi4.doffisecure.security.UserSettingsManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -29,6 +30,7 @@ import org.koin.android.ext.android.inject
 class CredentialAuthActivity : FragmentActivity() {
 
     private val lockManager: AppLockManager by inject()
+    private val passwordCrypto: PasswordCrypto by inject()
     private val passwordRepository: IPasswordRepository by inject()
     private val userSettings: UserSettingsManager by inject()
 
@@ -52,41 +54,56 @@ class CredentialAuthActivity : FragmentActivity() {
         }
 
         lifecycleScope.launch {
-            val password = passwordRepository.getPasswordById(passwordId)
-            if (password == null) {
-                setResult(Activity.RESULT_CANCELED)
-                finish()
-                return@launch
-            }
-
             val isLocked = lockManager.isLocked() || lockManager.shouldAutoLock()
             val alwaysRequireAuth = userSettings.autofillAlwaysRequireAuth.value
             val mustAuth = (isLocked || alwaysRequireAuth) && lockManager.hasMasterPassword()
 
             if (mustAuth) {
-                authenticateAndDeliver(password)
+                authenticateAndDeliver(passwordId)
             } else {
-                deliverCredential(password)
+                val password = passwordRepository.getPasswordById(passwordId)
+                if (password != null) {
+                    deliverCredential(password)
+                } else {
+                    setResult(Activity.RESULT_CANCELED)
+                    finish()
+                }
             }
         }
     }
 
-    private fun authenticateAndDeliver(password: Password) {
+    private fun authenticateAndDeliver(passwordId: Long) {
         val biometricManager = BiometricManager.from(this)
         val canAuth = biometricManager.canAuthenticate(
             BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
         )
 
-        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
+        val bioCipher = passwordCrypto.getBiometricDecryptCipher()
+        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS && bioCipher != null) {
             val executor = ContextCompat.getMainExecutor(this)
             val prompt = BiometricPrompt(
                 this,
                 executor,
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        lockManager.setLocked(false)
-                        lockManager.touchLastActive()
-                        deliverCredential(password)
+                        val cipher = result.cryptoObject?.cipher
+                        val unlocked = if (cipher != null) passwordCrypto.unlockWithBiometricCipher(cipher) else false
+                        if (unlocked && passwordCrypto.isUnlocked()) {
+                            lockManager.setLocked(false)
+                            lockManager.touchLastActive()
+                            lifecycleScope.launch {
+                                val password = passwordRepository.getPasswordById(passwordId)
+                                if (password != null) {
+                                    deliverCredential(password)
+                                } else {
+                                    setResult(Activity.RESULT_CANCELED)
+                                    finish()
+                                }
+                            }
+                        } else {
+                            setResult(Activity.RESULT_CANCELED)
+                            finish()
+                        }
                     }
 
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
@@ -107,15 +124,20 @@ class CredentialAuthActivity : FragmentActivity() {
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
                 .setTitle(getString(R.string.app_name))
                 .setSubtitle(getString(R.string.autofill_auth_prompt_subtitle))
-                .setAllowedAuthenticators(
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                )
+                .setNegativeButtonText(getString(R.string.action_cancel))
                 .build()
 
-            prompt.authenticate(promptInfo)
+            prompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(bioCipher))
         } else {
-            // Biometric not available on device, deliver directly
-            deliverCredential(password)
+            if (!lockManager.isLocked()) {
+                lifecycleScope.launch {
+                    val password = passwordRepository.getPasswordById(passwordId)
+                    if (password != null) deliverCredential(password) else finish()
+                }
+            } else {
+                setResult(Activity.RESULT_CANCELED)
+                finish()
+            }
         }
     }
 

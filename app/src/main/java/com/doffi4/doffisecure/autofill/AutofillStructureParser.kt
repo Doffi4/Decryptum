@@ -19,7 +19,7 @@ data class ParsedStructure<ID>(
     val newPasswordId: ID? = null,
     val enteredUsername: String? = null,
     val enteredPassword: String? = null,
-    val allAutofillIds: List<ID> = emptyList()
+    val allAutofillIds: List<ID> = emptyList(),
 )
 
 typealias ParsedAutofillStructure = ParsedStructure<AutofillId>
@@ -69,7 +69,7 @@ object AutofillStructureParser {
         if (contexts.isEmpty()) return ParsedAutofillStructure(null, null)
 
         val latest = parse(contexts.last().structure)
-        if (contexts.size == 1 || (latest.usernameId != null && latest.passwordId != null && latest.webDomain != null)) {
+        if (contexts.size == 1 || ((latest.usernameId != null) && (latest.passwordId != null) && (latest.webDomain != null))) {
             return latest
         }
 
@@ -139,18 +139,15 @@ object AutofillStructureParser {
                 val htmlInfo = node.htmlInfo
                 if (htmlInfo != null) {
                     htmlTag = htmlInfo.tag.lowercase()
-                    val attributes = htmlInfo.attributes
-                    if (attributes != null) {
-                        for (pair in attributes) {
-                            val key = pair.first?.lowercase().orEmpty()
-                            val value = pair.second?.lowercase().orEmpty()
-                            when (key) {
-                                "type" -> htmlType = value
-                                "name" -> htmlName = value
-                                "id" -> htmlId = value
-                                "autocomplete" -> htmlAutocomplete = value
-                                "placeholder" -> htmlPlaceholder = value
-                            }
+                    htmlInfo.attributes?.forEach { pair ->
+                        val key = pair.first?.lowercase().orEmpty()
+                        val value = pair.second?.lowercase().orEmpty()
+                        when (key) {
+                            "type" -> htmlType = value
+                            "name" -> htmlName = value
+                            "id" -> htmlId = value
+                            "autocomplete" -> htmlAutocomplete = value
+                            "placeholder" -> htmlPlaceholder = value
                         }
                     }
                 }
@@ -161,7 +158,7 @@ object AutofillStructureParser {
                     hints = node.autofillHints?.toList().orEmpty(),
                     inputType = node.inputType,
                     idEntry = node.idEntry,
-                    hintText = node.hint?.toString(),
+                    hintText = node.hint,
                     className = node.className,
                     htmlTag = htmlTag,
                     htmlType = htmlType,
@@ -312,7 +309,7 @@ object AutofillStructureParser {
 
         val isTextInput = isLeafNode && !isHiddenOrNonText && (isPassword || isUsername || isNewPassword ||
                 className.contains("edittext") ||
-                (htmlTag == "input" && !isHiddenOrNonText) ||
+                (htmlTag == "input") ||
                 (inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_TEXT)
 
         return InputCandidate(
@@ -376,12 +373,9 @@ object AutofillStructureParser {
         ) return true
 
         // 5. Notes, descriptions, and comments (multi-line non-auth)
-        if (isMultiLine && (allIdsAndNames.contains("note") || allIdsAndNames.contains("memo") ||
-                    allIdsAndNames.contains("content") || allIdsAndNames.contains("comment") ||
-                    allIdsAndNames.contains("desc") || allIdsAndNames.contains("body"))
-        ) return true
-
-        return false
+        return isMultiLine && (allIdsAndNames.contains("note") || allIdsAndNames.contains("memo") ||
+                allIdsAndNames.contains("content") || allIdsAndNames.contains("comment") ||
+                allIdsAndNames.contains("desc") || allIdsAndNames.contains("body"))
     }
 
     /**

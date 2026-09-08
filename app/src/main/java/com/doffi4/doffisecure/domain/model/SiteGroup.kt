@@ -7,7 +7,8 @@ package com.doffi4.doffisecure.domain.model
 data class SiteGroup(
     val domain: String,
     val displayName: String,
-    val faviconUrl: String,
+    val faviconUrl: String = "",
+    val parsedDomain: ParsedDomain = ParsedDomain(host = domain),
     val accounts: List<Password>
 ) {
     val accountCount: Int get() = accounts.size
@@ -34,17 +35,15 @@ fun List<Password>.groupBySite(): List<SiteGroup> {
     }
 
     return grouped.map { (key, accounts) ->
+        val rawCandidate = accounts.firstNotNullOfOrNull { it.url?.takeIf(String::isNotBlank) }
+            ?: accounts.first().service
+        val parsed = DomainUtils.parse(rawCandidate)
+
         SiteGroup(
             domain = key,
             displayName = displayNames[key] ?: key,
-            // Favicon: prefer the domain of the first account that has a URL,
-            // otherwise fall back to the service name.
-            faviconUrl = DomainUtils.faviconUrl(
-                DomainUtils.extract(
-                    accounts.firstNotNullOfOrNull { it.url?.takeIf(String::isNotBlank) }
-                        ?: accounts.first().service
-                )
-            ),
+            faviconUrl = parsed.host,
+            parsedDomain = parsed,
             accounts = accounts
         )
     }.sortedBy { it.displayName.lowercase() }

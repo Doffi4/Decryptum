@@ -39,15 +39,14 @@ object AutofillMatcher {
             if (passDomain.isNotBlank()) {
                 if (passDomain == cleanDomain) return 100
                 if (cleanDomain.endsWith(".$passDomain") || passDomain.endsWith(".$cleanDomain")) return 90
+                // When URL is explicitly set in the vault entry, it MUST NOT match other domains via fuzzy service names
+                return 0
             }
-            val domainParts = cleanDomain.split('.').filter {
-                it !in setOf("com", "org", "net", "ru", "ua", "io", "sso", "auth", "login", "id", "accounts", "app", "m", "www") && it.length >= 3
-            }
-            if (domainParts.any { serviceLower.contains(it) || it.contains(serviceLower) }) {
+
+            // Fallback ONLY when password has no URL stored (e.g. entry created by service name only):
+            val mainDomain = extractMainDomainLabel(cleanDomain)
+            if (mainDomain.isNotBlank() && mainDomain.equals(serviceLower, ignoreCase = true)) {
                 return 85
-            }
-            if (cleanDomain.contains(serviceLower) || serviceLower.contains(cleanDomain)) {
-                return 80
             }
         }
 
@@ -82,5 +81,27 @@ object AutofillMatcher {
             keywords.add("vk")
         }
         return keywords
+    }
+
+    /**
+     * Extracts the primary domain label (SLD) from a normalized domain name,
+     * accounting for common multipart TLDs.
+     * e.g. "paypal.com" -> "paypal"
+     * "auth.google.com" -> "google"
+     * "login.bbc.co.uk" -> "bbc"
+     * "paypal.com.evil-phishing.com" -> "evil-phishing"
+     */
+    fun extractMainDomainLabel(domain: String): String {
+        val labels = domain.lowercase().split('.').filter { it.isNotBlank() }
+        if (labels.isEmpty()) return ""
+        val multiPartTlds = setOf("co.uk", "com.ua", "org.uk", "gov.uk", "ac.uk", "co.jp", "com.au", "net.au")
+        val joinedLastTwo = if (labels.size >= 2) "${labels[labels.size - 2]}.${labels[labels.size - 1]}" else ""
+        return if (joinedLastTwo in multiPartTlds && labels.size >= 3) {
+            labels[labels.size - 3]
+        } else if (labels.size >= 2) {
+            labels[labels.size - 2]
+        } else {
+            labels.first()
+        }
     }
 }

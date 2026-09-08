@@ -11,9 +11,11 @@ import com.doffi4.doffisecure.ui.password.GeneratorScreen
 import com.doffi4.doffisecure.ui.password.PasswordDetailScreen
 import com.doffi4.doffisecure.ui.password.PasswordScreen
 import com.doffi4.doffisecure.ui.password.SettingsScreen
+import com.doffi4.doffisecure.ui.password.TotpScreen
 
 sealed class Screen(val route: String) {
     object PasswordList : Screen("password_list")
+    object TotpList : Screen("totp_list")
     object Generator : Screen("generator")
     object Settings : Screen("settings")
     object PasswordDetail : Screen("password_detail/{passwordId}") {
@@ -24,19 +26,22 @@ sealed class Screen(val route: String) {
 @Composable
 fun SetupNavGraph(
     navController: NavHostController,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     NavHost(
         navController = navController,
         startDestination = Screen.PasswordList.route,
-        modifier = modifier
+        modifier = modifier,
     ) {
         composable(route = Screen.PasswordList.route) {
-            PasswordScreen(
-                onNavigateToDetail = { id ->
-                    navController.navigate(Screen.PasswordDetail.createRoute(id))
-                }
-            )
+            PasswordScreen { id ->
+                navController.navigate(Screen.PasswordDetail.createRoute(id))
+            }
+        }
+        composable(route = Screen.TotpList.route) {
+            TotpScreen { id ->
+                navController.navigate(Screen.PasswordDetail.createRoute(id))
+            }
         }
         composable(route = Screen.Generator.route) {
             GeneratorScreen()
@@ -46,12 +51,12 @@ fun SetupNavGraph(
         }
         composable(
             route = Screen.PasswordDetail.route,
-            arguments = listOf(navArgument("passwordId") { type = NavType.LongType })
+            arguments = listOf(navArgument("passwordId") { type = NavType.LongType }),
         ) { backStackEntry ->
             val passwordId = backStackEntry.arguments?.getLong("passwordId") ?: return@composable
             PasswordDetailScreen(
                 passwordId = passwordId,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
             )
         }
     }

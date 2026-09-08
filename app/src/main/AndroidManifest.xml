@@ -3,6 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:name=".DecryptumApplication"
@@ -62,6 +64,17 @@
             android:exported="false"
             android:theme="@style/Theme.Decryptum.Translucent" />
 
+        <!-- Passkey Activities (FIDO2 / WebAuthn) -->
+        <activity
+            android:name=".autofill.PasskeySaveActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Decryptum.Translucent" />
+
+        <activity
+            android:name=".autofill.PasskeyAuthActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Decryptum.Translucent" />
+
         <!-- Autofill Dialog Activities -->
         <activity
             android:name=".autofill.AutofillAuthActivity"
@@ -82,6 +95,16 @@
             android:name=".autofill.AutofillDismissActivity"
             android:exported="false"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Clipboard auto-clear receiver for survival across process death -->
+        <receiver
+            android:name=".security.ClipboardClearReceiver"
+            android:exported="false" />
+
+        <!-- ML Kit Barcode dependencies -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="barcode" />
     </application>
 
 </manifest>

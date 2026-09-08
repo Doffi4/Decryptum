@@ -26,6 +26,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.milliseconds
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -39,7 +40,7 @@ sealed class AutofillDecision<out ID> {
         val inlineSubtitle: String,
         val targetUsernameId: ID?,
         val targetPasswordId: ID?,
-        val isSavedAccount: Boolean
+        val isSavedAccount: Boolean,
     ) : AutofillDecision<ID>()
 }
 
@@ -53,16 +54,16 @@ object AutofillResponsePlanner {
         webDomain: String?,
         packageName: String?,
         matches: List<Password>,
-        defaultPickerTitle: String = "Select account to fill"
+        defaultPickerTitle: String = "Select account to fill",
     ): AutofillDecision<ID> {
         // If neither field was identified as an auth input, suppress autofill
-        if (targetUsernameId == null && targetPasswordId == null) {
+        if ((targetUsernameId == null) && (targetPasswordId == null)) {
             return AutofillDecision.Empty
         }
 
         // Requirement R2: If no password field is present on screen AND no saved accounts exist for
         // this domain or package, immediately suppress autofill.
-        if (targetPasswordId == null && matches.isEmpty()) {
+        if ((targetPasswordId == null) && matches.isEmpty()) {
             return AutofillDecision.Empty
         }
 
@@ -87,7 +88,7 @@ object AutofillResponsePlanner {
             inlineSubtitle = inlineSubtitle,
             targetUsernameId = targetUsernameId,
             targetPasswordId = targetPasswordId,
-            isSavedAccount = matches.isNotEmpty()
+            isSavedAccount = matches.isNotEmpty(),
         )
     }
 }
@@ -103,7 +104,7 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
     override fun onFillRequest(
         request: FillRequest,
         cancellationSignal: CancellationSignal,
-        callback: FillCallback
+        callback: FillCallback,
     ) {
         val fillContexts = request.fillContexts
         if (fillContexts.isEmpty()) {
@@ -122,15 +123,21 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
         val targetPasswordId = parsed.passwordId ?: parsed.newPasswordId
         val targetUsernameId = parsed.usernameId
 
-        if (targetUsernameId == null && targetPasswordId == null) {
+        if ((targetUsernameId == null) && (targetPasswordId == null)) {
             callback.onSuccess(null)
             return
         }
 
+        val inlineInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val req = request.inlineSuggestionsRequest
+            "inlineRequest=${req != null}, specsCount=${req?.inlinePresentationSpecs?.size ?: 0}"
+        } else {
+            "inlineRequest=unsupported"
+        }
+
         android.util.Log.w(
             "DecryptumAutofill",
-            "onFillRequest: domain=${parsed.webDomain}, pkg=${parsed.packageName}, user=$targetUsernameId, pass=$targetPasswordId, focused=$focusedId, " +
-                    "inlineRequest=${request.inlineSuggestionsRequest != null}, specsCount=${request.inlineSuggestionsRequest?.inlinePresentationSpecs?.size ?: 0}"
+            "onFillRequest: domain=${parsed.webDomain}, pkg=${parsed.packageName}, user=$targetUsernameId, pass=$targetPasswordId, focused=$focusedId, $inlineInfo",
         )
 
         val fillJob = serviceScope.launch {
@@ -167,7 +174,7 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                 }
 
                 val domainTitle = parsed.webDomain?.removePrefix("www.") ?: showPicker.displayTitle
-                val domainFavicon = withTimeoutOrNull(500) {
+                val domainFavicon = withTimeoutOrNull(500.milliseconds) {
                     AutofillPresentationHelper.loadFaviconBitmap(
                         context = this@DecryptumAutofillService,
                         domainOrUrl = parsed.webDomain ?: showPicker.displayTitle,
@@ -179,7 +186,7 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                 val triggerIds = listOfNotNull(showPicker.targetUsernameId, showPicker.targetPasswordId)
                     .distinct()
                     .toTypedArray()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && triggerIds.isNotEmpty() && matches.isNotEmpty()) {
+                if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) && triggerIds.isNotEmpty() && matches.isNotEmpty()) {
                     fillResponseBuilder.setFillDialogTriggerIds(*triggerIds)
                     val dialogHeader = AutofillPresentationHelper.createDialogHeader(
                         context = this@DecryptumAutofillService,
@@ -210,11 +217,11 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                 // 1. Populate matched accounts as native datasets (login + mask, direct fill when unlocked)
                 for ((index, match) in distinctMatches.asSequence().take(4).withIndex()) {
                     val datasetBuilder = Dataset.Builder()
-                    val matchFavicon = domainFavicon ?: withTimeoutOrNull(300) {
+                    val matchFavicon = domainFavicon ?: withTimeoutOrNull(300.milliseconds) {
                         AutofillPresentationHelper.loadFaviconBitmap(
                             context = this@DecryptumAutofillService,
                             domainOrUrl = match.url ?: match.service,
-                            sizeDp = 38
+                            sizeDp = 38,
                         )
                     }
                     val presentation = AutofillPresentationHelper.createDropdownPresentation(
@@ -222,16 +229,16 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                         service = match.service,
                         username = match.username,
                         isLocked = mustAuth,
-                        faviconBitmap = matchFavicon
+                        faviconBitmap = matchFavicon,
                     )
                     val spec = inlineSpecs?.getOrNull(index) ?: inlineSpecs?.firstOrNull()
-                    val inlinePresentation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && spec != null) {
+                    val inlinePresentation = if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) && (spec != null)) {
                         AutofillPresentationHelper.createInlinePresentation(
                             context = this@DecryptumAutofillService,
                             spec = spec,
                             service = match.service,
                             username = match.username,
-                            isLocked = mustAuth
+                            isLocked = mustAuth,
                         )
                     } else null
 
@@ -249,19 +256,19 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                         }
                         val authPendingIntent = PendingIntent.getActivity(
                             this@DecryptumAutofillService,
-                            (match.id * 31 + (showPicker.targetPasswordId?.hashCode() ?: 0)).toInt(),
+                            ((match.id * 31) + (showPicker.targetPasswordId?.hashCode() ?: 0)).toInt(),
                             authIntent,
-                            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                            PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE,
                         )
                         datasetBuilder.setAuthentication(authPendingIntent.intentSender)
                     }
 
                     val accountDialogPresentation = if (matches.isNotEmpty()) presentation else null
 
-                    if (showPicker.targetUsernameId != null) {
+                    showPicker.targetUsernameId?.let { usernameId ->
                         AutofillPresentationHelper.setDatasetValue(
                             builder = datasetBuilder,
-                            id = showPicker.targetUsernameId,
+                            id = usernameId,
                             value = if (mustAuth) null else AutofillValue.forText(match.username),
                             presentation = presentation,
                             inlinePresentation = inlinePresentation,
@@ -269,10 +276,10 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                             suppressMenuPresentation = false
                         )
                     }
-                    if (showPicker.targetPasswordId != null) {
+                    showPicker.targetPasswordId?.let { passwordId ->
                         AutofillPresentationHelper.setDatasetValue(
                             builder = datasetBuilder,
-                            id = showPicker.targetPasswordId,
+                            id = passwordId,
                             value = if (mustAuth) null else AutofillValue.forText(fullPassword),
                             presentation = presentation,
                             inlinePresentation = inlinePresentation,
@@ -308,20 +315,20 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                     .setAuthentication(pickerPendingIntent.intentSender)
 
                 val pickerSpec = inlineSpecs?.getOrNull(distinctMatches.size) ?: inlineSpecs?.lastOrNull()
-                val inlinePicker = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && pickerSpec != null) {
+                val inlinePicker = if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) && (pickerSpec != null)) {
                     AutofillPresentationHelper.createPickerInlinePresentation(
                         context = this@DecryptumAutofillService,
                         spec = pickerSpec,
-                        pendingIntent = pickerPendingIntent
+                        pendingIntent = pickerPendingIntent,
                     )
                 } else null
 
                 val pickerDialogPresentation = if (distinctMatches.isNotEmpty()) pickerPresentation else null
 
-                if (showPicker.targetUsernameId != null) {
+                showPicker.targetUsernameId?.let { id ->
                     AutofillPresentationHelper.setDatasetValue(
                         builder = pickerDataset,
-                        id = showPicker.targetUsernameId,
+                        id = id,
                         value = null,
                         presentation = pickerPresentation,
                         inlinePresentation = inlinePicker,
@@ -329,10 +336,10 @@ open class DecryptumAutofillService : AutofillService(), KoinComponent {
                         suppressMenuPresentation = false
                     )
                 }
-                if (showPicker.targetPasswordId != null) {
+                showPicker.targetPasswordId?.let { id ->
                     AutofillPresentationHelper.setDatasetValue(
                         builder = pickerDataset,
-                        id = showPicker.targetPasswordId,
+                        id = id,
                         value = null,
                         presentation = pickerPresentation,
                         inlinePresentation = inlinePicker,

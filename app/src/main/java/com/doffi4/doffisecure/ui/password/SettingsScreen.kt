@@ -43,25 +43,22 @@ import org.koin.androidx.compose.koinViewModel
  * Compose's LocalContext is often a ContextThemeWrapper, so a direct cast
  * to FragmentActivity silently fails and biometrics never show.
  */
-private fun Context.findFragmentActivity(): FragmentActivity? {
-    var current: Context? = this
-    while (current != null) {
-        if (current is FragmentActivity) return current
-        current = (current as? ContextWrapper)?.baseContext
-    }
-    return null
+private tailrec fun Context.findFragmentActivity(): FragmentActivity? = when (this) {
+    is FragmentActivity -> this
+    is ContextWrapper -> baseContext.findFragmentActivity()
+    else -> null
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = koinViewModel()
+    viewModel: SettingsViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val activity = context.findFragmentActivity()
     val snackbarHostState = remember { SnackbarHostState() }
     val lockTimeout by viewModel.lockTimeout.collectAsState()
-    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(value = false) }
     val devModeEnabled by viewModel.devModeEnabled.collectAsState()
     val showDevPasswordCount by viewModel.showPasswordCount.collectAsState()
     val currentLang by viewModel.appLanguage.collectAsState()
@@ -84,8 +81,8 @@ fun SettingsScreen(
                         viewModel.deleteAllPasswords()
                     }
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                        if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
-                            errorCode != BiometricPrompt.ERROR_USER_CANCELED
+                        if ((errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) &&
+                            (errorCode != BiometricPrompt.ERROR_USER_CANCELED)
                         ) {
                             Toast.makeText(context, errString, Toast.LENGTH_SHORT).show()
                         }
@@ -93,7 +90,7 @@ fun SettingsScreen(
                     override fun onAuthenticationFailed() {
                         Toast.makeText(context, biometricNotRecognizedMsg, Toast.LENGTH_SHORT).show()
                     }
-                }
+                },
             )
         } catch (_: Exception) {
             null
@@ -101,11 +98,11 @@ fun SettingsScreen(
     }
 
     val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv")
+        contract = ActivityResultContracts.CreateDocument("text/csv"),
     ) { uri: Uri? -> uri?.let { viewModel.exportPasswords(context, it) } }
 
     val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
+        contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? -> uri?.let { viewModel.importPasswords(context, it) } }
 
     var isAutofillActive by remember { mutableStateOf(viewModel.isAutofillEnabled(context)) }
@@ -193,7 +190,7 @@ fun SettingsScreen(
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    var langExpanded by remember { mutableStateOf(false) }
+                    var langExpanded by remember { mutableStateOf(value = false) }
                     val selectedLangLabel = languageOptions.find { it.first == currentLang }?.second
                         ?: stringResource(R.string.lang_system)
                     ExposedDropdownMenuBox(
@@ -258,7 +255,7 @@ fun SettingsScreen(
                         }
                     }
                     Spacer(Modifier.height(12.dp))
-                    var expanded by remember { mutableStateOf(false) }
+                    var expanded by remember { mutableStateOf(value = false) }
                     val selectedLabel = timeoutOptions.find { it.second == lockTimeout }?.first ?: "${lockTimeout}s"
                     ExposedDropdownMenuBox(
                         expanded = expanded,
@@ -319,6 +316,37 @@ fun SettingsScreen(
                     Switch(
                         checked = viewModel.allowScreenshots.collectAsState().value,
                         onCheckedChange = { viewModel.setAllowScreenshots(it) }
+                    )
+                }
+            }
+
+            // Favicons toggle
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                        Icon(Icons.Default.Language, null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(Modifier.width(12.dp))
+                        Column {
+                            Text(stringResource(R.string.setting_load_favicons), style = MaterialTheme.typography.titleSmall)
+                            Text(
+                                stringResource(R.string.setting_load_favicons_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Switch(
+                        checked = viewModel.loadFavicons.collectAsState().value,
+                        onCheckedChange = { viewModel.setLoadFavicons(it) }
                     )
                 }
             }
@@ -518,7 +546,32 @@ fun SettingsScreen(
                     headlineContent = { Text(stringResource(R.string.setting_import)) },
                     supportingContent = { Text(stringResource(R.string.setting_import_desc)) },
                     leadingContent = { Icon(Icons.Default.FileDownload, null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier.clickable { importLauncher.launch(arrayOf("text/csv", "text/comma-separated-values")) }
+                    modifier = Modifier.clickable {
+                        importLauncher.launch(
+                            arrayOf(
+                                "text/csv",
+                                "text/comma-separated-values",
+                                "text/plain",
+                                "application/csv",
+                                "text/x-csv",
+                                "application/vnd.ms-excel",
+                                "*/*"
+                            )
+                        )
+                    }
+                )
+            }
+
+            // Clear Favicon Cache
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.setting_clear_favicons)) },
+                    supportingContent = { Text(stringResource(R.string.setting_clear_favicons_desc)) },
+                    leadingContent = { Icon(Icons.Default.Delete, null, tint = MaterialTheme.colorScheme.primary) },
+                    modifier = Modifier.clickable { viewModel.clearFaviconCache(context) }
                 )
             }
 

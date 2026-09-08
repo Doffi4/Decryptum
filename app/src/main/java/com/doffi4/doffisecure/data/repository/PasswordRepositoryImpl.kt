@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 
 class PasswordRepositoryImpl(
     private val passwordDao: PasswordDao,
-    private val passwordCrypto: PasswordCrypto
+    private val passwordCrypto: PasswordCrypto,
 ) : IPasswordRepository {
 
     // --- Session decryption cache ---
@@ -39,17 +39,38 @@ class PasswordRepositoryImpl(
     }
 
     private fun PasswordDatabaseEntity.decryptPassword(): PasswordDatabaseEntity {
-        // Return the plain-text password for UI consumption. New data is stored
-        // encrypted (prefix "enc:"), legacy plain-text rows are returned as-is.
-        return if (password.startsWith(ENC_PREFIX)) {
-            copy(password = passwordCrypto.decrypt(password.removePrefix(ENC_PREFIX)))
+        // Return the plain-text password and totpSecret for UI consumption.
+        // New data is stored encrypted (prefix "enc:"), legacy plain-text rows are returned as-is.
+        val decPassword = if (password.startsWith(ENC_PREFIX)) {
+            try {
+                passwordCrypto.decrypt(password.removePrefix(ENC_PREFIX))
+            } catch (_: Exception) {
+                password
+            }
         } else {
-            this
+            password
         }
+        val decTotp = totpSecret?.let {
+            if (it.startsWith(ENC_PREFIX)) {
+                try {
+                    passwordCrypto.decrypt(it.removePrefix(ENC_PREFIX))
+                } catch (_: Exception) {
+                    it
+                }
+            } else {
+                it
+            }
+        }
+        return copy(password = decPassword, totpSecret = decTotp)
     }
 
     private fun encryptForStorage(plain: String): String {
         return if (plain.startsWith(ENC_PREFIX)) plain else ENC_PREFIX + passwordCrypto.encrypt(plain)
+    }
+
+    private fun encryptNullableForStorage(plain: String?): String? {
+        if (plain.isNullOrEmpty()) return plain
+        return encryptForStorage(plain)
     }
 
     override fun getAllPasswords(): Flow<List<Password>> {
@@ -64,7 +85,7 @@ class PasswordRepositoryImpl(
                 // decrypting hundreds of rows again.
                 val gen = cacheGeneration.get()
                 val snapshot = cachedList
-                if (snapshot != null && snapshotGen == gen) {
+                if ((snapshot != null) && (snapshotGen == gen)) {
                     snapshot
                 } else {
                     val decrypted = entities.map { entity ->
@@ -119,16 +140,22 @@ class PasswordRepositoryImpl(
      */
     override suspend fun checkEncryptionIntegrity(): Int = withContext(Dispatchers.IO) {
         passwordDao.getAllPasswords().first().count { entity ->
-            if (!entity.password.startsWith(ENC_PREFIX)) {
-                false // legacy plain-text row - expected
-            } else {
+            var failed = false
+            if (entity.password.startsWith(ENC_PREFIX)) {
                 try {
                     passwordCrypto.decrypt(entity.password.removePrefix(ENC_PREFIX))
-                    false
                 } catch (_: Exception) {
-                    true // row exists but cannot be decrypted
+                    failed = true
                 }
             }
+            if (!failed && entity.totpSecret?.startsWith(ENC_PREFIX) == true) {
+                try {
+                    passwordCrypto.decrypt(entity.totpSecret.removePrefix(ENC_PREFIX))
+                } catch (_: Exception) {
+                    failed = true
+                }
+            }
+            failed
         }
     }
 
@@ -144,13 +171,21 @@ class PasswordRepositoryImpl(
         withContext(Dispatchers.IO) {
             invalidateCache()
             passwordDao.insertPassword(
-                PasswordMapper.toEntity(password).let { it.copy(password = encryptForStorage(it.password)) }
+                PasswordMapper.toEntity(password).let {
+                    it.copy(
+                        password = encryptForStorage(it.password),
+                        totpSecret = encryptNullableForStorage(it.totpSecret)
+                    )
+                }
             )
         }
     }
 
     override suspend fun addPasswords(passwords: List<Password>): Int {
         return withContext(Dispatchers.IO) {
+            if (!passwordCrypto.isUnlocked()) {
+                throw IllegalStateException("Vault is locked: cannot encrypt and store passwords")
+            }
             invalidateCache()
             // Encrypt SEQUENTIALLY: Android Keystore (especially hardware-backed
             // keymaster on devices like OnePlus) throws IllegalBlockSizeException
@@ -160,11 +195,15 @@ class PasswordRepositoryImpl(
             val entities = mutableListOf<PasswordDatabaseEntity>()
             for (p in passwords) {
                 try {
-                    val entity = PasswordMapper.toEntity(p)
-                        .let { it.copy(password = encryptForStorage(it.password)) }
+                    val entity = PasswordMapper.toEntity(p).let {
+                        it.copy(
+                            password = encryptForStorage(it.password),
+                            totpSecret = encryptNullableForStorage(it.totpSecret)
+                        )
+                    }
                     entities.add(entity)
-                } catch (_: Exception) {
-                    // Skip this record - malformed/unsupported payload
+                } catch (e: Exception) {
+                    android.util.Log.w("PasswordRepository", "Failed to encrypt record for ${p.service}: ${e.message}")
                 }
             }
             if (entities.isNotEmpty()) {
@@ -178,7 +217,12 @@ class PasswordRepositoryImpl(
         withContext(Dispatchers.IO) {
             invalidateCache()
             passwordDao.insertPassword(
-                PasswordMapper.toEntity(password).let { it.copy(password = encryptForStorage(it.password)) }
+                PasswordMapper.toEntity(password).let {
+                    it.copy(
+                        password = encryptForStorage(it.password),
+                        totpSecret = encryptNullableForStorage(it.totpSecret)
+                    )
+                }
             )
         }
     }
@@ -218,15 +262,39 @@ class PasswordRepositoryImpl(
      * so existing vaults become as fast as newly written data.
      */
     override suspend fun migrateLegacyEncryption(): Int = withContext(Dispatchers.IO) {
-        val legacyRows = passwordDao.getAllPasswords().first()
-            .filter { it.password.startsWith(ENC_PREFIX) && !it.password.startsWith(ENC2_PREFIX) }
+        val rows = passwordDao.getAllPasswords().first()
+            .filter {
+                (it.password.startsWith(ENC_PREFIX) && !it.password.startsWith(ENC2_PREFIX)) ||
+                (it.totpSecret?.startsWith(ENC_PREFIX) == true && !it.totpSecret.startsWith(ENC2_PREFIX)) ||
+                (!it.totpSecret.isNullOrEmpty() && !it.totpSecret.startsWith(ENC_PREFIX))
+            }
 
         val converted = mutableListOf<PasswordDatabaseEntity>()
-        for (entity in legacyRows) {
+        for (entity in rows) {
             try {
-                val plain = passwordCrypto.decrypt(entity.password.removePrefix(ENC_PREFIX))
-                if (plain.isNotEmpty()) {
-                    converted += entity.copy(password = ENC_PREFIX + passwordCrypto.encrypt(plain))
+                var newPassword = entity.password
+                if (entity.password.startsWith(ENC_PREFIX) && !entity.password.startsWith(ENC2_PREFIX)) {
+                    val plain = passwordCrypto.decrypt(entity.password.removePrefix(ENC_PREFIX))
+                    if (plain.isNotEmpty()) {
+                        newPassword = ENC_PREFIX + passwordCrypto.encrypt(plain)
+                    }
+                }
+
+                var newTotp = entity.totpSecret
+                val currentTotp = entity.totpSecret
+                if (!currentTotp.isNullOrEmpty()) {
+                    if (currentTotp.startsWith(ENC_PREFIX) && !currentTotp.startsWith(ENC2_PREFIX)) {
+                        val plainTotp = passwordCrypto.decrypt(currentTotp.removePrefix(ENC_PREFIX))
+                        if (plainTotp.isNotEmpty()) {
+                            newTotp = ENC_PREFIX + passwordCrypto.encrypt(plainTotp)
+                        }
+                    } else if (!currentTotp.startsWith(ENC_PREFIX)) {
+                        newTotp = ENC_PREFIX + passwordCrypto.encrypt(currentTotp)
+                    }
+                }
+
+                if (newPassword != entity.password || newTotp != entity.totpSecret) {
+                    converted += entity.copy(password = newPassword, totpSecret = newTotp)
                 }
             } catch (_: Exception) {
                 // Untouched - corrupt or unusual payload; keep as-is.

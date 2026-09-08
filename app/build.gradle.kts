@@ -12,8 +12,8 @@ android {
         applicationId = "com.doffi4.doffisecure"
         minSdk = 26
         targetSdk = 37
-        versionCode = 2
-        versionName = "0.9.0"
+        versionCode = 3
+        versionName = "0.10.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -45,6 +45,9 @@ android {
         compose = true
         buildConfig = true
     }
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -74,9 +77,22 @@ dependencies {
     implementation(libs.androidx.profileinstaller)
     implementation("androidx.autofill:autofill:1.1.0")
     implementation(libs.androidx.credentials)
+    implementation(libs.argon2kt)
+    implementation(libs.sqlcipher.android)
+    implementation(libs.sqlite)
+
+    // CameraX and ML Kit (2FA QR Code Scanning)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.google.mlkit.barcode)
+    implementation(libs.zxing.core)
+
 
 
     testImplementation(libs.junit)
+    testImplementation("org.json:json:20240303")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

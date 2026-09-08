@@ -2,28 +2,42 @@ package com.doffi4.doffisecure
 
 import android.app.Application
 import android.content.pm.ApplicationInfo
-import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import coil.disk.DiskCache
 import com.doffi4.doffisecure.di.appModule
-import com.doffi4.doffisecure.security.VaultWarmup
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.doffi4.doffisecure.security.FaviconFetcher
+import com.doffi4.doffisecure.security.IcoDecoder
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
-import org.koin.core.context.GlobalContext
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 
 class DecryptumApplication : Application(), ImageLoaderFactory {
 
+    init {
+        try {
+            System.loadLibrary("sqlcipher")
+        } catch (e: Throwable) {
+            android.util.Log.e("DecryptumApp", "Failed to load sqlcipher library", e)
+        }
+    }
+
     override fun newImageLoader(): ImageLoader =
         ImageLoader.Builder(this)
-            // Ignore Cache-Control so every cold start reuses the disk cache
-            // instead of refetching favicons from the network. VaultWarmup
-            // prefetches into this same loader, so the first pass is all hits.
-            .respectCacheHeaders(false)
+            .components {
+                add(FaviconFetcher.Factory(this@DecryptumApplication))
+                add(IcoDecoder.Factory())
+            }
+            // Ignore Cache-Control so favicons downloaded from websites
+            // are persistently reused from the local disk cache without re-requesting.
+            .respectCacheHeaders(enable = false)
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(cacheDir.resolve("favicons_cache"))
+                    .maxSizeBytes(20L * 1024 * 1024)
+                    .build()
+            }
             .build()
 
     override fun onCreate() {
@@ -35,27 +49,9 @@ class DecryptumApplication : Application(), ImageLoaderFactory {
             androidContext(this@DecryptumApplication)
             modules(appModule)
         }
-        startVaultWarmUp()
     }
 
     /** True for debug-build installs (matches BuildConfig.DEBUG without enabling it). */
     private fun isDebuggable(): Boolean =
         (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-
-    /**
-     * Starts the background warm-up as early as possible - right after Koin is
-     * up, i.e. while the lock screen is still being shown. By the time the
-     * user finishes the biometric/master-password step, the vault and favicons
-     * are already in memory, so the main list appears instantly and scrolls
-     * smoothly on the very first pass (no 30 fps "loading" sweep).
-     */
-    private fun startVaultWarmUp() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                GlobalContext.get().get<VaultWarmup>().warm()
-            } catch (t: Throwable) {
-                Log.w("Decryptum", "Vault warm-up skipped", t)
-            }
-        }
-    }
 }

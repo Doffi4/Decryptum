@@ -14,7 +14,8 @@ object PasswordMapper {
             username = entity.username,
             password = entity.password,
             url = entity.url,
-            createdAt = entity.createdAt
+            createdAt = entity.createdAt,
+            totpSecret = entity.totpSecret
         )
     }
 
@@ -28,7 +29,8 @@ object PasswordMapper {
             username = model.username,
             password = model.password,
             url = model.url,
-            createdAt = model.createdAt
+            createdAt = model.createdAt,
+            totpSecret = model.totpSecret
         )
     }
 }

@@ -55,6 +55,7 @@ import org.koin.core.context.GlobalContext
  */
 private val mainTabRoutes = setOf(
     Screen.PasswordList.route,
+    Screen.TotpList.route,
     Screen.Generator.route,
     Screen.Settings.route,
 )

@@ -39,11 +39,21 @@
     <string name="biometric_error_setup_first">Set up fingerprint or screen lock first</string>
     <string name="biometric_error_not_recognized">Biometric not recognized.</string>
     <string name="biometric_error_launch_failed">Biometric launch failed</string>
+    <string name="biometric_error_key_invalidated">Biometric key is outdated. Please sign in with master password to re-enable biometrics.</string>
     <string name="error_password_empty">Password cannot be empty</string>
     <string name="error_passwords_mismatch">Passwords do not match</string>
     <string name="error_password_too_short">Password must be at least 4 characters</string>
     <string name="error_password_incorrect">Incorrect password</string>
+    <string name="lock_too_many_attempts">Too many failed attempts. Try again in %1$d seconds.</string>
     <string name="error_biometric_prefix">Biometric: %1$s</string>
+    <string name="lock_btn_forgot_password">Forgot password?</string>
+    <string name="lock_forgot_password_title">Forgot Master Password?</string>
+    <string name="lock_forgot_password_message">Your master password encrypts your vault with zero-knowledge encryption. It cannot be recovered.\n\nIf you have biometrics set up, you can unlock with your fingerprint and change your password in Settings.\n\nIf biometrics are unavailable, the only way to continue using the app is to reset the vault. All stored passwords will be permanently deleted.</string>
+    <string name="lock_forgot_password_btn_reset">Reset vault…</string>
+    <string name="lock_reset_confirm_title">Permanently delete data?</string>
+    <string name="lock_reset_confirm_message">Are you sure you want to delete all passwords and reset your master password? This action cannot be undone.</string>
+    <string name="lock_reset_confirm_action">Delete all &amp; Reset</string>
+    <string name="lock_biometric_first_unlock_hint">Unlock with master password first to enable biometrics</string>
 
     <!-- Password List & Search -->
     <string name="search_placeholder">Search...</string>
@@ -132,11 +142,19 @@
     <string name="setting_screenshots_desc">Allow screen capture and previews (less secure)</string>
     <string name="setting_password_strength">Password strength estimation</string>
     <string name="setting_password_strength_desc">Show strength indicator when creating or viewing passwords</string>
+    <string name="setting_load_favicons">Load website icons</string>
+    <string name="setting_load_favicons_desc">Fetch icons directly from websites and cache them on device</string>
     <string name="section_data_management">Data Management</string>
     <string name="setting_export">Export Passwords</string>
     <string name="setting_export_desc">Save your passwords to a .csv file</string>
     <string name="setting_import">Import Passwords</string>
     <string name="setting_import_desc">Load passwords from a .csv file</string>
+    <string name="setting_clear_favicons">Clear Icon Cache</string>
+    <string name="setting_clear_favicons_desc">Delete all cached website favicons and reload them</string>
+    <string name="action_refresh_favicon">Refresh Icon</string>
+    <string name="favicon_refreshed">Icon refreshed</string>
+    <string name="favicon_cache_cleared">Icon cache cleared</string>
+    <string name="local_network_label">Local Network</string>
     <string name="section_danger_zone">Danger Zone</string>
     <string name="setting_delete_all">Delete All Passwords</string>
     <string name="setting_delete_all_desc">Permanently removes every stored password</string>
@@ -295,4 +313,83 @@
     <string name="autofill_chrome_tip">For Google Chrome: in Chrome, go to Menu (⋮) → Settings → Autofill services → select \"Autofill using another service\" → Restart Chrome.</string>
     <string name="autofill_xiaomi_tip">For Xiaomi / HyperOS: Settings → Additional settings → Languages &amp; input → Autofill service → choose Decryptum (or search \"Autofill\" in Settings).</string>
     <string name="autofill_header_subtitle">Autofill Decryptum</string>
+
+    <!-- Passkeys (FIDO2 / WebAuthn) -->
+    <string name="passkey_label">Passkey</string>
+    <string name="passkey_badge">Passkey</string>
+    <string name="passkey_save_title">Save Passkey to Decryptum?</string>
+    <string name="passkey_save_desc">Create and save a secure passkey for %1$s</string>
+    <string name="passkey_auth_prompt">Sign in with Passkey</string>
+    <string name="passkey_details_title">Passkey (FIDO2 / WebAuthn)</string>
+    <string name="passkey_rp_id">Relying Party: %1$s</string>
+    <string name="passkey_algorithm">Algorithm: %1$s</string>
+    <string name="passkey_sign_count">Sign counter: %1$d</string>
+    <string name="passkey_delete">Delete Passkey</string>
+    <string name="passkey_delete_confirm">Are you sure you want to delete this Passkey? You will no longer be able to sign in using it.</string>
+    <string name="passkey_saved_toast">Passkey saved to Decryptum</string>
+    <string name="passkey_deleted_toast">Passkey deleted</string>
+    <string name="passkey_login_only">Passkey Sign-in</string>
+
+    <!-- Breach Monitoring (HIBP) -->
+    <string name="breach_status_title">Breach Monitoring</string>
+    <string name="breach_status_checking">Checking public breach databases (k-Anonymity)…</string>
+    <string name="breach_status_clean">No compromises found in known data breaches</string>
+    <string name="breach_status_compromised">Compromised! Found in %1$d public breach(es). Change this password immediately!</string>
+    <string name="breach_status_error">Could not check breaches (network error)</string>
+    <string name="breach_action_retry">Retry</string>
+    <string name="breach_action_refresh">Re-check</string>
+
+    <!-- 2FA / TOTP Authenticator -->
+    <string name="totp_title">Two-Factor Authentication (2FA)</string>
+    <string name="totp_btn_add">Set up 2FA / TOTP</string>
+    <string name="totp_btn_scan_qr">Scan QR Code</string>
+    <string name="totp_btn_enter_manually">Enter Key Manually</string>
+    <string name="totp_copied_toast">2FA code copied: %1$s</string>
+    <string name="totp_delete_title">Remove 2FA Key?</string>
+    <string name="totp_delete_confirm">Are you sure you want to remove the 2FA key from this account? You may lose access to services requiring two-factor authentication.</string>
+    <string name="totp_dialog_enter_key_title">Enter 2FA Key</string>
+    <string name="totp_field_secret_hint">Paste Base32 key or otpauth:// URI</string>
+    <string name="totp_error_invalid_key">Invalid key format. Enter a valid Base32 secret or otpauth:// link.</string>
+    <string name="totp_camera_permission_title">Camera Permission Required</string>
+    <string name="totp_camera_permission_desc">Decryptum requires camera access to scan 2FA QR codes from your screen or documents.</string>
+    <string name="totp_camera_grant_btn">Grant Permission</string>
+    <string name="totp_scanner_title">Scan 2FA QR Code</string>
+    <string name="totp_meta_format">%1$ds · %2$s · %3$d digits</string>
+
+    <!-- Navigation -->
+    <string name="nav_2fa">2FA Codes</string>
+
+    <!-- Breach Banner & Audit -->
+    <string name="breach_banner_label_one">%1$d Breach</string>
+    <string name="breach_banner_label_few">%1$d Breaches</string>
+    <string name="breach_banner_label_many">%1$d Breaches</string>
+    <string name="breach_audit_title">Security Audit</string>
+    <string name="breach_audit_subtitle">These passwords were found in public breach databases. We recommend updating them immediately.</string>
+    <string name="breach_audit_clean_title">All passwords are secure</string>
+    <string name="breach_audit_clean_desc">None of your saved passwords were found in public data breaches.</string>
+    <string name="breach_audit_rescan">Rescan Vault</string>
+    <string name="breach_audit_checking">Auditing vault for breaches…</string>
+    <string name="breach_count_badge">In %1$d breaches</string>
+    <string name="breach_action_change_pwd">Change</string>
+
+    <!-- 2FA Screen -->
+    <string name="totp_screen_title">2FA Codes</string>
+    <string name="totp_search_placeholder">Search by service or username…</string>
+    <string name="totp_empty_title">No 2FA Codes</string>
+    <string name="totp_empty_desc">Add two-factor authentication to generate one-time passwords for your accounts.</string>
+    <string name="totp_add_button">Add 2FA Code</string>
+    <string name="totp_select_account_title">Select Account</string>
+    <string name="totp_scanner_hint">Point your camera at the QR code</string>
+    <string name="empty_search_results">No results found</string>
+
+    <!-- Google Authenticator Import -->
+    <string name="totp_import_dialog_title">Import from Google Authenticator</string>
+    <string name="totp_import_dialog_count">Found %1$d accounts</string>
+    <string name="totp_import_dialog_desc">Decryptum detected a migration QR code. The following accounts will be securely imported to your vault:</string>
+    <string name="totp_import_btn_confirm">Import All (%1$d)</string>
+    <string name="totp_import_success">Imported %1$d accounts</string>
+    <string name="totp_btn_scan_qr_subtitle">Supports Google Authenticator</string>
+    <string name="totp_btn_pick_gallery">Choose from Gallery</string>
+    <string name="totp_btn_pick_gallery_subtitle">Scan QR code from screenshot</string>
+    <string name="totp_error_no_qr_found">No QR code found in the selected image</string>
 </resources>

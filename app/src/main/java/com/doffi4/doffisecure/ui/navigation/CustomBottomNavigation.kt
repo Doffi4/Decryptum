@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -21,13 +23,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -60,7 +62,7 @@ import androidx.annotation.StringRes
 import androidx.compose.ui.res.stringResource
 import com.doffi4.doffisecure.R
 
-sealed class NavItem(val route: String, @StringRes val labelRes: Int, val label: String = "") {
+sealed class NavItem(val route: String, @param:StringRes val labelRes: Int, val label: String = "") {
     /** Renders the tab icon with the selection tint applied. */
     @Composable
     abstract fun Icon(selected: Boolean)
@@ -69,10 +71,22 @@ sealed class NavItem(val route: String, @StringRes val labelRes: Int, val label:
         @Composable
         override fun Icon(selected: Boolean) {
             Icon(
-                imageVector = Icons.Default.Lock,
+                imageVector = Icons.Default.Key,
                 contentDescription = null,
                 tint = tabIconTint(selected),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
+            )
+        }
+    }
+
+    object Totp : NavItem(Screen.TotpList.route, R.string.nav_2fa, "2FA") {
+        @Composable
+        override fun Icon(selected: Boolean) {
+            Icon(
+                imageVector = RadialBurstIcon,
+                contentDescription = null,
+                tint = tabIconTint(selected),
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -84,7 +98,7 @@ sealed class NavItem(val route: String, @StringRes val labelRes: Int, val label:
                 imageVector = GeneratorIcon,
                 contentDescription = null,
                 tint = tabIconTint(selected),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -96,7 +110,7 @@ sealed class NavItem(val route: String, @StringRes val labelRes: Int, val label:
                 imageVector = Icons.Default.Settings,
                 contentDescription = null,
                 tint = tabIconTint(selected),
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(20.dp),
             )
         }
     }
@@ -119,7 +133,7 @@ private val GeneratorIcon: ImageVector by lazy {
         defaultWidth = 24.dp,
         defaultHeight = 24.dp,
         viewportWidth = 24f,
-        viewportHeight = 24f
+        viewportHeight = 24f,
     ).apply {
         // Thin baseline line running across the bottom.
         path(fill = SolidColor(Color.Black)) {
@@ -154,18 +168,48 @@ private fun ImageVector.Builder.addGlyphBar(
     val ux = cos(rad).toFloat()
     val uy = sin(rad).toFloat()
     val px = -uy
-    val py = ux
     val hx = ux * halfLen
     val hy = uy * halfLen
     val tx = px * halfThick
-    val ty = py * halfThick
+    val ty = ux * halfThick
     path(fill = SolidColor(Color.Black)) {
-        moveTo(cx + hx + tx, cy + hy + ty)
-        lineTo(cx + hx - tx, cy + hy - ty)
-        lineTo(cx - hx - tx, cy - hy - ty)
-        lineTo(cx - hx + tx, cy - hy + ty)
+        moveTo(cx + (hx + tx), cy + (hy + ty))
+        lineTo(cx + (hx - tx), cy + (hy - ty))
+        lineTo(cx - (hx + tx), cy - (hy + ty))
+        lineTo(cx - (hx - tx), cy - (hy - ty))
         close()
     }
+}
+
+/**
+ * 2FA tab icon: an 8-ray radial starburst/timer dial with a center hub,
+ * matching the mobile design screenshot. Drawn as a lightweight vector.
+ */
+private val RadialBurstIcon: ImageVector by lazy {
+    ImageVector.Builder(
+        name = "RadialBurstIcon",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        val cx = 12f
+        val cy = 12f
+        val rInner = 3.8f
+        val rOuter = 9.4f
+        val halfLen = (rOuter - rInner) / 2f
+        val centerDist = rInner + halfLen
+        val halfThick = 0.85f
+
+        for (deg in floatArrayOf(0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f)) {
+            val rad = Math.toRadians(deg.toDouble())
+            val rayCenterX = cx + (cos(rad) * centerDist).toFloat()
+            val rayCenterY = cy + (sin(rad) * centerDist).toFloat()
+            addGlyphBar(rayCenterX, rayCenterY, deg, halfLen, halfThick)
+        }
+        val dotHalf = 1.3f
+        addGlyphBar(cx, cy, 0f, dotHalf, dotHalf)
+    }.build()
 }
 
 @Composable
@@ -173,30 +217,21 @@ fun CustomBottomNavigation(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val items = listOf(NavItem.Passwords, NavItem.Generator, NavItem.Settings)
+    val items = listOf(NavItem.Passwords, NavItem.Totp, NavItem.Generator, NavItem.Settings)
     val selectedIndex = items.indexOfFirst { item ->
         currentDestination?.hierarchy?.any { it.route == item.route } == true
     }.coerceAtLeast(0)
 
-    // Spring-animated pill position (in "item units": 0 or 1). No-bouncy
-    // spring gives a smooth, stable landing without oscillation jank.
-    val pillPosition = remember { Animatable(0f) }
-    LaunchedEffect(selectedIndex) {
-        pillPosition.animateTo(
-            targetValue = selectedIndex.toFloat(),
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioNoBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            )
-        )
-    }
+    val selectedWeight = 1.95f
+    val unselectedWeight = 1.0f
+    val totalWeight = selectedWeight + unselectedWeight * (items.size - 1)
 
     // 1. External container: positions the bar at the bottom and insets it
     //    from the screen edges. This "Bottom Panel" MUST be transparent.
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 24.dp, end = 24.dp, bottom = 20.dp), 
+            .padding(start = 18.dp, end = 18.dp, bottom = 20.dp),
         contentAlignment = Alignment.BottomCenter
     ) {
         // 2. The floating island capsule.
@@ -208,20 +243,38 @@ fun CustomBottomNavigation(navController: NavHostController) {
         ) {
             BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
                 val density = LocalDensity.current
-                val horizontalPadding = 8.dp
+                val horizontalPadding = 6.dp
                 var capsuleHeight by remember { mutableStateOf(0.dp) }
-                val tabWidth = (maxWidth - horizontalPadding * 2) / items.size
+                val availableWidth = (maxWidth - horizontalPadding * 2).coerceAtLeast(0.dp)
 
-                // 3. The "Backlight" border indicator (restored as in original screenshot)
+                val targetX = horizontalPadding + availableWidth * (selectedIndex.toFloat() / totalWeight)
+                val targetW = availableWidth * (selectedWeight / totalWeight)
+
+                val animatedOffset by animateDpAsState(
+                    targetValue = targetX,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    label = "pill_offset"
+                )
+                val animatedWidth by animateDpAsState(
+                    targetValue = targetW,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMediumLow
+                    ),
+                    label = "pill_width"
+                )
+
+                // 3. The "Backlight" border indicator (smoothly resizes and slides around the active tab)
                 Box(
                     modifier = Modifier
-                        // GPU-only translation: no layout/measure passes during
-                        // the slide, which keeps the indicator animation smooth.
                         .graphicsLayer {
-                            translationX = with(density) { (horizontalPadding + tabWidth * pillPosition.value).toPx() }
+                            translationX = with(density) { animatedOffset.toPx() }
                             translationY = with(density) { horizontalPadding.toPx() }
                         }
-                        .width(tabWidth)
+                        .width(animatedWidth)
                         .height((capsuleHeight - horizontalPadding * 2).coerceAtLeast(0.dp))
                         .border(
                             width = 1.5.dp,
@@ -240,9 +293,18 @@ fun CustomBottomNavigation(navController: NavHostController) {
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     items.forEachIndexed { index, item ->
+                        val isSelected = index == selectedIndex
+                        val tabWeight by animateFloatAsState(
+                            targetValue = if (isSelected) selectedWeight else unselectedWeight,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioNoBouncy,
+                                stiffness = Spring.StiffnessMediumLow
+                            ),
+                            label = "tab_weight_$index"
+                        )
                         Box(
                             modifier = Modifier
-                                .weight(1f)
+                                .weight(tabWeight)
                                 .padding(vertical = 8.dp)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
@@ -258,7 +320,6 @@ fun CustomBottomNavigation(navController: NavHostController) {
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            val isSelected = index == selectedIndex
                             TabContent(item = item, isSelected = isSelected)
                         }
                     }
@@ -289,12 +350,15 @@ private fun TabContent(item: NavItem, isSelected: Boolean) {
             label = "tab_label"
         ) { selected ->
             if (selected) {
-                Spacer(Modifier.width(8.dp))
+                Spacer(Modifier.width(5.dp))
                 Text(
                     text = stringResource(item.labelRes),
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp
+                    maxLines = 1,
+                    softWrap = false,
+                    overflow = TextOverflow.Ellipsis,
+                    fontSize = 11.5.sp
                 )
             }
         }
