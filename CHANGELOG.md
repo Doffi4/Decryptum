@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-09-08
+
+### Changed
+- Redesigned Autofill Bottom Sheet (`AutofillPickerActivity`) to full Material 3 standards:
+  - Account cards styled with clean outlines (`outlineVariant`), `surfaceContainerHigh` container fill, and native ripple feedback.
+  - Compact dialog height with removed redundant "Later" button.
+  - Added Material 3 filled tonal close button (12dp rounded square container).
+- Branded Gboard suggestion chip:
+  - Added transparent-background Decryptum shield brand vector icon (`ic_autofill_decryptum`).
+  - Updated chip action text to "Search in Decryptum" / "Искать в Decryptum".
+- Added `org.gradle.daemon=false` to `gradle.properties` to prevent Windows file-lock issues during build.
+- Bumped version to 1.0.1 (versionCode 5).
+
 ## [1.0.0] - 2026-09-08
 
 ### Added

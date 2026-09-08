@@ -63,8 +63,8 @@ Offline password manager and 2FA authenticator for Android with system autofill 
 ## Installation
 
 Download the signed APK from the [GitHub Releases](https://github.com/Doffi4/Decryptum/releases) page:
-- `Decryptum-v1.0.0-release.apk` - Optimized production build.
-- `Decryptum-v1.0.0-debug.apk` - Debug build with logs and diagnostics.
+- `Decryptum-v1.0.1-release.apk` - Optimized production build.
+- `Decryptum-v1.0.1-debug.apk` - Debug build with logs and diagnostics.
 
 ## License
 

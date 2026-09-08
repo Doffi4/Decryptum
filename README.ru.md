@@ -63,8 +63,8 @@
 ## Установка
 
 Скачайте подписанный APK со страницы [GitHub Releases](https://github.com/Doffi4/Decryptum/releases):
-- `Decryptum-v1.0.0-release.apk` - Оптимизированная релизная сборка.
-- `Decryptum-v1.0.0-debug.apk` - Дебаг-сборка с логами и диагностикой.
+- `Decryptum-v1.0.1-release.apk` - Оптимизированная релизная сборка.
+- `Decryptum-v1.0.1-debug.apk` - Дебаг-сборка с логами и диагностикой.
 
 ## Лицензия
 
