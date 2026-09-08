@@ -305,7 +305,7 @@
     <string name="autofill_matching_subtitle">Saved accounts</string>
     <string name="autofill_choose_other">Select another password</string>
     <string name="autofill_no_matching_for_service">No saved passwords for %1$s</string>
-    <string name="autofill_search_vault">Search vault</string>
+    <string name="autofill_search_vault">Search in Decryptum</string>
     <string name="autofill_action_generate">Generate strong password</string>
     <string name="autofill_copy_username">Copy login</string>
     <string name="autofill_copy_password">Copy password</string>

@@ -10,9 +10,9 @@ Offline password manager and 2FA authenticator for Android with system autofill 
 
 ## Screenshots
 
-| Vault | 2FA Authenticator | Autofill Bottom Sheet |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/vault.png" width="260" alt="Vault screen placeholder"/> | <img src="docs/screenshots/totp.png" width="260" alt="2FA screen placeholder"/> | <img src="docs/screenshots/autofill.png" width="260" alt="Autofill sheet placeholder"/> |
+| Vault | Generator | 2FA Authenticator | Autofill Bottom Sheet |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/vault.png" width="200" alt="Vault"/> | <img src="docs/screenshots/generator.png" width="200" alt="Password Generator"/> | <img src="docs/screenshots/totp.png" width="200" alt="2FA Authenticator"/> | <img src="docs/screenshots/autofill.png" width="200" alt="Autofill Bottom Sheet"/> |
 
 ## Features
 

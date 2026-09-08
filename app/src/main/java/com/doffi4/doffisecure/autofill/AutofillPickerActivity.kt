@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -188,7 +189,7 @@ class AutofillPickerActivity : FragmentActivity() {
                                 } else {
                                     Modifier
                                         .wrapContentHeight()
-                                        .heightIn(min = 160.dp, max = 420.dp)
+                                        .heightIn(max = 420.dp)
                                 }
                             )
                             .clickable(
@@ -196,7 +197,7 @@ class AutofillPickerActivity : FragmentActivity() {
                                 indication = null
                             ) {}, // Prevent dismiss when tapping sheet itself
                         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        color = MaterialTheme.colorScheme.surfaceContainerLow,
                         tonalElevation = 6.dp
                     ) {
                         Column(
@@ -208,10 +209,10 @@ class AutofillPickerActivity : FragmentActivity() {
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterHorizontally)
-                                    .width(36.dp)
+                                    .width(32.dp)
                                     .height(4.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(MaterialTheme.colorScheme.outlineVariant)
                             )
 
                             Spacer(Modifier.height(12.dp))
@@ -235,9 +236,9 @@ class AutofillPickerActivity : FragmentActivity() {
                                                 faviconUrl = serviceFavicon?.host.orEmpty(),
                                                 isLocalNetwork = serviceFavicon?.isLocalNetwork == true,
                                                 apexDomain = serviceFavicon?.apexDomain,
-                                                size = 32.dp
+                                                size = 40.dp
                                             )
-                                            Spacer(Modifier.width(10.dp))
+                                            Spacer(Modifier.width(12.dp))
                                             Column {
                                                 Text(
                                                     text = displayTitle ?: stringResource(R.string.app_name),
@@ -258,9 +259,9 @@ class AutofillPickerActivity : FragmentActivity() {
                                                 imageVector = Icons.Default.Key,
                                                 contentDescription = null,
                                                 tint = MaterialTheme.colorScheme.primary,
-                                                modifier = Modifier.size(22.dp)
+                                                modifier = Modifier.size(24.dp)
                                             )
-                                            Spacer(Modifier.width(10.dp))
+                                            Spacer(Modifier.width(12.dp))
                                             Text(
                                                 text = stringResource(R.string.app_name),
                                                 style = MaterialTheme.typography.titleMedium,
@@ -270,17 +271,23 @@ class AutofillPickerActivity : FragmentActivity() {
                                         }
                                     }
 
-                                    IconButton(
+                                    Surface(
                                         onClick = {
                                             setResult(Activity.RESULT_CANCELED)
                                             finish()
-                                        }
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        modifier = Modifier.size(36.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.action_cancel),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = stringResource(R.string.action_cancel),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
                                     }
                                 }
 
@@ -299,18 +306,18 @@ class AutofillPickerActivity : FragmentActivity() {
                                             }
 
                                             Card(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable { onPasswordSelected(item) },
+                                                onClick = { onPasswordSelected(item) },
+                                                modifier = Modifier.fillMaxWidth(),
                                                 shape = RoundedCornerShape(16.dp),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                                 colors = CardDefaults.cardColors(
-                                                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                                                 )
                                             ) {
                                                 Row(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                                        .padding(horizontal = 14.dp, vertical = 10.dp),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     SiteAvatar(
@@ -318,7 +325,7 @@ class AutofillPickerActivity : FragmentActivity() {
                                                         faviconUrl = parsed.host,
                                                         isLocalNetwork = parsed.isLocalNetwork,
                                                         apexDomain = parsed.apexDomain,
-                                                        size = 38.dp
+                                                        size = 40.dp
                                                     )
 
                                                     Spacer(Modifier.width(12.dp))
@@ -343,12 +350,13 @@ class AutofillPickerActivity : FragmentActivity() {
                                                         onClick = {
                                                             secureClipboard.copy(item.username)
                                                             Toast.makeText(context, R.string.autofill_copied_toast, Toast.LENGTH_SHORT).show()
-                                                        }
+                                                        },
+                                                        modifier = Modifier.size(48.dp)
                                                     ) {
                                                         Icon(
                                                             Icons.Default.ContentCopy,
                                                             contentDescription = stringResource(R.string.autofill_copy_username),
-                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                             modifier = Modifier.size(20.dp)
                                                         )
                                                     }
@@ -363,7 +371,10 @@ class AutofillPickerActivity : FragmentActivity() {
                                     TextButton(
                                         onClick = { isSearchExpanded = true },
                                         modifier = Modifier.fillMaxWidth(),
-                                        contentPadding = PaddingValues(vertical = 10.dp)
+                                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                        colors = ButtonDefaults.textButtonColors(
+                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
                                     ) {
                                         Icon(
                                             Icons.Default.Search,
@@ -445,17 +456,23 @@ class AutofillPickerActivity : FragmentActivity() {
                                         )
                                     }
 
-                                    IconButton(
+                                    Surface(
                                         onClick = {
                                             setResult(Activity.RESULT_CANCELED)
                                             finish()
-                                        }
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                        modifier = Modifier.size(36.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Close,
-                                            contentDescription = stringResource(R.string.action_cancel),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = stringResource(R.string.action_cancel),
+                                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
                                     }
                                 }
 
@@ -505,18 +522,18 @@ class AutofillPickerActivity : FragmentActivity() {
                                             }
 
                                             Card(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clickable { onPasswordSelected(item) },
+                                                onClick = { onPasswordSelected(item) },
+                                                modifier = Modifier.fillMaxWidth(),
                                                 shape = RoundedCornerShape(16.dp),
+                                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                                                 colors = CardDefaults.cardColors(
-                                                    containerColor = MaterialTheme.colorScheme.surfaceContainer
+                                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                                                 )
                                             ) {
                                                 Row(
                                                     modifier = Modifier
                                                         .fillMaxWidth()
-                                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                                        .padding(horizontal = 14.dp, vertical = 10.dp),
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     SiteAvatar(
@@ -551,12 +568,13 @@ class AutofillPickerActivity : FragmentActivity() {
                                                         onClick = {
                                                             secureClipboard.copy(item.username)
                                                             Toast.makeText(context, R.string.autofill_copied_toast, Toast.LENGTH_SHORT).show()
-                                                        }
+                                                        },
+                                                        modifier = Modifier.size(48.dp)
                                                     ) {
                                                         Icon(
                                                             Icons.Default.ContentCopy,
                                                             contentDescription = stringResource(R.string.autofill_copy_username),
-                                                            tint = MaterialTheme.colorScheme.primary,
+                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                                             modifier = Modifier.size(20.dp)
                                                         )
                                                     }

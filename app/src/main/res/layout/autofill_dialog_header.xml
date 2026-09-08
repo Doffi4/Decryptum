@@ -8,10 +8,10 @@
     <!-- Material 3 Drag Handle (must be ImageView for RemoteViews compatibility) -->
     <ImageView
         android:id="@+id/autofill_header_drag_handle"
-        android:layout_width="36dp"
+        android:layout_width="32dp"
         android:layout_height="4dp"
         android:layout_marginTop="2dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginBottom="12dp"
         android:src="@drawable/bg_autofill_drag_handle"
         android:scaleType="fitXY"
         android:contentDescription="@null" />
@@ -28,8 +28,8 @@
 
         <ImageView
             android:id="@+id/autofill_header_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginEnd="12dp"
             android:src="@drawable/ic_autofill_key"
             android:scaleType="fitCenter"
@@ -47,7 +47,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:textColor="#F5EFEA"
+                android:textColor="@color/autofill_text_primary"
                 android:ellipsize="end"
                 android:singleLine="true" />
 
@@ -57,7 +57,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="1dp"
                 android:textSize="13sp"
-                android:textColor="#BFAFA6"
+                android:textColor="@color/autofill_text_secondary"
                 android:text="@string/autofill_matching_subtitle"
                 android:ellipsize="end"
                 android:singleLine="true" />
@@ -67,10 +67,10 @@
             android:id="@+id/autofill_header_close"
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:padding="8dp"
+            android:padding="9dp"
             android:scaleType="centerInside"
             android:src="@drawable/ic_autofill_close"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:background="@drawable/bg_autofill_close_btn"
             android:contentDescription="@string/action_cancel" />
 
     </LinearLayout>

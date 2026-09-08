@@ -32,7 +32,7 @@ object AutofillPresentationHelper {
     suspend fun loadFaviconBitmap(
         context: Context,
         domainOrUrl: String,
-        sizeDp: Int = 38
+        sizeDp: Int = 40
     ): Bitmap? {
         val parsed = DomainUtils.parse(domainOrUrl)
         if (parsed.host.isBlank() || parsed.isLocalNetwork) return null
@@ -81,14 +81,15 @@ object AutofillPresentationHelper {
 
     /**
      * Creates a RemoteViews dropdown presentation for a password dataset item.
-     * Matches the card style of AutofillPickerActivity (media_1788619785182.jpg).
+     * Matches the card style of AutofillPickerActivity and Android 14+ Credential Manager.
      */
     fun createDropdownPresentation(
         context: Context,
         service: String,
         username: String,
         isLocked: Boolean,
-        faviconBitmap: Bitmap? = null
+        faviconBitmap: Bitmap? = null,
+        copyPendingIntent: PendingIntent? = null
     ): RemoteViews {
         val presentation = RemoteViews(context.packageName, R.layout.autofill_dataset_item)
         val titleText = username.ifBlank { service }
@@ -103,6 +104,24 @@ object AutofillPresentationHelper {
                 if (isLocked) R.drawable.ic_autofill_lock else R.drawable.ic_autofill_key
             )
         }
+
+        val finalCopyIntent = copyPendingIntent ?: if (username.isNotBlank()) {
+            val intent = Intent(context, AutofillCopyReceiver::class.java).apply {
+                action = AutofillCopyReceiver.ACTION_AUTOFILL_COPY
+                putExtra(AutofillCopyReceiver.EXTRA_COPY_TEXT, username)
+            }
+            PendingIntent.getBroadcast(
+                context,
+                username.hashCode(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+        } else null
+
+        if (finalCopyIntent != null) {
+            presentation.setOnClickPendingIntent(R.id.autofill_item_copy, finalCopyIntent)
+        }
+
         return presentation
     }
 
@@ -205,15 +224,17 @@ object AutofillPresentationHelper {
     fun createPickerInlinePresentation(
         context: Context,
         spec: InlinePresentationSpec,
-        pendingIntent: PendingIntent
+        pendingIntent: PendingIntent,
+        title: String? = null,
+        iconRes: Int? = null
     ): InlinePresentation? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
         return try {
             val builder = InlineSuggestionUi.newContentBuilder(pendingIntent)
-            builder.setTitle(context.getString(R.string.autofill_search_vault))
+            builder.setTitle(title ?: context.getString(R.string.autofill_search_vault))
             val icon = android.graphics.drawable.Icon.createWithResource(
                 context,
-                R.drawable.ic_autofill_search
+                iconRes ?: R.drawable.ic_autofill_decryptum
             )
             builder.setStartIcon(icon)
             val content: UiVersions.Content = builder.build()

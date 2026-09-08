@@ -101,6 +101,11 @@
             android:name=".security.ClipboardClearReceiver"
             android:exported="false" />
 
+        <!-- Autofill copy receiver -->
+        <receiver
+            android:name=".autofill.AutofillCopyReceiver"
+            android:exported="false" />
+
         <!-- ML Kit Barcode dependencies -->
         <meta-data
             android:name="com.google.mlkit.vision.DEPENDENCIES"

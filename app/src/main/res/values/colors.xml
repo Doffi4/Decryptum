@@ -9,4 +9,14 @@
     <color name="white">#FFFFFFFF</color>
     <!-- Dark startup/launcher background (splash for API < 31). -->
     <color name="splash_background">#FF101418</color>
+
+    <!-- Autofill Material 3 fallback colors (API < 31, light default) -->
+    <color name="autofill_dialog_surface">#FFF8F9FA</color>
+    <color name="autofill_card_bg">#FFF0F2F5</color>
+    <color name="autofill_card_stroke">#FFE5E7EB</color>
+    <color name="autofill_drag_handle">#FF9CA3AF</color>
+    <color name="autofill_text_primary">#FF1F2937</color>
+    <color name="autofill_text_secondary">#FF4B5563</color>
+    <color name="autofill_icon_tint">#FF4B5563</color>
+    <color name="autofill_button_bg">#FFF0F2F5</color>
 </resources>

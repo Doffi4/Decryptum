@@ -10,9 +10,9 @@
 
 ## Скріншоти
 
-| Сховище | 2FA Аутентифікатор | Шторка автозаповнення |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/vault.png" width="260" alt="Плейсхолдер сховища"/> | <img src="docs/screenshots/totp.png" width="260" alt="Плейсхолдер 2FA"/> | <img src="docs/screenshots/autofill.png" width="260" alt="Плейсхолдер автозаповнення"/> |
+| Сховище | Генератор | 2FA Аутентифікатор | Шторка автозаповнення |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/vault.png" width="200" alt="Сховище"/> | <img src="docs/screenshots/generator.png" width="200" alt="Генератор паролів"/> | <img src="docs/screenshots/totp.png" width="200" alt="2FA Аутентифікатор"/> | <img src="docs/screenshots/autofill.png" width="200" alt="Шторка автозаповнення"/> |
 
 ## Можливості
 

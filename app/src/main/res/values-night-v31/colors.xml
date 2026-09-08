@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Autofill Material 3 Dynamic Colors (Android 12+ / API 31+, Dark) -->
+    <color name="autofill_dialog_surface">@android:color/system_neutral1_900</color>
+    <color name="autofill_card_bg">@android:color/system_neutral1_800</color>
+    <color name="autofill_card_stroke">@android:color/system_neutral2_700</color>
+    <color name="autofill_drag_handle">@android:color/system_neutral2_400</color>
+    <color name="autofill_text_primary">@android:color/system_neutral1_50</color>
+    <color name="autofill_text_secondary">@android:color/system_neutral2_200</color>
+    <color name="autofill_icon_tint">@android:color/system_neutral2_200</color>
+    <color name="autofill_button_bg">@android:color/system_neutral1_800</color>
+</resources>

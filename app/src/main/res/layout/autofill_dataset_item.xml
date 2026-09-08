@@ -12,15 +12,15 @@
         android:gravity="center_vertical"
         android:minHeight="56dp"
         android:paddingStart="14dp"
-        android:paddingEnd="14dp"
-        android:paddingTop="10dp"
-        android:paddingBottom="10dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
         android:background="@drawable/bg_autofill_card">
 
         <ImageView
             android:id="@+id/autofill_item_icon"
-            android:layout_width="38dp"
-            android:layout_height="38dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginEnd="12dp"
             android:src="@drawable/ic_autofill_key"
             android:scaleType="fitCenter"
@@ -38,7 +38,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="15sp"
                 android:textStyle="bold"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/autofill_text_primary"
                 android:ellipsize="end"
                 android:singleLine="true" />
 
@@ -48,18 +48,20 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="2dp"
                 android:textSize="13sp"
-                android:textColor="#BFAFA6"
+                android:textColor="@color/autofill_text_secondary"
                 android:ellipsize="end"
                 android:singleLine="true" />
         </LinearLayout>
 
         <ImageView
             android:id="@+id/autofill_item_copy"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_marginStart="8dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:padding="14dp"
+            android:scaleType="centerInside"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_autofill_copy"
-            android:contentDescription="@null" />
+            android:contentDescription="@string/autofill_copy_username" />
 
     </LinearLayout>
 

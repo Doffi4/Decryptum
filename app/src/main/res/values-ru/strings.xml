@@ -305,7 +305,7 @@
     <string name="autofill_matching_subtitle">Сохранённые аккаунты</string>
     <string name="autofill_choose_other">Выбрать другой пароль</string>
     <string name="autofill_no_matching_for_service">Нет сохранённых паролей для %1$s</string>
-    <string name="autofill_search_vault">Найти в хранилище</string>
+    <string name="autofill_search_vault">Искать в Decryptum</string>
     <string name="autofill_action_generate">Сгенерировать надежный пароль</string>
     <string name="autofill_copy_username">Скопировать логин</string>
     <string name="autofill_copy_password">Скопировать пароль</string>

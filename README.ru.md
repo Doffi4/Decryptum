@@ -10,9 +10,9 @@
 
 ## Скриншоты
 
-| Хранилище | 2FA Аутентификатор | Шторка автозаполнения |
-|:---:|:---:|:---:|
-| <img src="docs/screenshots/vault.png" width="260" alt="Плейсхолдер хранилища"/> | <img src="docs/screenshots/totp.png" width="260" alt="Плейсхолдер 2FA"/> | <img src="docs/screenshots/autofill.png" width="260" alt="Плейсхолдер автозаполнения"/> |
+| Хранилище | Генератор | 2FA Аутентификатор | Шторка автозаполнения |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/vault.png" width="200" alt="Хранилище"/> | <img src="docs/screenshots/generator.png" width="200" alt="Генератор паролей"/> | <img src="docs/screenshots/totp.png" width="200" alt="2FA Аутентификатор"/> | <img src="docs/screenshots/autofill.png" width="200" alt="Шторка автозаполнения"/> |
 
 ## Возможности
 
