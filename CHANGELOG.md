@@ -1,72 +1,55 @@
-# Changelog 📜
+# Changelog
 
-All notable changes to the **Decryptum** password manager project will be documented in this file.
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to this project will be documented in this file.
 
----
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [1.0.0] - 2026-09-08
 
-### 🌟 Added
-- **Passkeys Support (FIDO2 / WebAuthn)**:
-  - Full native support for passkey registration and authentication via Android Credential Manager.
-  - Hardware-backed ECDSA P-256 (secp256r1) keypair generation in Android Keystore.
-  - Built-in CBOR encoding/decoding and WebAuthn authenticator response generation.
-  - Dedicated passkey management in credential details (`PasskeySaveActivity`, `PasskeyAuthActivity`, `PasskeyDao`, `PasskeyRepositoryImpl`).
-- **Integrated 2FA / TOTP Authenticator (RFC 6238)**:
-  - Built-in time-based one-time password generator supporting SHA-1, SHA-256, and SHA-512 algorithms, customizable digit lengths (6 or 8 digits), and customizable time periods (30s / 60s).
-  - Smooth animated circular countdown timer with real-time token regeneration.
-  - Camera-based live QR code scanner powered by CameraX and ML Kit Barcode Scanning (`QrCodeScannerDialog`).
-  - Gallery QR code image picker (`QrCodeImageScanner`) with ZXing fallback.
-  - Manual secret key input dialog with algorithm and interval configuration (`ManualTotpInputDialog`).
-  - One-tap batch import from Google Authenticator (`otpauth-migration://offline?data=...`) via `GoogleAuthImportDialog`.
-- **Compromised Password Audit (HaveIBeenPwned API)**:
-  - Zero-knowledge breach detection using the HaveIBeenPwned k-Anonymity API (SHA-1 prefix range query; full password and hash are never sent over the network).
-  - Bulk vault security scanner (`BreachAuditBottomSheet`) to audit all saved accounts with a single tap.
-  - Visual breach warnings and risk status badges in account details.
-- **SQLCipher Full-Database Encryption**:
-  - Transparent 256-bit AES database encryption for all Room tables, indexes, and metadata using SQLCipher (`sqlcipher-android`).
-  - Safe, automatic on-the-fly migration from legacy plaintext SQLite database to encrypted SQLCipher via `DatabaseMigrator`.
-- **Argon2id Master Key Derivation**:
-  - Upgraded master password hashing from basic SHA-256 iterations to memory-hard **Argon2id** (RFC 9106) via `argon2kt`, offering maximum resistance against GPU brute-force attacks.
-- **Automated Security & Unit Test Suite**:
-  - 12 new comprehensive test suites covering TOTP math, WebAuthn cryptographic assertions, CBOR encoding, Google Authenticator migration parser, Argon2id KDF, SQLCipher migration, and rate limiting.
+### Added
+- Implemented Passkey (FIDO2 / WebAuthn) registration and authentication using AndroidX Credentials API.
+- Implemented hardware-backed ECDSA P-256 keypair generation in Android Keystore.
+- Added native CBOR encoder and WebAuthn authenticator response parser.
+- Added built-in RFC 6238 TOTP authenticator with SHA-1, SHA-256, and SHA-512 support.
+- Added live QR code scanning via CameraX and ML Kit Barcode Scanning.
+- Added QR code image parser with ZXing fallback.
+- Added Google Authenticator migration export parser (`otpauth-migration://`).
+- Added HaveIBeenPwned breach detection using k-Anonymity SHA-1 prefix API.
+- Added automated unit test suites for TOTP, WebAuthn, CBOR, SQLCipher migration, and rate limiting.
 
-### 🛡️ Changed & Security Enhancements
-- **Privacy-First Favicon Fetching**:
-  - Removed domain HTTP requests from `VaultWarmup` during lock screen display, preventing network traffic leakage of saved accounts before user authentication.
-  - Implemented offline-first `FaviconFetcher` with local `IcoDecoder` and deferred network fetching only after explicit vault unlock.
-- **Enhanced Clipboard Auto-Clear**:
-  - Implemented `ClipDescription.EXTRA_IS_SENSITIVE = true` on Android 13+ (API 33+) to prevent OS visual previews and third-party keyboard history snooping.
-  - Integrated `ClipboardClearReceiver` using Android AlarmManager for guaranteed clipboard purging even if the application is killed or backgrounded.
-- **Autofill Save Flow**:
-  - Implemented full `AutofillSaveActivity` and Credential Manager save handler, prompting users to save newly entered credentials directly from browsers and third-party apps.
+### Security
+- Integrated SQLCipher 4.6.1 for full page-level AES-256 database encryption.
+- Added automatic SQLite-to-SQLCipher migration mechanism (`DatabaseMigrator`).
+- Migrated master password derivation to Argon2id (RFC 9106) via `argon2kt`.
+- Added `ClipDescription.EXTRA_IS_SENSITIVE` on Android 13+ to suppress clipboard previews.
+- Implemented `ClipboardClearReceiver` via AlarmManager for reliable background clipboard wiping.
+- Replaced pre-unlock lock screen network requests with local `IcoDecoder` and deferred favicon fetching.
 
----
+### Changed
+- Migrated credential saving to dedicated `AutofillSaveActivity` and Credential Provider flow.
+- Optimized R8 shrinking rules and Baseline Profiles for faster cold start.
+- Bumped version to 1.0.0 (versionCode 4).
 
-## [0.9.0 Beta] - 2026-09-05
+## [0.9.0] - 2026-09-05
 
-### ⚡ Added
-- **Native Android Autofill Service**:
-  - Integrated Android `AutofillService` framework for fast credential suggestions across mobile browsers (Chrome, Firefox, Brave, etc.) and native applications.
-  - Inline IME keyboard suggestions for Gboard and compatible keyboards.
-  - Material 3 Bottom Sheet modal for selecting accounts and searching the vault.
-  - Strict form parser (`AutofillStructureParser`) to prevent false-positive prompts in search bars and chat windows.
-- **Multi-Language Support (Localization)**:
-  - Built-in per-app language switcher supporting **English (🇬🇧)**, **Ukrainian (🇺🇦)**, and **Russian (🇷🇺)**.
-  - Android 13+ Per-App Language Preferences integration via `AppLocaleManager`.
+### Added
+- Implemented Android `AutofillService` with inline IME keyboard suggestions.
+- Added Material 3 bottom sheet picker for account selection.
+- Added strict form analysis (`AutofillStructureParser`) to filter non-login input fields.
+- Added per-app language selection (English, Ukrainian, Russian) with Android 13+ `LocaleManager` support.
 
-### 🛠️ Changed
-- **Version Bump**: Updated to `v0.9.0 Beta` (`versionCode = 2`).
-- **Optimization**: R8 minification and Baseline Profiles optimizations (~2.9 MB APK).
+### Changed
+- Bumped version to 0.9.0 (versionCode 2).
+- Reduced APK size using R8 code and resource shrinking.
 
----
+## [0.8.0] - 2026-09-04
 
-## [0.8.0 Beta] - 2026-09-04
-
-### 🚀 Initial Public Beta
-- Local AES-GCM envelope encryption using hardware-backed Android Keystore (`enc:2:...`).
-- Biometric unlock (Fingerprint & Face) via `BiometricPrompt` with customizable auto-lock timer.
-- Strong password generator with entropy meter and customizable presets.
-- Bulk CSV import/export compatible with Chrome, Bitwarden, LastPass, and KeePass.
-- Dynamic Material You theme, custom bottom navigation bar, and developer diagnostic overlay.
+### Added
+- Initial release.
+- Android Keystore AES-GCM envelope encryption.
+- Biometric unlock (`BiometricPrompt`) with auto-lock timer.
+- Password generator with entropy calculation and customization options.
+- CSV import and export compatible with Bitwarden, KeePass, Chrome, and LastPass.
+- Material You dynamic theming and custom bottom navigation.
+- Diagnostic overlay for development mode (FPS and frame drop metrics).
