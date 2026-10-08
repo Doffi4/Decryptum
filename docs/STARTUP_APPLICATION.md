@@ -20,7 +20,7 @@ Android users who prefer a local vault and transparent privacy boundaries. Initi
 
 ## 5. Current stage
 
-Open-source implementation with published v1.0.1 and an owner-approved public 1.1.0 prerelease. Android builds/JVM tests and a static website are available. Native authorization/migration/recovery/passkey gates remain unresolved. The website source is in the repository, not deployed; the Claude prototype has fake-transport tests but no live-provider validation.
+Open-source implementation with published v1.0.1 and an owner-approved public 1.1.0 prerelease. Android builds/JVM tests and a static website are available. Native authorization/migration/recovery/passkey gates remain unresolved. The [website](https://doffi4.github.io/Decryptum/) is published on GitHub Pages; the Claude prototype has fake-transport tests but no live-provider validation.
 
 ## 6. Technical differences
 
@@ -70,7 +70,7 @@ Founder residence, business registration country, operating location and eligibi
 
 - Repository: [Doffi4/Decryptum](https://github.com/Doffi4/Decryptum).
 - Existing release: [v1.0.1](https://github.com/Doffi4/Decryptum/releases/tag/v1.0.1); it predates this work.
-- Live website/company email/demo/privacy-policy URL: `[OWNER INPUT REQUIRED]`. A local static build is not a live public URL. Publish reviewed docs only after separate authorization.
+- Live website: https://doffi4.github.io/Decryptum/ ; privacy policy: https://doffi4.github.io/Decryptum/privacy.html . Company email/demo/custom domain: `[OWNER INPUT REQUIRED]`. GitHub Pages publication does not establish company-domain eligibility.
 
 ## 18. Anything else reviewers should know?
 
@@ -80,6 +80,6 @@ Decryptum is openly developed under GPLv3. Its intended AI boundary is narrow an
 
 As checked on 2026-10-07, the [official program FAQ](https://claude.com/programs/startups) allows bootstrapped applicants and describes eligibility as founding within five years or funding within two. It requests a Claude Console account, a company email matching the website domain, a short product description and compliance with supportability policies. First-party API credits apply through Console, not Bedrock/Vertex; approval and benefits are not guaranteed. The [official terms](https://www.anthropic.com/startup-program-official-terms) govern the application. Recheck them at submission time; this is not legal/eligibility advice.
 
-Before applying, the owner must confirm eligibility/date/company/country facts; choose an owned domain or separately authorize purchase; approve hosting and configure the real website; configure matching domain email; create/verify the correct Claude Console organization; confirm any required project/API settings without exposing keys; fill all placeholders and review the final form. No paid action, DNS change, account creation or submission was performed.
+Before applying, the owner must confirm eligibility/date/company/country facts; choose an owned domain or separately authorize purchase; review the published website and configure any required owned-domain hosting; configure matching domain email; create/verify the correct Claude Console organization; confirm any required project/API settings without exposing keys; fill all placeholders and review the final form. No paid action, DNS change, account creation or submission was performed.
 
 **Recommendation now:** keep this as a draft. Do not submit a production-ready claim while launch blockers, owner facts and domain/email verification are unresolved. A candid development-stage application could be considered after those owner facts/contact requirements are confirmed; it does not require falsely declaring the release safe or the advisor live.

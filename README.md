@@ -6,7 +6,7 @@
 
 A local-first Android password manager and TOTP authenticator, built with Kotlin, Jetpack Compose and Material 3. No Decryptum account or hosted vault is required.
 
-[Русский](README.ru.md) · [Українська](README.uk.md) · [Releases](https://github.com/Doffi4/Decryptum/releases) · [Security](SECURITY.md) · [Privacy](PRIVACY.md)
+[Русский](README.ru.md) · [Українська](README.uk.md) · [Releases](https://github.com/Doffi4/Decryptum/releases) · **[Website](https://doffi4.github.io/Decryptum/)** · [Security](SECURITY.md) · [Privacy](PRIVACY.md)
 
 **Status: v1.1.0 public prerelease, active development.** This README describes the current source, including local Security Center work. Existing APKs may differ. Passkeys are experimental; Claude guidance is debug-only and disabled in release. Keep independent recovery options and test with disposable data while [launch gates](docs/PHASE6_HANDOFF.md) remain open.
 
@@ -35,7 +35,7 @@ New password-entry sheet: actual Compose component rendered locally with synthet
 - CSV/JSON import parsers and **unencrypted CSV export**. Export can contain passwords, TOTP seeds and private passkey material; it is not a portable encrypted backup.
 - Optional aggregate-only Claude Security Advisor experiment, configured at runtime in debug only, with consent for every request. Release factory disables it.
 
-Android **8.0+ / API 26**; Credential Provider/passkeys require **Android 14+ / API 34**. App languages: **English and Russian**. No cloud sync, iOS/browser/desktop vault client or Ukrainian app strings are implemented. A [static landing website](website/README.md) is prepared locally; it is not a web vault.
+Android **8.0+ / API 26**; Credential Provider/passkeys require **Android 14+ / API 34**. App languages: **English and Russian**. No cloud sync, iOS/browser/desktop vault client or Ukrainian app strings are implemented. The **[public website](https://doffi4.github.io/Decryptum/)** presents the app and its policies; it is not a web vault. [Website source and deployment](website/README.md).
 
 ## Security and privacy
 

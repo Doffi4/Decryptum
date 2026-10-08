@@ -8,7 +8,7 @@
 
 Локальное Android-хранилище паролей и TOTP-аутентификатор на Kotlin, Jetpack Compose и Material 3. Аккаунт Decryptum и облачное хранилище не нужны.
 
-[English](README.md) · [Українська](README.uk.md) · [Релизы](https://github.com/Doffi4/Decryptum/releases) · [Безопасность](SECURITY.md) · [Приватность](PRIVACY.md)
+[English](README.md) · [Українська](README.uk.md) · [Релизы](https://github.com/Doffi4/Decryptum/releases) · **[Сайт](https://doffi4.github.io/Decryptum/)** · [Безопасность](SECURITY.md) · [Приватность](PRIVACY.md)
 
 **v1.1.0 опубликован как предварительный релиз; разработка продолжается.** Здесь описан текущий код; опубликованные APK могут отличаться. Passkeys экспериментальные, Claude Advisor доступен только в debug и отключён в release. До закрытия [блокеров](docs/PHASE6_HANDOFF.md) используйте тестовые данные и сохраняйте независимые способы восстановления важных аккаунтов.
 
@@ -29,7 +29,7 @@
 - Разбор CSV/JSON и **открытый CSV-экспорт** с возможными паролями, TOTP-секретами и приватными ключами. Это не зашифрованный backup.
 - Claude Advisor: четыре агрегированных счётчика, отдельное согласие на каждый запрос, только настроенный debug. В release отключён.
 
-Android **8+ / API 26**; Credential Provider/passkeys — **14+ / API 34**. Языки — **EN/RU**. Синхронизация, iOS, браузерный/настольный vault-клиент и украинские строки не реализованы. [Сайт](website/README.md) — локально подготовленная статическая витрина.
+Android **8+ / API 26**; Credential Provider/passkeys — **14+ / API 34**. Языки — **EN/RU**. Синхронизация, iOS, браузерный/настольный vault-клиент и украинские строки не реализованы. **[Сайт Decryptum](https://doffi4.github.io/Decryptum/)** — публичная витрина приложения и документация. [Исходники и публикация](website/README.md).
 
 ## Безопасность и сеть
 

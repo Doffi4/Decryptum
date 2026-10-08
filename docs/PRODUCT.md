@@ -23,7 +23,7 @@ These are implementation characteristics, not claims of unique invention, market
 | Claude advisor | Explicit aggregate-only consented debug transport; release disabled | No default configuration, no live-provider validation, no production credential model |
 | Import/export | CSV/JSON parsers and unencrypted CSV export | Not portable encrypted backup; complete TOTP/passkey recovery unverified |
 | Platforms/locales | Android 8+; provider needs Android 14+; app EN/RU | No iOS, web vault, desktop app or Ukrainian app strings |
-| Website | Static local landing and source-derived documentation | Not deployed; site is a presentation, not a vault client |
+| Website | [Public GitHub Pages site](https://doffi4.github.io/Decryptum/) and source-derived documentation | Static presentation, not a vault client; custom domain/mailbox not configured |
 
 The owner-approved public prerelease uses `versionName` 1.1.0 / `versionCode` 7, published 2026-10-08. Existing v1.0.1 APKs predate this work. Signing still uses Android Debug identity, matching the published v1.0.1 release certificate. Native upgrade/data retention and public signing policy remain unverified. Password-cache/corrupt-read, several mandatory-auth fallbacks, migration replacement/version and DB-key persistence paths were repaired. Integration/recipient trust, native migration, recovery and signing gates remain open. See [release notes](RELEASE_NOTES_1.1.md) and [current launch checklist](LAUNCH_CHECKLIST.md); the [launch audit](LAUNCH_AUDIT.md) remains the historical baseline.
 

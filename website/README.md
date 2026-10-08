@@ -1,5 +1,7 @@
 # Decryptum static website
 
+**Public site: [https://doffi4.github.io/Decryptum/](https://doffi4.github.io/Decryptum/).**
+
 Build-time Node.js (22+) and Marked render maintained repository Markdown into static HTML. No runtime framework, backend, external fonts, analytics or client dependency bundle. The only browser script is the optional theme control. The site copy is English, matching the canonical public README; the app has EN/RU strings.
 
 ```sh
@@ -27,9 +29,15 @@ Open `http://127.0.0.1:4173`. Preview server binds only to loopback. Output is `
 
 Security/Privacy/Product/Threat Model and center/advisor pages are rendered directly from repository Markdown to prevent parallel policy copies. Raw Markdown HTML is escaped. These build inputs must remain reviewed local source; do not feed arbitrary untrusted Markdown into the build.
 
-## Deployment preparation (owner action only)
+## GitHub Pages publication
 
-Nothing is deployed automatically. Default `siteUrl=''` means noindex, robots disallow, no invented canonical/OG URL/sitemap. Before publication, review claims, screenshots, disclosure contact and release status; configure an owned HTTPS **origin** in `site.config.mjs` or `SITE_URL`. Do not assume any proposed domain is available. Set `basePath`/`BASE_PATH` to `/` or e.g. `/Decryptum/` for project GitHub Pages. The build then generates absolute canonical/social metadata and a sitemap.
+Publication was authorized on 2026-10-08. `.github/workflows/pages.yml` installs locked dependencies, checks lint/types/tests, builds and verifies production links/metadata, then deploys `dist/` through GitHub Pages. It runs on relevant pushes to `main` and can be started manually from Actions. Actions are pinned to verified official commit revisions. The site URL is also set as the repository homepage.
+
+Production uses `SITE_URL=https://doffi4.github.io` and `BASE_PATH=/Decryptum/`. Local previews retain the empty origin/root base defaults below. No custom domain, DNS change or mailbox is configured.
+
+## Other hosting / local preview
+
+The Pages workflow publishes reviewed source changes automatically. Outside that workflow, default `siteUrl=''` means noindex, robots disallow, no invented canonical/OG URL/sitemap. Before publication, review claims, screenshots, disclosure contact and release status; configure an owned HTTPS **origin** in `site.config.mjs` or `SITE_URL`. Do not assume any proposed domain is available. Set `basePath`/`BASE_PATH` to `/` or e.g. `/Decryptum/` for project GitHub Pages. The build then generates absolute canonical/social metadata and a sitemap.
 
 ```powershell
 # Example values only; use a hostname you actually control.
@@ -38,7 +46,7 @@ $env:BASE_PATH='/'
 npm run build
 ```
 
-For Pages upload the generated static output with `.nojekyll`; for Cloudflare Pages/Netlify/Vercel use build `npm ci && npm run build` from `website`, output `dist`, and no SPA rewrites. All routes are actual `.html` files. Review the host's logs/privacy settings and headers; serve HTTPS and add `X-Content-Type-Options: nosniff` and `Content-Security-Policy: frame-ancestors 'none'` as response headers if supported. The HTML supplies a restrictive CSP for script/style/image/network policy. Domain purchase/DNS, mailbox setup, source push and deployment are separate owner actions.
+For Pages upload the generated static output with `.nojekyll`; for Cloudflare Pages/Netlify/Vercel use build `npm ci && npm run build` from `website`, output `dist`, and no SPA rewrites. All routes are actual `.html` files. Review the host's logs/privacy settings and headers; serve HTTPS and add `X-Content-Type-Options: nosniff` and `Content-Security-Policy: frame-ancestors 'none'` as response headers if supported. The HTML supplies a restrictive CSP for script/style/image/network policy. Custom-domain purchase/DNS and mailbox setup still require separate owner authorization.
 
 ## Screenshots and design exploration
 

@@ -1,6 +1,6 @@
 # Decryptum 1.1.0 — launch checklist
 
-Updated 2026-10-08. **Public prerelease: authorized after explicit owner approval of versionCode 7. Production readiness: BLOCKING. Startup application: draft only.** The exact reviewed APK is published as v1.1.0; APK assembly and owner review do not close native security/recovery gates. Repository publication is authorized. Website deployment, DNS/domain changes and application submission remain deferred.
+Updated 2026-10-08. **Public prerelease: authorized after explicit owner approval of versionCode 7. Production readiness: BLOCKING. Startup application: draft only.** The exact reviewed APK is published as v1.1.0; APK assembly and owner review do not close native security/recovery gates. Repository publication is authorized. GitHub Pages publication was separately authorized on 2026-10-08. Custom-domain/DNS changes and application submission remain deferred.
 
 ## GO
 
@@ -9,7 +9,7 @@ These are individual verified checks, not overall launch approval.
 - Source version is **1.1.0 / versionCode 7**, a compatible minor-version draft relative to published 1.0.1/5. Application ID unchanged.
 - Local Security Center and Material 3 polish implemented. Definitions remain heuristic; breaches, password age, full 2FA/standalone-passkey coverage and global security score are unavailable.
 - Advisor privacy boundary source-reviewed and JVM tested: four explicit integer counts, fresh consent/exact preview, cancellation/auth checks, bounded untrusted responses, no vault tools. Release factory disabled; no production key provisioned or live Anthropic request performed.
-- Website clean install/build/lint/typecheck passed; 4 tests and **159** local links passed after policy/product updates. Eight static pages; preview remains noindex. No deployment.
+- Website clean install/build/lint/typecheck passed; 4 tests and **159** local links passed after policy/product updates. Eight static pages; local preview remains noindex. The public GitHub Pages build uses the real origin/base path with canonical metadata, robots and sitemap.
 - Earlier candidate 1 (versionCode 6) Android build into a fresh directory passed in **2m 51s**, **146 tasks executed / 2 up-to-date**: **196 debug / 197 release JVM tests**, zero failure/error/skip, APK/R8 and instrumentation assembly, lint **0 errors / 150 warnings** per variant. Do not infer native execution from compilation.
 - Public v1.0.1 release and local candidate both verify with certificate SHA-256 `93965360a3a6903851cecddb9370eab62afc269ec107cce9b472190ea99b76fa`. This is Android Debug identity; actual upgrade/data retention is untested.
 - Critical migration replacement/key-persistence triggers and cached-DEK fresh-verification failure were reproduced in JVM regressions before repairs. After repairs focused/full JVM tests pass. Native validation remains blocked.
@@ -22,7 +22,7 @@ These are individual verified checks, not overall launch approval.
 - Confirm public signing identity, private-key custody/backup and any supported rotation plan. Current/old releases use Android Debug identity. Do not enter keys into chat/source/logs.
 - Establish a private security disclosure channel and real contact/privacy mailbox.
 - Confirm founder/contact/team/legal-entity status, founding/funding dates, registration/residence/operating country, measured traction, prior startup benefits and program eligibility. Fill every `[OWNER INPUT REQUIRED]` in [application draft](STARTUP_APPLICATION.md).
-- Choose an owned domain or separately authorize purchase. Approve hosting, publish reviewed static site/policies, configure matching domain email and verify the appropriate Claude Console organization/project settings. No purchase, deployment or DNS action was performed.
+- Choose an owned domain or separately authorize purchase. Approve hosting, publish reviewed static site/policies, configure matching domain email and verify the appropriate Claude Console organization/project settings. GitHub Pages hosting is authorized and configured; no domain purchase or DNS action was performed.
 - Recheck current official program requirements, review the form and separately authorize submission. No guarantee of acceptance/credits is implied.
 - Production release promotion remains pending technical gates. Public prerelease approval is recorded above; it does not establish native security assurance.
 
@@ -53,7 +53,7 @@ Security-sensitive code changed in this phase: `DatabaseMigrator`, `DatabaseKeyM
 
 ## Verification and credibility record
 
-Build-time source baseline: `a74b6a1ab6819593f25ab40cdc5f6f918833fed6` plus the changes now recorded by tag v1.1.0. Toolchain: Gradle wrapper 9.6.0, JBR 25.0.3 from `E:\Android Studio\jbr`, SDK/target 37, minimum 26, Java source target 11. No `.github/workflows` exists; local checks are the available CI-equivalent, not a green hosted CI run.
+Build-time source baseline: `a74b6a1ab6819593f25ab40cdc5f6f918833fed6` plus the changes now recorded by tag v1.1.0. Toolchain: Gradle wrapper 9.6.0, JBR 25.0.3 from `E:\Android Studio\jbr`, SDK/target 37, minimum 26, Java source target 11. Android verification was local, not hosted CI. A separate `.github/workflows/pages.yml` now checks/builds/deploys only the static website.
 
 Fresh build outputs are isolated under ignored `.codex-phase6/`. Release unit tests enabled only by local init script; every Test task forced to execute. Final command: `gradlew.bat -I .codex-phase6/deliver.init.gradle :app:testDebugUnitTest :app:testReleaseUnitTest :app:assembleDebug :app:assembleRelease :app:lintDebug :app:lintRelease :app:assembleDebugAndroidTest --console=plain`. The script redirects build directories to a fresh tree and enables AGP release unit tests; product build policy is unchanged apart from version/comment.
 

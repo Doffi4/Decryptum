@@ -57,7 +57,7 @@ Deleting a record/uninstalling does not erase copies you exported, other apps' c
 
 ## Landing website
 
-The static site contains no analytics, tracking pixels, session recording, embedded third-party widgets, remote fonts or browser API calls to an AI provider. It serves local assets. Its optional theme control stores only `decryptum-theme` (`light`/`dark`) in browser localStorage. With JavaScript disabled it remains usable in dark mode. External links navigate to GitHub; the selected hosting provider will necessarily receive ordinary HTTP metadata and may keep access logs. No hosting service/domain has been selected or deployed by this phase.
+The [public site](https://doffi4.github.io/Decryptum/) is hosted on GitHub Pages. It contains no analytics, tracking pixels, session recording, embedded third-party widgets, remote fonts or browser API calls to an AI provider. It serves local assets. Its optional theme control stores only `decryptum-theme` (`light`/`dark`) in browser localStorage. With JavaScript disabled it remains usable in dark mode. External links navigate to GitHub; GitHub receives ordinary HTTP metadata for website requests and may keep hosting access logs. No custom domain or privacy mailbox is configured.
 
 ## Contact and changes
 

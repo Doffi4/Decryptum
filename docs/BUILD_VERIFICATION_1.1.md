@@ -45,4 +45,4 @@ Generated output is under ignored `.artifacts/verification/`. Exact binary repro
 
 Native SQLCipher/Keystore/biometrics/lifecycle, migration crash/low-space behavior, complete encrypted recovery, passkey recipient/protocol interoperability, device UI/accessibility and production signing/disclosure policy remain open. Core local checks do not imply breach verification. Claude Advisor is disabled in release. See [release notes](RELEASE_NOTES_1.1.md), [Security](../SECURITY.md), [Privacy](../PRIVACY.md) and [production-readiness checklist](LAUNCH_CHECKLIST.md).
 
-The release is explicitly a **prerelease**. Website source is included; website hosting/DNS and startup application submission are deferred.
+The release is explicitly a **prerelease**. The website is now [published on GitHub Pages](https://doffi4.github.io/Decryptum/) through a separate workflow; this does not add native Android verification. Custom-domain/DNS changes and startup application submission are deferred.

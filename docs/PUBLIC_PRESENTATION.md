@@ -1,6 +1,6 @@
 # Phase 5 — public presentation evidence
 
-Historical work record from 2026-10-07. Repository and v1.1.0 prerelease publication were subsequently authorized on 2026-10-08; see the [current release record](BUILD_VERIFICATION_1.1.md). Website hosting remains deferred.
+Historical work record from 2026-10-07. Repository and v1.1.0 prerelease publication were subsequently authorized on 2026-10-08; see the [current release record](BUILD_VERIFICATION_1.1.md). Website hosting was then separately authorized and configured at [doffi4.github.io/Decryptum](https://doffi4.github.io/Decryptum/) with the Pages workflow. The following phase-specific results describe the earlier local preparation.
 
 Work date: 2026-10-07. Scope: current local source, retaining pre-existing Android/Phase 2–4 changes. No core cryptography or app behavior was modified in this phase. No commit, push, release publication, hosting deployment, domain purchase/DNS update or real-provider request was made.
 
