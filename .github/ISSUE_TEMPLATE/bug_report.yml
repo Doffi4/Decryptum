@@ -1,0 +1,25 @@
+name: Bug report
+description: Report reproducible behavior with disposable data.
+body:
+  - type: markdown
+    attributes:
+      value: "For vulnerabilities, read SECURITY.md first. Do not include secrets, vault exports or exploit details here."
+  - type: textarea
+    id: environment
+    attributes:
+      label: Build and device
+      description: Tag/commit or APK version, Android/API, device and relevant browser.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected result and actual result
+      description: Use synthetic data. Include whether the vault was locked and relevant settings.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reviewed and redacted evidence
+      description: Optional screenshots/logs. Remove credentials, service identities and document URIs.

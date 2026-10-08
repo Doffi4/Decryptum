@@ -63,6 +63,7 @@ class PasskeyAuthActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (lockManager.shouldAutoLock()) lockManager.setLocked(true)
 
         val passkeyId = intent.getLongExtra(EXTRA_PASSKEY_ID, -1L)
         if (passkeyId == -1L) {
@@ -146,11 +147,7 @@ class PasskeyAuthActivity : FragmentActivity() {
 
             prompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(bioCipher))
         } else {
-            if (!lockManager.isLocked() && passwordCrypto.isUnlocked()) {
-                onAuthSuccess(passkeyId)
-            } else {
-                showMasterPasswordFallback(passkeyId)
-            }
+            showMasterPasswordFallback(passkeyId)
         }
     }
 
@@ -246,6 +243,11 @@ class PasskeyAuthActivity : FragmentActivity() {
     }
 
     private fun deliverPasskeyAssertion(passkey: Passkey) {
+        if (lockManager.isLocked() || lockManager.shouldAutoLock() || !passwordCrypto.isUnlocked()) {
+            setResult(Activity.RESULT_CANCELED)
+            finish()
+            return
+        }
         try {
             val providerRequest = PendingIntentHandler.retrieveProviderGetCredentialRequest(intent)
             val getPkOption = providerRequest?.credentialOptions?.filterIsInstance<GetPublicKeyCredentialOption>()?.firstOrNull()

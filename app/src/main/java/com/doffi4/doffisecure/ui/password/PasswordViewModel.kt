@@ -3,6 +3,8 @@ package com.doffi4.doffisecure.ui.password
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.doffi4.doffisecure.domain.model.Password
+import com.doffi4.doffisecure.domain.model.PasswordGeneratorOptions
+import com.doffi4.doffisecure.domain.usecase.GeneratePasswordUseCase
 import com.doffi4.doffisecure.domain.usecase.AddPasswordUseCase
 import com.doffi4.doffisecure.domain.usecase.CountPasswordsUseCase
 import com.doffi4.doffisecure.domain.usecase.DeletePasswordUseCase
@@ -18,9 +20,7 @@ import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.security.UserSettingsManager
 import com.doffi4.doffisecure.security.VaultWarmup
 import com.doffi4.doffisecure.domain.model.Passkey
-import com.doffi4.doffisecure.domain.model.BreachCheckResult
 import com.doffi4.doffisecure.domain.repository.IPasskeyRepository
-import com.doffi4.doffisecure.domain.usecase.CheckPasswordBreachUseCase
 import com.doffi4.doffisecure.domain.model.TotpConfig
 import com.doffi4.doffisecure.ui.util.UiText
 import kotlinx.coroutines.flow.*
@@ -49,23 +49,11 @@ class PasswordViewModel(
     private val refreshRateController: RefreshRateController,
     private val userSettings: UserSettingsManager,
     private val passkeyRepository: IPasskeyRepository,
-    private val checkPasswordBreachUseCase: CheckPasswordBreachUseCase,
+    private val generatePasswordUseCase: GeneratePasswordUseCase,
 ) : ViewModel() {
 
     val allPasskeys: StateFlow<List<Passkey>> = passkeyRepository.getAllPasskeys()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    private val _breachState = MutableStateFlow<BreachCheckResult>(BreachCheckResult.Idle)
-    val breachState: StateFlow<BreachCheckResult> = _breachState.asStateFlow()
-
-    private val _breachedAccounts = MutableStateFlow<List<BreachedAccount>>(emptyList())
-    val breachedAccounts: StateFlow<List<BreachedAccount>> = _breachedAccounts.asStateFlow()
-
-    private val _isAuditingBreaches = MutableStateFlow(value = false)
-    val isAuditingBreaches: StateFlow<Boolean> = _isAuditingBreaches.asStateFlow()
-
-    private var breachJob: Job? = null
-    private var vaultAuditJob: Job? = null
 
     private val _uiState = MutableStateFlow<PasswordUiState>(PasswordUiState.Loading)
     val uiState: StateFlow<PasswordUiState> = _uiState.asStateFlow()
@@ -129,7 +117,6 @@ class PasswordViewModel(
                     _uiState.value = PasswordUiState.Error(UiText.StringResource(R.string.toast_password_not_found))
                 } else {
                     _uiState.value = PasswordUiState.Success(emptyList())
-                    checkBreach(loaded.password, forceRefresh = false)
                 }
             } catch (e: CancellationException) {
                 throw e
@@ -137,20 +124,6 @@ class PasswordViewModel(
                 _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to load password"))
             }
         }
-    }
-
-    fun checkBreach(password: String, forceRefresh: Boolean = false) {
-        breachJob?.cancel()
-        breachJob = viewModelScope.launch {
-            _breachState.value = BreachCheckResult.Checking
-            val result = checkPasswordBreachUseCase(password, forceRefresh)
-            _breachState.value = result
-        }
-    }
-
-    fun resetBreachState() {
-        breachJob?.cancel()
-        _breachState.value = BreachCheckResult.Idle
     }
 
     fun onEditPasswordClicked(password: Password) {
@@ -182,32 +155,7 @@ class PasswordViewModel(
                 .catch { e -> _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Unknown Error")) }
                 .collect { passwords ->
                     _uiState.value = PasswordUiState.Success(passwords)
-                    auditVaultBreaches(passwords = passwords, forceRefresh = false)
                 }
-        }
-    }
-
-    fun auditVaultBreaches(passwords: List<Password>? = null, forceRefresh: Boolean = false) {
-        vaultAuditJob?.cancel()
-        vaultAuditJob = viewModelScope.launch(Dispatchers.IO) {
-            _isAuditingBreaches.value = true
-            try {
-                val list = passwords ?: (_uiState.value as? PasswordUiState.Success)?.passwords ?: emptyList()
-                val compromised = mutableListOf<BreachedAccount>()
-                for (item in list) {
-                    if (item.password.isNotBlank()) {
-                        val result = checkPasswordBreachUseCase(item.password, forceRefresh)
-                        if (result is BreachCheckResult.Compromised) {
-                            compromised.add(BreachedAccount(item, result.count))
-                        }
-                    }
-                }
-                _breachedAccounts.value = compromised
-            } catch (_: Exception) {
-                // keep current
-            } finally {
-                _isAuditingBreaches.value = false
-            }
         }
     }
 
@@ -251,20 +199,14 @@ class PasswordViewModel(
         return true
     }
 
-    fun addPassword(service: String, username: String, password: String) {
-        viewModelScope.launch {
-            if (service.isBlank() || username.isBlank() || password.isBlank()) {
-                _uiState.value = PasswordUiState.Error(UiText.StringResource(R.string.error_all_fields_required))
-                return@launch
-            }
-            try {
-                addPasswordUseCase(service, username, password)
-                _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_saved)))
-            } catch (e: Exception) {
-                _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to add password"))
-            }
-        }
+    /** Await persistence so the form can keep its draft on a recoverable failure. */
+    suspend fun addPassword(service: String, username: String, password: String) {
+        require(service.isNotBlank() && username.isNotBlank() && password.isNotBlank())
+        addPasswordUseCase(service, username, password)
+        _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_saved)))
     }
+
+    fun generatePasswordForEntry(): String = generatePasswordUseCase(PasswordGeneratorOptions())
 
     fun updatePassword(
         id: Long,
@@ -298,7 +240,6 @@ class PasswordViewModel(
                     url = finalUrl,
                     totpSecret = finalTotp
                 )
-                checkBreach(password, forceRefresh = false)
                 _uiEvent.emit(PasswordUiEvent.ShowToast(UiText.StringResource(R.string.toast_password_updated)))
             } catch (e: Exception) {
                 _uiState.value = PasswordUiState.Error(UiText.DynamicString(e.message ?: "Failed to update password"))

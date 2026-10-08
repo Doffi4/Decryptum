@@ -1,71 +1,50 @@
+<img src="docs/screenshots/icon.webp" width="72" alt="Іконка Decryptum">
+
 # Decryptum
 
-Офлайн-менеджер паролів та 2FA-аутентифікатор для Android з інтеграцією системного автозаповнення та підтримкою Passkeys.
+**[Завантажити v1.1.0 — попередній реліз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 08.10.2026. [Зміни](docs/RELEASE_NOTES_1.1.md), [перевірка APK](docs/BUILD_VERIFICATION_1.1.md), [залишкові обмеження](docs/LAUNCH_CHECKLIST.md).
 
-[English](README.md) | [Українська] | [Русский](README.ru.md)
+**Ваші паролі. Ваші ключі. Ваш пристрій.**
 
-[![Release](https://img.shields.io/github/v/release/Doffi4/Decryptum?style=flat-square)](https://github.com/Doffi4/Decryptum/releases/latest)
-[![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Android%208.0%2B%20(API%2026%2B)-green.svg?style=flat-square)](https://developer.android.com)
+Локальне Android-сховище паролів і TOTP-автентифікатор на Kotlin, Jetpack Compose та Material 3. Обліковий запис Decryptum і хмарне сховище не потрібні.
 
-## Скріншоти
+[English](README.md) · [Русский](README.ru.md) · [Релізи](https://github.com/Doffi4/Decryptum/releases) · [Безпека](SECURITY.md) · [Приватність](PRIVACY.md)
 
-| Сховище | Генератор | 2FA Аутентифікатор | Шторка автозаповнення |
-|:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/vault.png" width="200" alt="Сховище"/> | <img src="docs/screenshots/generator.png" width="200" alt="Генератор паролів"/> | <img src="docs/screenshots/totp.png" width="200" alt="2FA Аутентифікатор"/> | <img src="docs/screenshots/autofill.png" width="200" alt="Шторка автозаповнення"/> |
+**v1.1.0 опубліковано як попередній реліз; розробка триває.** Опис стосується поточного коду, APK можуть відрізнятися. Passkeys експериментальні; Claude Advisor лише в debug, у release вимкнений. До закриття [блокерів](docs/PHASE6_HANDOFF.md) використовуйте тестові дані та незалежні способи відновлення важливих акаунтів.
 
-## Можливості
+| Сховище | TOTP |
+| --- | --- |
+| <img src="docs/screenshots/vault.png" width="200" alt="Попередній інтерфейс сховища"> | <img src="docs/screenshots/totp.png" width="200" alt="Попередній інтерфейс TOTP"> |
 
-### Сховище та шифрування
-- Повне шифрування бази даних AES-256 через SQLCipher (`sqlcipher-android`) на рівні сторінок.
-- Деривація майстер-пароля через Argon2id (RFC 9106) за допомогою бібліотеки `argon2kt`.
-- Апаратне загортання DEK через Android Keystore AES-GCM (`enc:2:...`).
-- Біометрична автентифікація (`BiometricPrompt`) з настроюваним тайм-аутом автоблокування.
-- Автоматичне очищення буфера обміну через 30 секунд за допомогою `AlarmManager` та прапорця `EXTRA_IS_SENSITIVE` на Android 13+.
-- Офлайн-експорт та імпорт CSV, сумісний з Bitwarden, KeePass, Chrome та LastPass.
-- Інтеграція з HaveIBeenPwned k-Anonymity API для перевірки скомпрометованих паролів (5-символьний префікс SHA-1 без витоку даних).
+Це наявні знімки попереднього інтерфейсу, не поточної збірки. Версія та походження записів не встановлені; числа не є статистикою користувачів. Security Center не показаний. [Примітки](docs/screenshots/README.md).
 
-### Passkeys / WebAuthn
-- Реєстрація та автентифікація ключів доступу FIDO2 / WebAuthn через Android Credential Manager API.
-- Апаратна генерація пар ключів ECDSA P-256 (secp256r1) в Android Keystore.
-- Вбудовані кодувальник і декодувальник CBOR для обробки даних автентифікатора та JSON-клієнта.
-- Перегляд та керування зареєстрованими Passkeys у деталях облікового запису.
+## Можливості поточного коду
 
-### 2FA / TOTP Аутентифікатор
-- Генератор одноразових паролів за часом (RFC 6238) з підтримкою HMAC-SHA1, HMAC-SHA256, HMAC-SHA512.
-- Налаштування довжини коду (6 або 8 цифр) та інтервалу оновлення (30 або 60 секунд).
-- Таймер зворотного відліку з індикатором прогресу та копіюванням у буфер в один дотик.
-- Сканування QR-кодів камерою через CameraX та Google ML Kit Barcode Scanning.
-- Розпізнавання QR-кодів із зображень галереї через ZXing.
-- Пакетний імпорт акаунтів з Google Authenticator за схемою `otpauth-migration://`.
+- Паролі: створення, пошук, групування, редагування й видалення; майстер-пароль і підтримуваний біометричний шлях розблокування.
+- Генератор на SecureRandom із налаштуваннями довжини й символів.
+- Локальні TOTP, ручне введення, QR із камери/зображення та розбір експорту Google Authenticator.
+- Android Autofill, підказки клавіатури й Credential Provider (Android 14+); сумісність і довіра до отримувача ще перевіряються.
+- Локальний Security Center: евристика слабких паролів, точне повторне використання між акаунтами та дублікати. Без загального бала, автоматичного видалення чи перевірки витоків.
+- Експериментальні програмні passkeys P-256/ES256 з експортованими приватними ключами; не апаратні. Протокол, довіра до викликача та відновлення не підтверджені.
+- Імпорт CSV/JSON і **незашифрований CSV-експорт**, який може містити паролі, TOTP-секрети та приватні ключі.
+- Claude Advisor: чотири агреговані лічильники, згода на кожен запит, лише налаштований debug. У release вимкнений.
 
-### Інтеграція з Android
-- Реалізація системного сервісу `AutofillService` для браузерів (Chrome, Firefox, Brave) та нативних додатків.
-- Інлайн-підказки в клавіатурі (чіпи IME) для Gboard та сумісних клавіатур.
-- Інтеграція з Android 14+ Credential Provider (`DecryptumCredentialProviderService`).
-- Парсер структури форм (`AutofillStructureParser`) для фільтрації полів пошуку та повідомлень у чатах.
-- Збереження нових облікових записів (`AutofillSaveActivity`) під час реєстрації або входу.
-- Підтримка вибору мови додатка (англійська, українська, російська) через Android 13+ `LocaleManager`.
-- Опціональний захист вікна `FLAG_SECURE` від знімків екрана та попереднього перегляду в диспетчері задач.
+Android **8+ / API 26**, Credential Provider/passkeys — **14+ / API 34**. Мови застосунку — **англійська й російська**; український README не означає української локалізації. Хмарна синхронізація, iOS, браузерний/настільний vault-клієнт не реалізовані. [Сайт](website/README.md) — статична вітрина, підготовлена локально.
 
-## Стек технологій
+## Захист і обмеження
 
-- **Мова:** Kotlin 2.2.10 (Target SDK 37, Min SDK 26)
-- **UI:** Jetpack Compose, Material 3, Navigation Compose
-- **База даних:** Room 2.8.4 + SQLCipher 4.6.1
-- **Криптографія:** Argon2kt 1.6.0, AndroidX Security Crypto, Android Keystore
-- **Автентифікація та автозаповнення:** AndroidX Credentials 1.5.0, Android Autofill Framework
-- **2FA та розпізнавання:** CameraX 1.4.1, Google ML Kit Barcode Scanning 17.3.0, ZXing Core 3.5.3
-- **Впровадження залежностей:** Koin 3.5.0
-- **Завантаження іконок:** Coil 2.7.0 (локальний декодер ICO + дисковий кеш)
-- **Мінімізація коду:** ProGuard / R8 з базовими профілями (Baseline Profiles)
+Room/SQLCipher шифрує базу окремим випадковим ключем, обгорнутим через Keystore. Паролі, TOTP та приватні passkey-дані додатково захищені AES-GCM; ключ сховища захищає ключ, отриманий із майстер-пароля через Argon2id. Реальні Android-потоки й апаратні властивості потребують перевірки.
 
-## Встановлення
+Основні функції працюють офлайн, але іконки можуть розкривати домени зовнішнім сервісам. HIBP-код збережений, проте до поточних перевірок не підключений: витоки **не перевірені**. SDK аналітики/віддалених crash reports у поточному коді не знайдені. Advisor не надсилає секрети, хеші чи ідентичності акаунтів, але провайдер бачить IP/час і лічильники.
 
-Завантажте підписаний APK зі сторінки [GitHub Releases](https://github.com/Doffi4/Decryptum/releases):
-- `Decryptum-v1.0.1-release.apk` - Оптимізована релізна збірка.
-- `Decryptum-v1.0.1-debug.apk` - Дебаг-збірка з логами та діагностикою.
+Android backup вимкнений; повне зашифроване відновлення не встановлено. Втрата пристрою/Keystore, видалення застосунку або забутий майстер-пароль можуть означати втрату доступу. [Безпека](SECURITY.md), [приватність](PRIVACY.md), [модель загроз](docs/THREAT_MODEL.md). Незалежний аудит і гарантований захист не заявляються.
 
-## Ліцензія
+## Спробувати й долучитися
 
-Проєкт поширюється за ліцензією GNU General Public License v3.0 (GPLv3). Подробиці у файлі [LICENSE](LICENSE).
+APK: **[Decryptum v1.1.0](https://github.com/Doffi4/Decryptum/releases/download/v1.1.0/Decryptum-v1.1.0.apk)** — той самий перевірений власником файл, без повторної збірки. Підпис Android Debug збігається з v1.0.1; оновлення та збереження даних на пристрої не перевірені. Не видаляйте застосунок і не скидайте важливе сховище заради встановлення.
+
+Android Studio/SDK 37, JDK 25 для Gradle (Java target 11). Команди: [основний README](README.md#try-or-build), [Contributing](CONTRIBUTING.md). Тести Android потребують тестового пристрою/емулятора.
+
+Пріоритети: авторизація інтеграцій, безпечні міграції, відновлення, passkeys, пристрої/доступність і правильно підписаний кандидат. Sync та desktop/browser — майбутні ідеї. [Продукт](docs/PRODUCT.md), [Phase 6](docs/PHASE6_HANDOFF.md). [Відповідальне розкриття](SECURITY.md#reporting-a-vulnerability): приватний канал ще має підтвердити власник, секрети публічно не надсилайте.
+
+Ліцензія: [GNU GPLv3](LICENSE).

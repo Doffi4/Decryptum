@@ -29,7 +29,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.core.tween
 import androidx.compose.ui.draw.clip
-import com.doffi4.doffisecure.ui.components.BreachAuditBottomSheet
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
@@ -41,6 +40,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 
 import androidx.compose.ui.graphics.Color
 import com.doffi4.doffisecure.domain.model.Password
@@ -116,6 +120,7 @@ private const val DEV_TAP_WINDOW_MS = 1500L
 fun PasswordScreen(
     modifier: Modifier = Modifier,
     viewModel: PasswordViewModel = koinViewModel(),
+    onNavigateToSecurityCenter: () -> Unit = {},
     onNavigateToDetail: (Long) -> Unit,
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -146,9 +151,6 @@ fun PasswordScreen(
     val showPasswordStrength by viewModel.showPasswordStrength.collectAsState()
     val devPrefetchCount by viewModel.devPrefetchCount.collectAsState()
     val allPasskeys by viewModel.allPasskeys.collectAsState()
-    val breachedAccounts by viewModel.breachedAccounts.collectAsState()
-    val isAuditingBreaches by viewModel.isAuditingBreaches.collectAsState()
-    var showBreachAuditSheet by remember { mutableStateOf(value = false) }
     var devTaps by remember { mutableIntStateOf(0) }
     var lastDevTapTime by remember { mutableLongStateOf(0L) }
 
@@ -260,7 +262,7 @@ fun PasswordScreen(
     }
 
     Scaffold(
-        containerColor = Color.Transparent, // <-- Додай цей рядок!
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -288,6 +290,9 @@ fun PasswordScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToSecurityCenter) {
+                        Icon(Icons.Default.Security, stringResource(R.string.security_center_title))
+                    }
                     // Small bug icon: visible reminder that developer mode is active
                     if (devModeEnabled) {
                         Icon(
@@ -357,71 +362,6 @@ fun PasswordScreen(
                 )
             )
 
-            // Breach Monitoring Banner (smoothly appears when compromised passwords exist)
-            AnimatedVisibility(
-                visible = breachedAccounts.isNotEmpty(),
-                enter = fadeIn(animationSpec = tween(300)) + expandVertically(animationSpec = tween(300)),
-                exit = fadeOut(animationSpec = tween(200)) + shrinkVertically(animationSpec = tween(200)),
-            ) {
-                val breachCount = breachedAccounts.size
-                val label = when {
-                    (breachCount % 10 == 1) && (breachCount % 100 != 11) -> stringResource(R.string.breach_banner_label_one, breachCount)
-                    (breachCount % 10 in 2..4) && (breachCount % 100 !in 12..14) -> stringResource(R.string.breach_banner_label_few, breachCount)
-                    else -> stringResource(R.string.breach_banner_label_many, breachCount)
-                }
-
-                Surface(
-                    shape = CircleShape,
-                    color = Color(0xFF261514),
-                    border = BorderStroke(1.dp, Color(0x33FF8A65)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
-                        .clip(CircleShape)
-                        .clickable { showBreachAuditSheet = true },
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = Color(0xFF3E1F1D),
-                            modifier = Modifier.size(28.dp),
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Security,
-                                    contentDescription = null,
-                                    tint = Color(0xFFFF8B77),
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFFFFCCBC),
-                        )
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = Color(0xFFFFAB91).copy(alpha = 0.7f),
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-            }
-
             // Developer pill: live password count (enabled in Settings > Developer)
             AnimatedVisibility(visible = devModeEnabled && showDevPasswordCount) {
                 Surface(
@@ -467,7 +407,12 @@ fun PasswordScreen(
                     )
                     is PasswordUiState.Success -> {
                         if (state.passwords.isEmpty()) {
-                            Text(stringResource(R.string.passwords_empty), Modifier.align(Alignment.Center))
+                            Text(
+                                stringResource(if (searchQuery.isBlank()) R.string.vault_empty_guidance else R.string.empty_search_results),
+                                Modifier.align(Alignment.Center).padding(horizontal = 24.dp, vertical = 16.dp),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
                         } else {
                             val groups = remember(state.passwords) { state.passwords.groupBySite() }
                             // Which sites are expanded (accounts shown). Kept at screen
@@ -568,24 +513,15 @@ fun PasswordScreen(
         }
 
         if (showAddDialog) {
-            AddPasswordDialog(
+            PasswordEntrySheet(
                 showStrength = showPasswordStrength,
                 onDismiss = viewModel::onDismissAddDialog,
-                onConfirm = { s, u, p ->
-                    viewModel.addPassword(s, u, p)
-                }
+                onSave = viewModel::addPassword,
+                onGenerate = viewModel::generatePasswordForEntry,
             )
         }
 
-        if (showBreachAuditSheet) {
-            BreachAuditBottomSheet(
-                breachedAccounts = breachedAccounts,
-                isAuditing = isAuditingBreaches,
-                onRescanRequested = { viewModel.auditVaultBreaches(forceRefresh = true) },
-                onSelectPassword = onNavigateToDetail,
-                onDismiss = { showBreachAuditSheet = false },
-            )
-        }
+
     }
 }
 
@@ -800,10 +736,11 @@ private fun QuickCopyButton(
 ) {
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(48.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .clickable { onClick() },
+            .semantics(mergeDescendants = true) { this.contentDescription = contentDescription }
+            .clickable(role = Role.Button) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -826,80 +763,12 @@ private fun QuickCopyButton(
         ) {
             Icon(
                 imageVector = Icons.Default.ContentCopy,
-                contentDescription = contentDescription,
+                contentDescription = null,
                 tint = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier.size(8.dp)
             )
         }
     }
-}
-
-@Composable
-fun AddPasswordDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (String, String, String) -> Unit,
-    showStrength: Boolean = false,
-) {
-    var service by remember { mutableStateOf("") }
-    var user by remember { mutableStateOf("") }
-    var pass by remember { mutableStateOf("") }
-    var passVisible by remember { mutableStateOf(false) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.add_password_dialog_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(
-                    value = service,
-                    onValueChange = { service = it },
-                    label = { Text(stringResource(R.string.field_service)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = user,
-                    onValueChange = { user = it },
-                    label = { Text(stringResource(R.string.field_username)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = pass,
-                    onValueChange = { pass = it },
-                    label = { Text(stringResource(R.string.field_password)) },
-                    visualTransformation = if (passVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    trailingIcon = {
-                        IconButton(onClick = { passVisible = !passVisible }) {
-                            Icon(
-                                imageVector = if (passVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null,
-                            )
-                        }
-                    },
-                )
-                if (showStrength) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    PasswordStrengthBadge(
-                        password = pass,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    if (service.isNotBlank() && pass.isNotBlank()) {
-                        onConfirm(service, user, pass)
-                    }
-                    onDismiss()
-                },
-            ) { Text(stringResource(R.string.action_add)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
 }
 
 @Composable
@@ -918,7 +787,10 @@ fun EditPasswordDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.edit_password_dialog_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
                 OutlinedTextField(
                     value = service,
                     onValueChange = { service = it },
@@ -941,7 +813,7 @@ fun EditPasswordDialog(
                         IconButton(onClick = { passVisible = !passVisible }) {
                             Icon(
                                 imageVector = if (passVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = null,
+                                contentDescription = stringResource(if (passVisible) R.string.action_hide else R.string.action_show),
                             )
                         }
                     },
@@ -966,6 +838,7 @@ fun EditPasswordDialog(
                     )
                     onDismiss()
                 },
+                enabled = service.isNotBlank() && user.isNotBlank() && pass.isNotBlank(),
             ) { Text(stringResource(R.string.action_update)) }
         },
         dismissButton = {

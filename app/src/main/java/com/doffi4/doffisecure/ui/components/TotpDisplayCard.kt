@@ -71,7 +71,7 @@ fun TotpDisplayCard(
     val timerColor by animateColorAsState(
         targetValue = when {
             remainingSeconds <= 3 -> MaterialTheme.colorScheme.error
-            remainingSeconds <= 6 -> Color(0xFFF57C00) // Amber/Orange warning
+            remainingSeconds <= 6 -> MaterialTheme.colorScheme.secondary
             else -> MaterialTheme.colorScheme.primary
         },
         animationSpec = tween(durationMillis = 300),
@@ -114,7 +114,7 @@ fun TotpDisplayCard(
 
                 IconButton(
                     onClick = onDeleteTotp,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -129,10 +129,6 @@ fun TotpDisplayCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple()
-                    ) { onCopyCode(code) }
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -150,12 +146,6 @@ fun TotpDisplayCard(
                             letterSpacing = 2.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = stringResource(R.string.action_copy),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp)
-                        )
                     }
 
                     // Optional label/account name
@@ -170,6 +160,10 @@ fun TotpDisplayCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
+                }
+
+                IconButton(onClick = { onCopyCode(code) }, modifier = Modifier.size(48.dp)) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.totp_copy_code))
                 }
 
                 // Circular Countdown Timer

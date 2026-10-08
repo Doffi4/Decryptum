@@ -133,6 +133,20 @@ val appModule = module {
     factory { CheckPasswordBreachUseCase(get()) }
 
     // ViewModels
+    factory<com.doffi4.doffisecure.domain.advisor.SecurityAdvisorService> {
+        val lockManager = get<AppLockManager>()
+        com.doffi4.doffisecure.data.advisor.AdvisorServiceFactory.create(androidContext()) { !lockManager.isLocked() }
+    }
+    viewModel {
+        val lockManager = get<AppLockManager>()
+        val passwords = get<GetPasswordsUseCase>()
+        com.doffi4.doffisecure.ui.security.SecurityCenterViewModel(
+            passwords = { passwords() },
+            locked = lockManager.isLockedFlow,
+            canRead = { !lockManager.isLocked() },
+            advisorService = get(),
+        )
+    }
     viewModel { AppLockViewModel(get(), get(), get(), get(), get()) }
     viewModel {
         PasswordViewModel(
@@ -149,7 +163,7 @@ val appModule = module {
             refreshRateController = get(),
             userSettings = get(),
             passkeyRepository = get(),
-            checkPasswordBreachUseCase = get(),
+            generatePasswordUseCase = get(),
         )
     }
     viewModel { GeneratorViewModel(get(), get(), get()) }

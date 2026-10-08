@@ -32,3 +32,13 @@ antigravity_agent_instructions.txt
 
 *.apk
 To-Do List.txt
+
+# Local delivery, user attachments and agent/build workspaces
+/.codex-*/
+/exports/
+/docs/superpowers/
+claude-advisor.properties
+*.jks
+*.keystore
+/design/references/
+/design/add-password/stitch-proposal.*

@@ -8,6 +8,8 @@ import com.doffi4.doffisecure.domain.model.Password
 import com.doffi4.doffisecure.domain.repository.IPasswordRepository
 import com.doffi4.doffisecure.security.PasswordCrypto
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -20,52 +22,34 @@ class PasswordRepositoryImpl(
     private val passwordCrypto: PasswordCrypto,
 ) : IPasswordRepository {
 
-    // --- Session decryption cache ---
-    // The fully-decrypted vault is held in memory for the process lifetime. That
-    // matches the existing design (VaultWarmup already decrypts the whole vault
-    // and the UI composables hold plaintext anyway) and is never persisted -
-    // cleared naturally on process death and discarded when auto-lock swaps the
-    // UI back to LockScreen. Every mutation bumps [cacheGeneration] so the flow
-    // below rebuilds exactly once instead of re-decrypting all N rows on every
-    // unrelated Room invalidation.
-    @Volatile
-    private var cachedList: List<Password>? = null
-    @Volatile
-    private var snapshotGen = -1L
-    private val cacheGeneration = java.util.concurrent.atomic.AtomicLong(0L)
-
-    private fun invalidateCache() {
-        cacheGeneration.incrementAndGet()
+    private fun requireUnlocked() {
+        check(passwordCrypto.isUnlocked()) { "Vault is locked" }
     }
 
     private fun PasswordDatabaseEntity.decryptPassword(): PasswordDatabaseEntity {
+        requireUnlocked()
         // Return the plain-text password and totpSecret for UI consumption.
         // New data is stored encrypted (prefix "enc:"), legacy plain-text rows are returned as-is.
         val decPassword = if (password.startsWith(ENC_PREFIX)) {
-            try {
-                passwordCrypto.decrypt(password.removePrefix(ENC_PREFIX))
-            } catch (_: Exception) {
-                password
-            }
+            passwordCrypto.decrypt(password.removePrefix(ENC_PREFIX))
         } else {
             password
         }
         val decTotp = totpSecret?.let {
             if (it.startsWith(ENC_PREFIX)) {
-                try {
-                    passwordCrypto.decrypt(it.removePrefix(ENC_PREFIX))
-                } catch (_: Exception) {
-                    it
-                }
+                passwordCrypto.decrypt(it.removePrefix(ENC_PREFIX))
             } else {
                 it
             }
         }
+        requireUnlocked()
         return copy(password = decPassword, totpSecret = decTotp)
     }
 
     private fun encryptForStorage(plain: String): String {
-        return if (plain.startsWith(ENC_PREFIX)) plain else ENC_PREFIX + passwordCrypto.encrypt(plain)
+        // Input is a domain plaintext value. A user's literal "enc:" prefix
+        // must not bypass encryption or be interpreted as a storage payload.
+        return ENC_PREFIX + passwordCrypto.encrypt(plain)
     }
 
     private fun encryptNullableForStorage(plain: String?): String? {
@@ -76,25 +60,15 @@ class PasswordRepositoryImpl(
     override fun getAllPasswords(): Flow<List<Password>> {
         return passwordDao.getAllPasswords()
             .map { entities ->
-                // Session cache: the full plain-text list is expensive to rebuild
-                // (N decryptions). VaultWarmup already builds it once at startup,
-                // and every edit currently triggers a re-emission + re-decrypt of
-                // the WHOLE vault. We keep the latest decrypted snapshot for the
-                // process and only rebuild it when a write bumps the generation,
-                // so unrelated re-emissions reuse the in-memory list instead of
-                // decrypting hundreds of rows again.
-                val gen = cacheGeneration.get()
-                val snapshot = cachedList
-                if ((snapshot != null) && (snapshotGen == gen)) {
-                    snapshot
-                } else {
-                    val decrypted = entities.map { entity ->
-                        PasswordMapper.toDomain(entity.decryptPassword())
-                    }
-                    cachedList = decrypted
-                    snapshotGen = gen
-                    decrypted
+                // Decrypt only for active subscribers. Never retain an extra singleton
+                // plaintext snapshot across a lock or serve stale external DB writes.
+                requireUnlocked()
+                val decrypted = entities.map {
+                    currentCoroutineContext().ensureActive()
+                    PasswordMapper.toDomain(it.decryptPassword())
                 }
+                requireUnlocked()
+                decrypted
             }
             // Decrypt on a background dispatcher: Keystore operations are slow,
             // and with a large vault doing it on the main thread causes jank.
@@ -130,7 +104,6 @@ class PasswordRepositoryImpl(
     override fun getDuplicateGroups(): Flow<List<DuplicateGroup>> = passwordDao.getDuplicateGroups()
 
     override suspend fun deleteDuplicates(): Int = withContext(Dispatchers.IO) {
-        invalidateCache()
         passwordDao.deleteDuplicates()
     }
 
@@ -161,15 +134,17 @@ class PasswordRepositoryImpl(
 
     override suspend fun getPasswordById(id: Long): Password? {
         return withContext(Dispatchers.IO) {
-            passwordDao.getPasswordById(id)?.let { entity ->
+            requireUnlocked()
+            val result = passwordDao.getPasswordById(id)?.let { entity ->
                 PasswordMapper.toDomain(entity.decryptPassword())
             }
+            requireUnlocked()
+            result
         }
     }
 
     override suspend fun addPassword(password: Password) {
         withContext(Dispatchers.IO) {
-            invalidateCache()
             passwordDao.insertPassword(
                 PasswordMapper.toEntity(password).let {
                     it.copy(
@@ -186,7 +161,6 @@ class PasswordRepositoryImpl(
             if (!passwordCrypto.isUnlocked()) {
                 throw IllegalStateException("Vault is locked: cannot encrypt and store passwords")
             }
-            invalidateCache()
             // Encrypt SEQUENTIALLY: Android Keystore (especially hardware-backed
             // keymaster on devices like OnePlus) throws IllegalBlockSizeException
             // on concurrent GCM operations. Each row is guarded so a single
@@ -203,7 +177,7 @@ class PasswordRepositoryImpl(
                     }
                     entities.add(entity)
                 } catch (e: Exception) {
-                    android.util.Log.w("PasswordRepository", "Failed to encrypt record for ${p.service}: ${e.message}")
+                    android.util.Log.w("PasswordRepository", "Record encryption failed; record skipped")
                 }
             }
             if (entities.isNotEmpty()) {
@@ -215,7 +189,6 @@ class PasswordRepositoryImpl(
 
     override suspend fun updatePassword(password: Password) {
         withContext(Dispatchers.IO) {
-            invalidateCache()
             passwordDao.insertPassword(
                 PasswordMapper.toEntity(password).let {
                     it.copy(
@@ -229,14 +202,12 @@ class PasswordRepositoryImpl(
 
     override suspend fun deletePassword(id: Long) {
         withContext(Dispatchers.IO) {
-            invalidateCache()
             passwordDao.deleteById(id)
         }
     }
 
     override suspend fun deleteAllPasswords() {
         withContext(Dispatchers.IO) {
-            invalidateCache()
             passwordDao.deleteAll()
         }
     }
@@ -244,9 +215,13 @@ class PasswordRepositoryImpl(
     override fun searchPasswords(query: String): Flow<List<Password>> {
         return passwordDao.searchPasswords(query)
             .map { list ->
-                list.map { entity ->
+                requireUnlocked()
+                val result = list.map { entity ->
+                    currentCoroutineContext().ensureActive()
                     PasswordMapper.toDomain(entity.decryptPassword())
                 }
+                requireUnlocked()
+                result
             }
             .flowOn(Dispatchers.Default)
     }
@@ -301,7 +276,6 @@ class PasswordRepositoryImpl(
             }
         }
         if (converted.isNotEmpty()) {
-            invalidateCache()
             passwordDao.insertAllPasswords(converted)
         }
         converted.size

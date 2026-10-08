@@ -65,6 +65,16 @@ fun TotpScreen(
     val totpPasswords by viewModel.totpPasswords.collectAsState()
     val loadFavicons by viewModel.loadFavicons.collectAsState()
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val noQrMessage = stringResource(R.string.totp_error_no_qr_found)
+    LaunchedEffect(viewModel, snackbarHostState, context) {
+        viewModel.uiEvent.collect { event ->
+            if (event is PasswordUiEvent.ShowToast) {
+                snackbarHostState.showSnackbar(event.message.asString(context))
+            }
+        }
+    }
     var searchQuery by remember { mutableStateOf("") }
 
     var showAddOptionsDialog by remember { mutableStateOf(false) }
@@ -102,7 +112,7 @@ fun TotpScreen(
                 uri = uri,
                 onSuccess = handleScannedCode,
                 onNotFound = {
-                    Toast.makeText(context, context.getString(R.string.totp_error_no_qr_found), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, noQrMessage, Toast.LENGTH_LONG).show()
                 }
             )
         }
@@ -282,7 +292,8 @@ fun TotpScreen(
     }
 
     Scaffold(
-        containerColor = Color.Transparent,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
@@ -339,7 +350,7 @@ fun TotpScreen(
                         IconButton(onClick = { searchQuery = "" }) {
                             Icon(
                                 Icons.Default.Close,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.action_clear_search),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -359,7 +370,22 @@ fun TotpScreen(
                 ),
             )
 
-            if (totpPasswords.isEmpty()) {
+            if (uiState is PasswordUiState.Loading) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (uiState is PasswordUiState.Error) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(stringResource(R.string.vault_load_error), color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = { viewModel.loadPasswords() }) {
+                        Text(stringResource(R.string.breach_action_retry))
+                    }
+                }
+            } else if (totpPasswords.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -543,7 +569,7 @@ private fun TotpAccountCard(
                 val timerColor by animateColorAsState(
                     targetValue = when {
                         remainingSeconds <= 3 -> MaterialTheme.colorScheme.error
-                        remainingSeconds <= 6 -> Color(0xFFF57C00)
+                        remainingSeconds <= 6 -> MaterialTheme.colorScheme.secondary
                         else -> MaterialTheme.colorScheme.primary
                     },
                     animationSpec = tween(durationMillis = 300),
@@ -554,7 +580,6 @@ private fun TotpAccountCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(10.dp))
-                        .clickable { onCopyCode(code) }
                         .padding(vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -562,6 +587,7 @@ private fun TotpAccountCard(
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f),
                     ) {
                         Text(
                             text = TotpGenerator.formatCode(code),
@@ -570,13 +596,15 @@ private fun TotpAccountCard(
                             fontSize = 26.sp,
                             letterSpacing = 2.sp,
                             color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f),
                         )
-                        Icon(
-                            imageVector = Icons.Default.ContentCopy,
-                            contentDescription = stringResource(R.string.action_copy),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            modifier = Modifier.size(18.dp),
-                        )
+                        IconButton(onClick = { onCopyCode(code) }, modifier = Modifier.size(48.dp)) {
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = stringResource(R.string.totp_copy_code),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
 
                     Box(

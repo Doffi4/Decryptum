@@ -103,6 +103,7 @@ private fun CameraPreviewContent(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val noQrMessage = stringResource(R.string.totp_error_no_qr_found)
     var isScanned by remember { mutableStateOf(value = false) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -119,7 +120,7 @@ private fun CameraPreviewContent(
                     }
                 },
                 onNotFound = {
-                    Toast.makeText(context, context.getString(R.string.totp_error_no_qr_found), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, noQrMessage, Toast.LENGTH_LONG).show()
                 }
             )
         }
@@ -324,6 +325,7 @@ private fun CameraPermissionDeniedContent(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val noQrMessage = stringResource(R.string.totp_error_no_qr_found)
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -333,7 +335,7 @@ private fun CameraPermissionDeniedContent(
                 uri = uri,
                 onSuccess = onCodeScanned,
                 onNotFound = {
-                    Toast.makeText(context, context.getString(R.string.totp_error_no_qr_found), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, noQrMessage, Toast.LENGTH_LONG).show()
                 }
             )
         }

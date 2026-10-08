@@ -1,0 +1,12 @@
+// Isolate generated files and enable release JVM tests without changing the APK.
+allprojects {
+    layout.buildDirectory.set(file("${rootDir}/.artifacts/verification/${project.name}"))
+    pluginManager.withPlugin("com.android.application") {
+        extensions.getByName("androidComponents").beforeVariants(
+            extensions.getByName("androidComponents").selector().withBuildType("release")
+        ) { builder -> builder.enableUnitTest = true }
+    }
+    tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+        outputs.upToDateWhen { false }
+    }
+}

@@ -23,6 +23,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -45,9 +48,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.*
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -237,7 +245,7 @@ fun CustomBottomNavigation(navController: NavHostController) {
         // 2. The floating island capsule.
         Surface(
             shape = CircleShape,
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f), // Прозорий темний фон для всієї капсули
+            color = MaterialTheme.colorScheme.surfaceContainer,
             shadowElevation = 6.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -287,6 +295,7 @@ fun CustomBottomNavigation(navController: NavHostController) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .selectableGroup()
                         .onSizeChanged { capsuleHeight = with(density) { it.height.toDp() } }
                         .padding(horizontalPadding),
                     verticalAlignment = Alignment.CenterVertically,
@@ -294,6 +303,7 @@ fun CustomBottomNavigation(navController: NavHostController) {
                 ) {
                     items.forEachIndexed { index, item ->
                         val isSelected = index == selectedIndex
+                        val tabLabel = stringResource(item.labelRes)
                         val tabWeight by animateFloatAsState(
                             targetValue = if (isSelected) selectedWeight else unselectedWeight,
                             animationSpec = spring(
@@ -305,19 +315,12 @@ fun CustomBottomNavigation(navController: NavHostController) {
                         Box(
                             modifier = Modifier
                                 .weight(tabWeight)
-                                .padding(vertical = 8.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null
-                                ) {
-                                    navController.navigate(item.route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
+                                .heightIn(min = 48.dp)
+                                .clip(CircleShape)
+                                .semantics { contentDescription = tabLabel }
+                                .selectable(selected = isSelected, role = Role.Tab, onClick = {
+                                    navController.navigateToMainTab(item.route)
+                                }),
                             contentAlignment = Alignment.Center
                         ) {
                             TabContent(item = item, isSelected = isSelected)
@@ -358,7 +361,7 @@ private fun TabContent(item: NavItem, isSelected: Boolean) {
                     maxLines = 1,
                     softWrap = false,
                     overflow = TextOverflow.Ellipsis,
-                    fontSize = 11.5.sp
+                    modifier = Modifier.clearAndSetSemantics {},
                 )
             }
         }

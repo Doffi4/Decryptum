@@ -101,6 +101,60 @@ class PasswordRepositoryTotpEncryptionTest {
         assertEquals(legacyPlainTotp, loaded!!.totpSecret)
     }
 
+    @Test
+    fun `warmed repository rejects locked list detail and search reads`() = runBlocking {
+        repository.addPassword(Password(1, "Synthetic", "alice", "secret", null, 0))
+        repository.getAllPasswords().first()
+        crypto.lock()
+        suspend fun rejects(block: suspend () -> Unit) {
+            try { block(); org.junit.Assert.fail("Locked read must fail") }
+            catch (_: IllegalStateException) { }
+        }
+        rejects { repository.getAllPasswords().first() }
+        rejects { repository.getPasswordById(1) }
+        rejects { repository.searchPasswords("Synthetic").first() }
+    }
+
+    @Test
+    fun `corrupted encrypted row cannot become a successful credential`() = runBlocking {
+        dao.insertPassword(PasswordDatabaseEntity(1, "Synthetic", "alice", "enc:2:broken"))
+        try { repository.getAllPasswords().first(); org.junit.Assert.fail("Corrupt read must fail") }
+        catch (_: IllegalStateException) { }
+    }
+
+    @Test
+    fun `reads reflect database changes rather than a retained plaintext snapshot`() = runBlocking {
+        dao.insertPassword(PasswordDatabaseEntity(1, "Before", "alice", "legacy-value"))
+        assertEquals("Before", repository.getAllPasswords().first().single().service)
+        dao.insertPassword(PasswordDatabaseEntity(1, "After", "alice", "legacy-value"))
+        assertEquals("After", repository.getAllPasswords().first().single().service)
+    }
+
+    @Test
+    fun `plaintext password resembling storage prefix round trips exactly`() = runBlocking {
+        repository.addPassword(Password(1, "Synthetic", "alice", "enc:literal-user-password", null, 0))
+        assertEquals("enc:literal-user-password", repository.getPasswordById(1)!!.password)
+    }
+
+    @Test
+    fun `empty locked vault must not become successful empty analysis input`() = runBlocking {
+        crypto.lock()
+        try { repository.getAllPasswords().first(); org.junit.Assert.fail("Locked read must fail") }
+        catch (_: IllegalStateException) { }
+    }
+
+    @Test
+    fun `locked picker headers omit both password and TOTP while detail fails`() = runBlocking {
+        repository.addPassword(Password(1, "Synthetic", "alice", "synthetic-secret", null, 0, "synthetic-totp"))
+        crypto.lock()
+        val header = repository.getAutofillHeaders().first().single()
+        assertEquals("alice", header.username)
+        assertEquals("", header.password)
+        org.junit.Assert.assertNull(header.totpSecret)
+        try { repository.getPasswordById(header.id); org.junit.Assert.fail("Locked fill must fail") }
+        catch (_: IllegalStateException) { }
+    }
+
     private class FakePasswordDao : PasswordDao {
         val storedPasswords = mutableMapOf<Long, PasswordDatabaseEntity>()
 

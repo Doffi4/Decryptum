@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.WindowManager
+import androidx.activity.result.contract.ActivityResultContracts
 import android.widget.Toast
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -21,6 +23,7 @@ import com.doffi4.doffisecure.security.AppLockManager
 import com.doffi4.doffisecure.security.PasswordCrypto
 import com.doffi4.doffisecure.security.UserSettingsManager
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import org.koin.android.ext.android.inject
 
 /**
@@ -33,6 +36,10 @@ class CredentialAuthActivity : FragmentActivity() {
     private val passwordCrypto: PasswordCrypto by inject()
     private val passwordRepository: IPasswordRepository by inject()
     private val userSettings: UserSettingsManager by inject()
+    private val pickerFallback = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        setResult(result.resultCode, result.data)
+        finish()
+    }
 
     companion object {
         const val EXTRA_PASSWORD_ID = "com.doffi4.doffisecure.EXTRA_PASSWORD_ID"
@@ -45,6 +52,8 @@ class CredentialAuthActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!lockManager.getAllowScreenshots()) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+        if (lockManager.shouldAutoLock()) lockManager.setLocked(true)
 
         val passwordId = intent.getLongExtra(EXTRA_PASSWORD_ID, -1L)
         if (passwordId == -1L) {
@@ -61,13 +70,7 @@ class CredentialAuthActivity : FragmentActivity() {
             if (mustAuth) {
                 authenticateAndDeliver(passwordId)
             } else {
-                val password = passwordRepository.getPasswordById(passwordId)
-                if (password != null) {
-                    deliverCredential(password)
-                } else {
-                    setResult(Activity.RESULT_CANCELED)
-                    finish()
-                }
+                readAndDeliver(passwordId)
             }
         }
     }
@@ -91,15 +94,7 @@ class CredentialAuthActivity : FragmentActivity() {
                         if (unlocked && passwordCrypto.isUnlocked()) {
                             lockManager.setLocked(false)
                             lockManager.touchLastActive()
-                            lifecycleScope.launch {
-                                val password = passwordRepository.getPasswordById(passwordId)
-                                if (password != null) {
-                                    deliverCredential(password)
-                                } else {
-                                    setResult(Activity.RESULT_CANCELED)
-                                    finish()
-                                }
-                            }
+                            readAndDeliver(passwordId)
                         } else {
                             setResult(Activity.RESULT_CANCELED)
                             finish()
@@ -129,19 +124,32 @@ class CredentialAuthActivity : FragmentActivity() {
 
             prompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(bioCipher))
         } else {
-            if (!lockManager.isLocked()) {
-                lifecycleScope.launch {
-                    val password = passwordRepository.getPasswordById(passwordId)
-                    if (password != null) deliverCredential(password) else finish()
-                }
-            } else {
-                setResult(Activity.RESULT_CANCELED)
-                finish()
-            }
+            // Reuse the existing picker/master-password flow. Unavailable biometrics
+            // never downgrade a mandatory authentication request to an unlocked read.
+            pickerFallback.launch(Intent(this, AutofillPickerActivity::class.java).apply {
+                putExtra(AutofillPickerActivity.EXTRA_PRESELECTED_PASSWORD_ID, passwordId)
+                putExtra(AutofillPickerActivity.EXTRA_REQUIRE_AUTH, true)
+            })
+        }
+    }
+
+    private fun readAndDeliver(passwordId: Long) {
+        lifecycleScope.launch {
+            try {
+                val password = passwordRepository.getPasswordById(passwordId)
+                if (password != null) deliverCredential(password)
+                else { setResult(Activity.RESULT_CANCELED); finish() }
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { setResult(Activity.RESULT_CANCELED); finish() }
         }
     }
 
     private fun deliverCredential(password: Password) {
+        if (lockManager.isLocked() || lockManager.shouldAutoLock()) {
+            setResult(Activity.RESULT_CANCELED)
+            finish()
+            return
+        }
         try {
             val credential = PasswordCredential(id = password.username, password = password.password)
             val response = GetCredentialResponse(credential)

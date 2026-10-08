@@ -1,0 +1,16 @@
+name: Feature request
+description: Describe a user problem and useful outcome.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome and constraints
+      description: Include offline/privacy/recovery constraints and alternatives considered.
+    validations:
+      required: true

@@ -1,5 +1,39 @@
 # Changelog
 
+## [1.1.0] — 2026-10-08 (prerelease)
+
+### Added
+- Local Security Center for weak-password heuristics, exact reuse and exact credential duplicates, with links to affected entries.
+- Optional Claude Security Advisor prototype in debug builds: per-request consent and an exact four-count JSON preview. Disabled in release builds.
+- Static presentation site with source-rendered privacy/security/product pages; release notes, startup application draft and launch checklist.
+
+### Improved
+- Material 3 fallback colors, vault/TOTP/detail layouts, shared component styling and EN/RU copy. Dynamic color remains supported.
+- Explicit unavailable/not-checked states for breach checks and unsupported coverage, without a misleading safety score.
+
+### Fixed
+- Main-tab navigation after Security Center no longer restores another screen through the start-tab saved-stack alias. Security-to-generator shortcuts share the bar action.
+- Opaque tab surfaces and immediate screen transitions prevent overlapping screen content; rounded clipping contains bottom-tab ripple.
+- Add-password sheet replaces the legacy alert, offers local generation/keyboard flow and waits for a successful write before closing; failed writes retain input and allow retry.
+- Password repository no longer keeps a process-lifetime decrypted snapshot; locked reads and corrupt field decryption fail closed, and literal `enc:` user passwords are encrypted normally.
+- Autofill picker reads metadata headers before authentication and fetches the selected password afterward; guarded repository reads no longer crash its locked pre-auth loading path.
+- Mandatory auth no longer falls through to filling when biometrics are unavailable in picker/password Credential Manager/passkey auth paths. Password Credential Manager reuses the picker/master-password fallback.
+- Master-password verification no longer accepts arbitrary input merely because a DEK is already cached.
+- Plaintext DB migration checkpoints WAL, preserves `user_version`, reopens/checks the export and atomically replaces the source without deleting it first. Failed DB-key persistence and incomplete stored key pairs refuse database access. Native crash/low-space validation remains open.
+
+### Security
+- Automatic HIBP calls disconnected from password loading/edit flows; breaches explicitly remain not checked.
+- Advisor uses an explicit aggregate DTO, bounded/cancellable HTTPS, no redirects/retries, untrusted text responses and no vault tools. No production provider key is embedded.
+- Removed service/exception details from the touched bulk-encryption log and SQLCipher migration exception logging. Picker/password credential auth honor screenshot protection.
+- Documented actual encryption, software/exportable passkeys, network metadata, readable CSV and recovery limits; corrected misleading zero-knowledge/hardware claims.
+
+### Developer
+- Published versionName 1.1.0 / versionCode 7; JVM regression coverage and disposable native migration fixtures added.
+- Build/test/lint results, certificate comparison and artifact hashes recorded in the launch checklist. Android runtime tests require a device; compilation is not execution.
+- README EN/RU/UK, policies, contribution/issue/PR guidance and static website source accompany this release. Website deployment and startup application submission remain deferred.
+
+Published as a prerelease after explicit owner approval of the versionCode 7 APK. Native authorization/migration/recovery/passkey evidence and production signing/disclosure decisions remain open. See [release notes](docs/RELEASE_NOTES_1.1.md) and [checklist](docs/LAUNCH_CHECKLIST.md).
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
@@ -22,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Implemented Passkey (FIDO2 / WebAuthn) registration and authentication using AndroidX Credentials API.
-- Implemented hardware-backed ECDSA P-256 keypair generation in Android Keystore.
+- Implemented software ECDSA P-256 keypair generation with encrypted exportable private keys (corrected description; the implementation does not generate these keys inside Android Keystore).
 - Added native CBOR encoder and WebAuthn authenticator response parser.
 - Added built-in RFC 6238 TOTP authenticator with SHA-1, SHA-256, and SHA-512 support.
 - Added live QR code scanning via CameraX and ML Kit Barcode Scanning.
@@ -36,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added automatic SQLite-to-SQLCipher migration mechanism (`DatabaseMigrator`).
 - Migrated master password derivation to Argon2id (RFC 9106) via `argon2kt`.
 - Added `ClipDescription.EXTRA_IS_SENSITIVE` on Android 13+ to suppress clipboard previews.
-- Implemented `ClipboardClearReceiver` via AlarmManager for reliable background clipboard wiping.
+- Implemented `ClipboardClearReceiver` via AlarmManager for best-effort background clipboard clearing; OS restrictions can prevent it.
 - Replaced pre-unlock lock screen network requests with local `IcoDecoder` and deferred favicon fetching.
 
 ### Changed
@@ -50,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implemented Android `AutofillService` with inline IME keyboard suggestions.
 - Added Material 3 bottom sheet picker for account selection.
 - Added strict form analysis (`AutofillStructureParser`) to filter non-login input fields.
-- Added per-app language selection (English, Ukrainian, Russian) with Android 13+ `LocaleManager` support.
+- Added per-app language selection with Android 13+ `LocaleManager` support. Current app strings are English/Russian; Ukrainian README availability does not establish Ukrainian app localization.
 
 ### Changed
 - Bumped version to 0.9.0 (versionCode 2).

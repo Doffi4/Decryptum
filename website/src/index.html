@@ -1,0 +1,419 @@
+<main id="main" tabindex="-1">
+  <section class="hero wrap" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="eyebrow">
+        <span class="dot" aria-hidden="true"></span> LOCAL-FIRST · ANDROID ·
+        OPEN SOURCE
+      </p>
+      <h1 id="hero-title">
+        Your passwords.<br />Your keys.<br /><span>Your device.</span>
+      </h1>
+      <p class="lead">
+        A quieter place for your digital essentials. Decryptum keeps your
+        passwords and two-factor codes in a local Android vault.
+      </p>
+      <div class="actions">
+        <a class="button primary" href="{{repository}}"
+          >Explore the source <span aria-hidden="true">↗</span></a
+        ><a class="button outline" href="{{repository}}/releases"
+          >Browse releases <span aria-hidden="true">↗</span></a
+        >
+      </div>
+      <p class="fine">Android 8+ · English &amp; Russian · GPLv3</p>
+      <div class="status-note">
+        <strong>A project in active development.</strong> This page describes
+        v1.1.0, available as a public prerelease. Native security and recovery
+        verification remain incomplete.
+        <a href="{{base}}product.html"
+          >See current status <span aria-hidden="true">→</span></a
+        >
+      </div>
+    </div>
+    <figure class="hero-preview">
+      <div class="preview-top">
+        <span>01 / THE VAULT</span><span>Android</span>
+      </div>
+      <div class="phone">
+        <img
+          src="{{base}}assets/vault.webp"
+          width="465"
+          height="1024"
+          alt="Earlier Decryptum vault screen with search, grouped accounts and floating navigation"
+          fetchpriority="high"
+          decoding="async"
+        />
+      </div>
+      <figcaption>
+        Existing app screenshot.<br />Earlier interface; not the current build.
+      </figcaption>
+    </figure>
+  </section>
+  <div class="principles wrap" role="group" aria-label="Product principles">
+    <span>Local storage</span><span>No Decryptum account</span
+    ><span>Offline core features</span><span>Source you can inspect</span>
+  </div>
+  <section class="section wrap" id="features" aria-labelledby="features-title">
+    <div class="section-heading">
+      <p class="eyebrow">THE EVERYDAY ESSENTIALS</p>
+      <h2 id="features-title">Less friction.<br />More control.</h2>
+      <p>
+        Keep the useful things together, without building your routine around a
+        cloud account.
+      </p>
+    </div>
+    <div class="feature-grid">
+      <article class="feature">
+        <span class="feature-number">01</span>
+        <h3>A local password vault</h3>
+        <p>
+          Save, search, group and edit your accounts. Unlock with a master
+          password or the supported biometric flow.
+        </p>
+      </article>
+      <article class="feature">
+        <span class="feature-number">02</span>
+        <h3>Your two-factor codes</h3>
+        <p>
+          Generate TOTP codes locally. Add accounts manually, scan a QR code or
+          import a Google Authenticator export.
+        </p>
+      </article>
+      <article class="feature">
+        <span class="feature-number">03</span>
+        <h3>Passwords on your terms</h3>
+        <p>
+          Generate passwords with SecureRandom. Choose length and character
+          sets. Strength labels are guidance, not a guarantee.
+        </p>
+      </article>
+      <article class="feature">
+        <span class="feature-number">04</span>
+        <h3>Android autofill</h3>
+        <p>
+          Use Android’s autofill framework and credential integration. App and
+          browser compatibility still needs device testing.
+        </p>
+      </article>
+    </div>
+    <div class="totp-preview">
+      <div>
+        <p class="eyebrow">02 / THE AUTHENTICATOR</p>
+        <h3>Your codes, kept close.</h3>
+        <p>
+          TOTP codes are generated from the stored secret and device time. There
+          is no Decryptum server to contact for each code.
+        </p>
+        <p class="fine">
+          Existing app screenshot. Earlier interface, not the current build. The
+          displayed historical code is not a TOTP recovery secret.
+        </p>
+      </div>
+      <figure>
+        <img
+          src="{{base}}assets/totp.webp"
+          width="465"
+          height="1024"
+          alt="Earlier Decryptum TOTP screen with a code and countdown"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>Earlier Android interface</figcaption>
+      </figure>
+    </div>
+    <aside class="inline-note">
+      <strong>Passkeys: experimental.</strong> Android 14+ provider code can
+      create and use software P-256 credentials. Caller trust, interoperability
+      and recovery need further validation. These are exportable keys, not
+      hardware-bound passkeys.
+      <a href="{{base}}security.html#known-limitations"
+        >Read the limitations →</a
+      >
+    </aside>
+  </section>
+  <section class="privacy-band" id="privacy" aria-labelledby="privacy-title">
+    <div class="wrap privacy-layout">
+      <div>
+        <p class="eyebrow">A CLEAR DATA BOUNDARY</p>
+        <h2 id="privacy-title">Local first.<br />Explicit about the rest.</h2>
+        <p class="lead">
+          Your vault lives in the app’s private storage. There is no Decryptum
+          cloud account or cross-device sync.
+        </p>
+        <a class="text-link" href="{{base}}privacy.html"
+          >Read the privacy details <span aria-hidden="true">↗</span></a
+        >
+      </div>
+      <div class="data-list">
+        <div>
+          <span>Stays on device</span>
+          <p>
+            Vault records, TOTP generation and local Security Center analysis.
+          </p>
+        </div>
+        <div>
+          <span>Can use the network</span>
+          <p>
+            Site icons can disclose a domain to Google, DuckDuckGo and the site
+            itself. The current favicon setting is not a complete network
+            switch.
+          </p>
+        </div>
+        <div>
+          <span>Not an encrypted backup</span>
+          <p>
+            CSV exports can contain passwords, TOTP seeds and private passkey
+            material in readable form. Android backup is disabled.
+          </p>
+        </div>
+        <div>
+          <span>No bundled analytics</span>
+          <p>
+            No analytics, tracking pixels or remote crash-reporting SDK was
+            found in the current source.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section wrap" id="security" aria-labelledby="security-title">
+    <div class="section-heading">
+      <p class="eyebrow">SECURITY, WITH CONTEXT</p>
+      <h2 id="security-title">Understand the protection.</h2>
+      <p>
+        Encryption is one layer. Device security, unlocking, safe recovery and
+        correct integration boundaries matter too.
+      </p>
+    </div>
+    <div class="architecture">
+      <article>
+        <span class="tag">STORAGE</span>
+        <h3>An encrypted database</h3>
+        <p>
+          Room uses SQLCipher with a random database key wrapped by Android
+          Keystore.
+        </p>
+      </article>
+      <article>
+        <span class="tag">VAULT SECRETS</span>
+        <h3>A separate encryption key</h3>
+        <p>
+          Passwords, TOTP secrets and private passkey material use AES-GCM with
+          a vault key protected by a master-password-derived Argon2id key.
+        </p>
+      </article>
+      <article>
+        <span class="tag">REALISTIC LIMITS</span>
+        <h3>The device is part of the boundary</h3>
+        <p>
+          A compromised OS or an attacker inside an unlocked process can defeat
+          app protections. Independent security assurance has not been
+          established.
+        </p>
+      </article>
+    </div>
+    <div class="link-row">
+      <a class="text-link" href="{{base}}security.html"
+        >Security architecture ↗</a
+      ><a class="text-link" href="{{base}}threat-model.html">Threat model ↗</a>
+    </div>
+  </section>
+  <section
+    class="section wrap center-section"
+    id="security-center"
+    aria-labelledby="center-title"
+  >
+    <div class="center-copy">
+      <p class="eyebrow">LOCAL SECURITY CENTER</p>
+      <h2 id="center-title">A useful next step.<br />Not a safety score.</h2>
+      <p>
+        The current source checks weak passwords, exact reuse across accounts
+        and duplicate credentials on your device. Review findings and make
+        changes yourself.
+      </p>
+      <p>
+        No AI or internet is needed for these checks. Breaches are explicitly
+        <strong>not checked</strong>; a quiet result does not mean your accounts
+        are safe.
+      </p>
+      <a class="text-link" href="{{base}}security-center.html"
+        >How the checks work ↗</a
+      >
+    </div>
+    <div class="check-list" role="group" aria-label="Implemented local checks">
+      <div>
+        <span aria-hidden="true">01</span>
+        <div>
+          <h3>Weak passwords</h3>
+          <p>
+            Length, limited common patterns and the existing strength heuristic.
+          </p>
+        </div>
+      </div>
+      <div>
+        <span aria-hidden="true">02</span>
+        <div>
+          <h3>Reused passwords</h3>
+          <p>
+            Exact matches shared across different stored account identities.
+          </p>
+        </div>
+      </div>
+      <div>
+        <span aria-hidden="true">03</span>
+        <div>
+          <h3>Duplicate credentials</h3>
+          <p>
+            Exact copies flagged for manual review. Nothing is deleted
+            automatically.
+          </p>
+        </div>
+      </div>
+      <p class="fine">
+        Explanation of current source behavior. This panel is not an app
+        screenshot.
+      </p>
+    </div>
+  </section>
+  <section class="wrap advisor" aria-labelledby="advisor-title">
+    <div>
+      <p class="eyebrow">OPTIONAL · DEVELOPMENT ONLY</p>
+      <h2 id="advisor-title">AI advice, with a narrow boundary.</h2>
+      <p>
+        The Claude Security Advisor is a debug-only experiment and is disabled
+        in release builds. Each configured request requires consent and lets you
+        review the exact data first.
+      </p>
+      <a class="text-link" href="{{base}}security-advisor.html"
+        >Inspect the outbound contract ↗</a
+      >
+    </div>
+    <div class="advisor-boundary">
+      <h3>Four counts. No vault identities.</h3>
+      <p>
+        Only password-entry, weak-password, reused-password and
+        duplicate-credential counts are sent as vault-derived data.
+      </p>
+      <p>
+        <strong
+          >Passwords, TOTP secrets, private keys, hashes, usernames and domains
+          are not sent by this feature.</strong
+        >
+        Anthropic receives IP/timing and transport metadata. Counts can still be
+        sensitive; the response is untrusted guidance.
+      </p>
+    </div>
+  </section>
+  <section
+    class="section wrap roadmap"
+    id="roadmap"
+    aria-labelledby="roadmap-title"
+  >
+    <div>
+      <p class="eyebrow">WHAT COMES NEXT</p>
+      <h2 id="roadmap-title">Build trust<br />before adding more.</h2>
+      <p>
+        The next priority is release verification and closing the remaining
+        launch blockers. Future ideas are not shipping promises.
+      </p>
+      <a class="text-link" href="{{base}}product.html"
+        >Product &amp; roadmap ↗</a
+      >
+    </div>
+    <ol>
+      <li>
+        <span>PRIORITY 01</span>
+        <h3>Verify the fundamentals</h3>
+        <p>
+          Lock and autofill boundaries, crash-safe migrations, restore behavior,
+          passkey trust and release signing.
+        </p>
+      </li>
+      <li>
+        <span>PRIORITY 02</span>
+        <h3>Test the real experience</h3>
+        <p>
+          Devices, accessibility, large vaults, current screenshots and a
+          reproducible release candidate.
+        </p>
+      </li>
+      <li>
+        <span>EXPLORATION</span>
+        <h3>Extend carefully</h3>
+        <p>
+          Encrypted recovery, improved imports, consented breach checks; later,
+          possible sync and browser or desktop work.
+        </p>
+      </li>
+    </ol>
+  </section>
+  <section class="section wrap faq" id="faq" aria-labelledby="faq-title">
+    <p class="eyebrow">GOOD QUESTIONS</p>
+    <h2 id="faq-title">Before you try it.</h2>
+    <details>
+      <summary>Does Decryptum work offline?</summary>
+      <p>
+        The vault, password generator, TOTP and local Security Center work
+        offline. Favicons can use the network. HIBP code exists but is not
+        connected to current checks; optional configured debug Claude requests
+        use the network.
+      </p>
+    </details>
+    <details>
+      <summary>Can I recover my vault if I lose my phone?</summary>
+      <p>
+        A portable encrypted recovery workflow is not implemented or verified.
+        Android backup is disabled. CSV export is readable and is not a safe
+        encrypted backup; full restore, including passkeys and TOTP, needs
+        validation.
+      </p>
+    </details>
+    <details>
+      <summary>Is it ready for my only copy of important credentials?</summary>
+      <p>
+        The current development tree has unresolved release blockers. Keep
+        independent recovery options and test with disposable data first.
+        Existing releases can differ from the source described here.
+      </p>
+    </details>
+    <details>
+      <summary>Does AI see my passwords?</summary>
+      <p>
+        The optional advisor accepts only four aggregate counts, never passwords
+        or secret/identity fields. It requires consent per request, is
+        unavailable without debug configuration and is disabled in release. It
+        is not a breach detector.
+      </p>
+    </details>
+    <details>
+      <summary>What platforms and languages are supported?</summary>
+      <p>
+        The Android app targets Android 8.0+ (API 26). Credential
+        Provider/passkey integration requires Android 14+. App strings are
+        English and Russian. Browser and desktop apps, cloud sync and an iOS app
+        are not implemented.
+      </p>
+    </details>
+    <details>
+      <summary>How do I report a security issue?</summary>
+      <p>
+        Read the
+        <a href="{{base}}security.html#reporting-a-vulnerability"
+          >disclosure instructions</a
+        >. A private reporting channel must be confirmed by the owner before
+        sensitive reports are sent. Do not post secrets or exploit details in a
+        public issue.
+      </p>
+    </details>
+  </section>
+  <section class="wrap source-cta" aria-labelledby="source-title">
+    <p class="eyebrow">OPEN DEVELOPMENT</p>
+    <h2 id="source-title">See what’s behind the interface.</h2>
+    <p>
+      Read the code, understand the tradeoffs, or help make the next release
+      better.
+    </p>
+    <a class="button primary" href="{{repository}}"
+      >Decryptum on GitHub <span aria-hidden="true">↗</span></a
+    >
+  </section>
+</main>

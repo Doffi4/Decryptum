@@ -5,6 +5,8 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
+import android.content.SharedPreferences
 import org.junit.Before
 import org.junit.Test
 import java.security.SecureRandom
@@ -26,6 +28,34 @@ class DatabaseKeyManagerTest {
             prefs = prefs,
             testSecretKey = testMasterKey
         )
+    }
+
+    @Test
+    fun `failed key commit blocks this manager even when preferences changed in memory`() {
+        val rejectingPrefs = object : SharedPreferences by prefs {
+            override fun edit(): SharedPreferences.Editor {
+                val editor = prefs.edit()
+                return object : SharedPreferences.Editor by editor {
+                    override fun putString(key: String?, value: String?): SharedPreferences.Editor {
+                        editor.putString(key, value)
+                        return this
+                    }
+                    override fun commit(): Boolean {
+                        editor.commit() // Android can update memory even if disk commit fails.
+                        return false
+                    }
+                }
+            }
+        }
+        val manager = DatabaseKeyManager(rejectingPrefs, testSecretKey = testMasterKey)
+        repeat(2) { assertThrows(IllegalStateException::class.java) { manager.getPassphrase() } }
+    }
+
+    @Test
+    fun `partial stored key refuses regeneration`() {
+        prefs.edit().putString("encrypted_db_key", "existing blob").commit()
+        assertThrows(IllegalStateException::class.java) { keyManager.getPassphrase() }
+        assertEquals("existing blob", prefs.getString("encrypted_db_key", null))
     }
 
     @Test

@@ -5,6 +5,8 @@ import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -133,6 +135,8 @@ fun LockScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -140,14 +144,14 @@ fun LockScreen(
             Surface(
                 shape = CircleShape,
                 color = MaterialTheme.colorScheme.primaryContainer,
-                modifier = Modifier.size(80.dp)
+                modifier = Modifier.size(56.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         Icons.Default.Lock,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
@@ -173,6 +177,15 @@ fun LockScreen(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
+
+            if (isSetup) {
+                Text(
+                    text = stringResource(R.string.setup_passphrase_guidance),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                )
+            }
 
             OutlinedTextField(
                 value = input.password,

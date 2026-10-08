@@ -117,7 +117,7 @@ fun GeneratorScreen(
     val hasCharset = includeUpper || includeLower || includeDigits || includeSymbols
 
     Scaffold(
-        containerColor = Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {

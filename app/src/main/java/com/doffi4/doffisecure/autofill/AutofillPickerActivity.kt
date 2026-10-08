@@ -43,6 +43,7 @@ import androidx.credentials.GetCredentialResponse
 import androidx.credentials.PasswordCredential
 import androidx.credentials.provider.PendingIntentHandler
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.lifecycleScope
 import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.domain.model.DomainUtils
 import com.doffi4.doffisecure.domain.model.Password
@@ -51,9 +52,14 @@ import com.doffi4.doffisecure.security.AppLocaleManager
 import com.doffi4.doffisecure.security.AppLockManager
 import com.doffi4.doffisecure.security.SecureClipboard
 import com.doffi4.doffisecure.security.UserSettingsManager
+import com.doffi4.doffisecure.security.PasswordCrypto
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import android.view.WindowManager
 import com.doffi4.doffisecure.ui.password.SiteAvatar
 import com.doffi4.doffisecure.ui.theme.DecryptumTheme
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.CancellationException
 import org.koin.android.ext.android.inject
 
 /**
@@ -70,6 +76,8 @@ class AutofillPickerActivity : FragmentActivity() {
     private val passwordRepository: IPasswordRepository by inject()
     private val userSettings: UserSettingsManager by inject()
     private val secureClipboard: SecureClipboard by inject()
+    private val passwordCrypto: PasswordCrypto by inject()
+    private var pendingMasterAuth by mutableStateOf<Password?>(null)
 
     private var usernameId: AutofillId? = null
     private var passwordFieldId: AutofillId? = null
@@ -85,6 +93,7 @@ class AutofillPickerActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!lockManager.getAllowScreenshots()) window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
 
         @Suppress("DEPRECATION")
         usernameId = intent.getParcelableExtra(AutofillAuthActivity.EXTRA_USERNAME_ID)
@@ -106,6 +115,42 @@ class AutofillPickerActivity : FragmentActivity() {
         setContent {
             DecryptumTheme {
                 val context = LocalContext.current
+                pendingMasterAuth?.let { selected ->
+                    var masterPassword by remember(selected.id) { mutableStateOf("") }
+                    var incorrect by remember(selected.id) { mutableStateOf(false) }
+                    AlertDialog(
+                        onDismissRequest = { pendingMasterAuth = null },
+                        title = { Text(stringResource(R.string.autofill_auth_prompt_title)) },
+                        text = {
+                            OutlinedTextField(
+                                value = masterPassword,
+                                onValueChange = { masterPassword = it; incorrect = false },
+                                label = { Text(stringResource(R.string.lock_field_master_password)) },
+                                visualTransformation = PasswordVisualTransformation(),
+                                isError = incorrect,
+                                singleLine = true,
+                            )
+                        },
+                        dismissButton = { TextButton(onClick = { pendingMasterAuth = null }) {
+                            Text(stringResource(R.string.action_cancel))
+                        } },
+                        confirmButton = { TextButton(onClick = {
+                            if (lockManager.getLockoutUntilTimestamp() > System.currentTimeMillis()) return@TextButton
+                            if (lockManager.verifyPassword(masterPassword)) {
+                                lockManager.clearLockout()
+                                lockManager.setFailedAttempts(0)
+                                pendingMasterAuth = null
+                                fillAndFinish(selected)
+                            } else {
+                                incorrect = true
+                                val attempts = lockManager.getFailedAttempts() + 1
+                                lockManager.setFailedAttempts(attempts)
+                                if (attempts >= 5) lockManager.setLockoutUntilTimestamp(System.currentTimeMillis() + 30_000L)
+                            }
+                            masterPassword = ""
+                        }) { Text(stringResource(R.string.autofill_fill_action)) } },
+                    )
+                }
                 var allPasswords by remember { mutableStateOf<List<Password>>(emptyList()) }
                 var isSearchExpanded by remember {
                     mutableStateOf((preselectedPasswordId == -1L) && webDomain.isNullOrBlank() && packageNameArg.isNullOrBlank() && serviceNameArg.isNullOrBlank())
@@ -113,7 +158,7 @@ class AutofillPickerActivity : FragmentActivity() {
                 var searchQuery by remember { mutableStateOf("") }
 
                 LaunchedEffect(Unit) {
-                    allPasswords = passwordRepository.getAllPasswords().first()
+                    allPasswords = passwordRepository.getAutofillHeaders().first()
                 }
 
                 // Domain-aware matching passwords for current site/app
@@ -592,8 +637,9 @@ class AutofillPickerActivity : FragmentActivity() {
     }
 
     private fun onPasswordSelected(password: Password) {
+        if (lockManager.shouldAutoLock()) lockManager.setLocked(true)
         val isLocked = lockManager.isLocked() || lockManager.shouldAutoLock()
-        val alwaysRequireAuth = userSettings.autofillAlwaysRequireAuth.value
+        val alwaysRequireAuth = userSettings.autofillAlwaysRequireAuth.value || intent.getBooleanExtra(EXTRA_REQUIRE_AUTH, false)
         val mustAuth = (isLocked || alwaysRequireAuth) && lockManager.hasMasterPassword()
 
         if (mustAuth) {
@@ -605,28 +651,31 @@ class AutofillPickerActivity : FragmentActivity() {
 
     private fun authenticateAndFill(password: Password) {
         val biometricManager = BiometricManager.from(this)
-        val canAuth = biometricManager.canAuthenticate(
-            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-        )
+        val canAuth = biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+        val cipher = passwordCrypto.getBiometricDecryptCipher()
 
-        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS) {
+        if (canAuth == BiometricManager.BIOMETRIC_SUCCESS && cipher != null) {
             val executor = ContextCompat.getMainExecutor(this)
             val prompt = BiometricPrompt(
                 this,
                 executor,
                 object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        lockManager.setLocked(locked = false)
-                        lockManager.touchLastActive()
-                        fillAndFinish(password)
+                        val authenticatedCipher = result.cryptoObject?.cipher
+                        if (authenticatedCipher != null && passwordCrypto.unlockWithBiometricCipher(authenticatedCipher)) {
+                            lockManager.setLocked(locked = false)
+                            fillAndFinish(password)
+                        } else {
+                            pendingMasterAuth = password
+                        }
                     }
 
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                        if (errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
-                            errorCode == BiometricPrompt.ERROR_USER_CANCELED
-                        ) {
+                        if (errorCode == BiometricPrompt.ERROR_USER_CANCELED) {
                             setResult(RESULT_CANCELED)
                             finish()
+                        } else {
+                            pendingMasterAuth = password
                         }
                     }
 
@@ -643,18 +692,41 @@ class AutofillPickerActivity : FragmentActivity() {
             val promptInfo = BiometricPrompt.PromptInfo.Builder()
                 .setTitle(getString(R.string.app_name))
                 .setSubtitle(getString(R.string.autofill_auth_prompt_subtitle))
-                .setAllowedAuthenticators(
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.DEVICE_CREDENTIAL
-                )
+                .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                .setNegativeButtonText(getString(R.string.autofill_auth_enter_pin))
                 .build()
 
-            prompt.authenticate(promptInfo)
+            prompt.authenticate(promptInfo, BiometricPrompt.CryptoObject(cipher))
         } else {
-            fillAndFinish(password)
+            pendingMasterAuth = password
         }
     }
 
     private fun fillAndFinish(password: Password) {
+        lifecycleScope.launch {
+            try {
+                if (lockManager.isLocked() || lockManager.shouldAutoLock()) {
+                    setResult(RESULT_CANCELED)
+                    finish()
+                    return@launch
+                }
+                val current = passwordRepository.getPasswordById(password.id)
+                if (current == null || lockManager.isLocked() || lockManager.shouldAutoLock()) {
+                    setResult(RESULT_CANCELED)
+                    finish()
+                    return@launch
+                }
+                deliverCredential(current)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                setResult(RESULT_CANCELED)
+                finish()
+            }
+        }
+    }
+
+    private fun deliverCredential(password: Password) {
         val uId = usernameId
         val pId = passwordFieldId
 
@@ -707,5 +779,6 @@ class AutofillPickerActivity : FragmentActivity() {
         const val EXTRA_WEB_DOMAIN = "extra_web_domain"
         const val EXTRA_PACKAGE_NAME = "extra_package_name"
         const val EXTRA_SERVICE_NAME = "extra_service_name"
+        const val EXTRA_REQUIRE_AUTH = "extra_require_auth"
     }
 }

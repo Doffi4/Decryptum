@@ -207,7 +207,7 @@ class PasswordCrypto(
     /** Returns true if the vault is currently unlocked and the DEK is available in memory. */
     fun isUnlocked(): Boolean = cachedDek != null
 
-    /** Wipes the in-memory DEK from RAM. Called on app lock or background timeout. */
+    /** Clears the cached DEK reference. JVM memory erasure is not guaranteed. */
     fun lock() {
         synchronized(keyLock) {
             cachedDek = null
@@ -247,7 +247,6 @@ class PasswordCrypto(
         password: String,
         isLegacyPasswordValid: ((String) -> Boolean)? = null
     ): Boolean {
-        if (isUnlocked()) return true
         if (password.isEmpty()) return false
 
         // Modern path: wrapped by Argon2id KEK
@@ -476,13 +475,13 @@ class PasswordCrypto(
             try {
                 decryptWithKey(encoded.removePrefix(NEW_BODY_PREFIX), dek)
             } catch (_: Exception) {
-                encoded // Payload corrupted - never crash
+                throw IllegalStateException("Unable to decrypt vault value")
             }
         } else {
             try {
                 decryptWithKey(encoded, getOrCreateLegacyKey())
             } catch (_: Exception) {
-                encoded // pre-encryption plain-text fallback
+                throw IllegalStateException("Unable to decrypt vault value")
             }
         }
     }

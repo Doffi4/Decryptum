@@ -2,7 +2,6 @@ package com.doffi4.doffisecure.security
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.core.content.edit
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import java.security.KeyStore
@@ -18,7 +17,8 @@ import javax.crypto.spec.GCMParameterSpec
  * the Room SQLite database via SQLCipher.
  *
  * The raw 32-byte key is encrypted at rest using an AES-256-GCM key inside the
- * hardware-backed `AndroidKeyStore` and persisted in private [SharedPreferences].
+ * `AndroidKeyStore` and persisted in private [SharedPreferences]. Hardware backing
+ * depends on the device and is not established by this implementation.
  *
  * In-memory caching ensures that the Keystore decryption only occurs once per app process.
  */
@@ -50,18 +50,26 @@ class DatabaseKeyManager(
     @Volatile
     private var cachedPassphrase: ByteArray? = null
 
+    @Volatile
+    private var persistenceFailed = false
+
     /**
      * Returns the 32-byte (256-bit) encryption key for the database.
      * Generates a new random key if one does not already exist.
      */
     fun getPassphrase(): ByteArray {
+        check(!persistenceFailed) { "Database key persistence failed; restart before retrying" }
         cachedPassphrase?.let { return it.copyOf() }
 
         synchronized(lock) {
+            check(!persistenceFailed) { "Database key persistence failed; restart before retrying" }
             cachedPassphrase?.let { return it.copyOf() }
 
             val existingEncrypted = prefs.getString(PREF_ENCRYPTED_DB_KEY, null)
             val existingIv = prefs.getString(PREF_DB_KEY_IV, null)
+            check((existingEncrypted == null) == (existingIv == null)) {
+                "Incomplete stored database key; refusing to replace it"
+            }
 
             val rawKey = if ((existingEncrypted != null) && (existingIv != null)) {
                 try {
@@ -93,9 +101,16 @@ class DatabaseKeyManager(
         val iv = cipher.iv
         val encryptedKey = cipher.doFinal(rawKey)
 
-        prefs.edit(commit = true) {
-            putString(PREF_ENCRYPTED_DB_KEY, Base64.getEncoder().encodeToString(encryptedKey))
-            putString(PREF_DB_KEY_IV, Base64.getEncoder().encodeToString(iv))
+        val persisted = prefs.edit()
+            .putString(PREF_ENCRYPTED_DB_KEY, Base64.getEncoder().encodeToString(encryptedKey))
+            .putString(PREF_DB_KEY_IV, Base64.getEncoder().encodeToString(iv))
+            .commit()
+        if (!persisted) {
+            // Failed commits may still update SharedPreferences in memory. Never let
+            // another request use that non-durable key to encrypt the database.
+            persistenceFailed = true
+            rawKey.fill(0)
+            throw IllegalStateException("Failed to persist database encryption key")
         }
 
         return rawKey

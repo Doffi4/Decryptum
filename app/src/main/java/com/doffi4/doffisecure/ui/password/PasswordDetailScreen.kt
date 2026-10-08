@@ -3,6 +3,8 @@ package com.doffi4.doffisecure.ui.password
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +32,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.doffi4.doffisecure.R
@@ -52,16 +58,17 @@ import org.koin.androidx.compose.koinViewModel
 fun PasswordDetailScreen(
     passwordId: Long,
     onNavigateBack: () -> Unit,
+    onNavigateToSecurityCenter: () -> Unit = {},
     viewModel: PasswordViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val selectedPassword by viewModel.selectedPassword.collectAsState()
-    val breachState by viewModel.breachState.collectAsState()
     val showEditDialog by viewModel.showEditDialog.collectAsState()
     val showPasswordStrength by viewModel.showPasswordStrength.collectAsState()
     val allPasskeys by viewModel.allPasskeys.collectAsState()
     var showDeletePasskeyConfirm by remember { mutableStateOf(value = false) }
+    var showDeleteCredentialConfirm by remember(passwordId) { mutableStateOf(false) }
     var showAddTotpOptions by remember { mutableStateOf(value = false) }
     var showQrScanner by remember { mutableStateOf(value = false) }
     var showManualTotpInput by remember { mutableStateOf(value = false) }
@@ -70,12 +77,6 @@ fun PasswordDetailScreen(
     val scope = rememberCoroutineScope()
     var refreshKey by remember { mutableIntStateOf(0) }
     val faviconRefreshedMsg = stringResource(R.string.favicon_refreshed)
-
-    DisposableEffect(passwordId) {
-        onDispose {
-            viewModel.resetBreachState()
-        }
-    }
 
     LaunchedEffect(passwordId) {
         viewModel.loadPasswordById(passwordId)
@@ -134,12 +135,7 @@ fun PasswordDetailScreen(
                         Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.action_edit))
                     }
                     IconButton(
-                        onClick = {
-                            selectedPassword?.let {
-                                viewModel.deletePassword(it.id)
-                                onNavigateBack()
-                            }
-                        },
+                        onClick = { showDeleteCredentialConfirm = selectedPassword != null },
                     ) {
                         Icon(
                             Icons.Default.Delete,
@@ -173,7 +169,8 @@ fun PasswordDetailScreen(
                         modifier = Modifier
                             .padding(padding)
                             .padding(16.dp)
-                            .fillMaxSize(),
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         val rawCandidate = pwd.url?.takeIf(String::isNotBlank) ?: pwd.service
@@ -237,10 +234,11 @@ fun PasswordDetailScreen(
                                 viewModel.copyPassword(pwd.password)
                             }
 
-                            BreachStatusCard(
-                                breachState = breachState,
-                                onRefresh = { viewModel.checkBreach(pwd.password, forceRefresh = true) }
-                            )
+                            TextButton(onClick = onNavigateToSecurityCenter) {
+                                Icon(Icons.Default.CloudOff, null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.security_center_title))
+                            }
                         } else if (linkedPasskey != null) {
                             DetailItem(
                                 label = stringResource(R.string.field_password),
@@ -339,7 +337,7 @@ fun PasswordDetailScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
                             text = "${stringResource(R.string.detail_created)}: ${formatDate(pwd.createdAt)}",
@@ -352,6 +350,29 @@ fun PasswordDetailScreen(
                     CircularProgressIndicator()
                 }
             }
+        }
+
+        if (showDeleteCredentialConfirm) {
+            AlertDialog(
+                onDismissRequest = { showDeleteCredentialConfirm = false },
+                title = { Text(stringResource(R.string.delete_credential_title)) },
+                text = { Text(stringResource(R.string.delete_credential_message)) },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            selectedPassword?.let { viewModel.deletePassword(it.id) }
+                            showDeleteCredentialConfirm = false
+                            onNavigateBack()
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    ) { Text(stringResource(R.string.action_delete)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteCredentialConfirm = false }) {
+                        Text(stringResource(R.string.action_cancel))
+                    }
+                },
+            )
         }
 
         if (showDeletePasskeyConfirm) {
@@ -502,7 +523,7 @@ fun DetailItem(
     copyIcon: ImageVector = Icons.Default.ContentCopy,
     onCopy: (() -> Unit)? = null,
 ) {
-    var isVisible by remember { mutableStateOf(value = !isSecret) }
+    var isVisible by remember(value, isSecret) { mutableStateOf(value = !isSecret) }
     val hideDesc = stringResource(R.string.action_hide)
     val showDesc = stringResource(R.string.action_show)
     val copyDesc = stringResource(R.string.action_copy)
@@ -525,6 +546,7 @@ fun DetailItem(
                         fontSize = 18.sp
                     ),
                     color = MaterialTheme.colorScheme.onSurface,
+                    fontFamily = if (isSecret) FontFamily.Monospace else FontFamily.Default,
                     modifier = Modifier.weight(1f)
                 )
                 Row(
@@ -534,10 +556,10 @@ fun DetailItem(
                     if (isSecret) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
+                                .size(48.dp)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-                                .clickable { isVisible = !isVisible },
+                                .clickable(role = Role.Button) { isVisible = !isVisible },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -581,15 +603,16 @@ private fun QuickCopyBadgeIcon(
     val isGenericCopy = icon == Icons.Default.ContentCopy
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(48.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .clickable { onClick() },
+            .semantics(mergeDescendants = true) { this.contentDescription = contentDescription }
+            .clickable(role = Role.Button) { onClick() },
         contentAlignment = Alignment.Center
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = if (isGenericCopy) contentDescription else null,
+            contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .size(18.dp)
@@ -611,7 +634,7 @@ private fun QuickCopyBadgeIcon(
             ) {
                 Icon(
                     imageVector = Icons.Default.ContentCopy,
-                    contentDescription = contentDescription,
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(8.dp)
                 )
@@ -670,7 +693,7 @@ fun BreachStatusCard(
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = null,
-                        tint = Color(0xFF2E7D32),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Text(
@@ -681,7 +704,7 @@ fun BreachStatusCard(
                     )
                     IconButton(
                         onClick = onRefresh,
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,

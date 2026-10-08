@@ -143,11 +143,29 @@ class PasswordCryptoTest {
     }
 
     @Test
-    fun `corrupted ciphertext returns fallback safely without crashing`() {
+    fun `corrupted ciphertext fails closed instead of returning encoded secret`() {
         crypto.setupMasterPassword("MasterPass")
         val corruptedPayload = "2:not_a_valid_base64_payload_at_all"
-        val result = crypto.decrypt(corruptedPayload)
-        assertEquals("Corrupted payload should return raw string as fallback", corruptedPayload, result)
+        org.junit.Assert.assertThrows(IllegalStateException::class.java) { crypto.decrypt(corruptedPayload) }
+    }
+
+    @Test
+    fun `valid format with tampered authentication tag fails closed`() {
+        crypto.setupMasterPassword("MasterPass")
+        val encoded = crypto.encrypt("synthetic-secret").removePrefix("2:")
+        val bytes = java.util.Base64.getDecoder().decode(encoded)
+        bytes[bytes.lastIndex] = (bytes.last().toInt() xor 1).toByte()
+        val tampered = "2:" + java.util.Base64.getEncoder().encodeToString(bytes)
+        assertThrows(IllegalStateException::class.java) { crypto.decrypt(tampered) }
+    }
+
+    @Test
+    fun `fresh verification rejects wrong and empty passwords while already unlocked`() {
+        crypto.setupMasterPassword("CorrectPassword123")
+        assertFalse(crypto.unlockWithPassword("WrongPassword456"))
+        assertFalse(crypto.unlockWithPassword(""))
+        assertTrue(crypto.unlockWithPassword("CorrectPassword123"))
+        assertTrue(crypto.isUnlocked())
     }
 
     @Test

@@ -12,8 +12,8 @@ android {
         applicationId = "com.doffi4.doffisecure"
         minSdk = 26
         targetSdk = 37
-        versionCode = 5
-        versionName = "1.0.1"
+        versionCode = 7
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -32,8 +32,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
             )
-            // Sign the release APK with the auto-generated debug keystore so it
-            // is installable right away on any device.
+            // Private candidate only. Public release is gated on owner-approved
+            // signing identity and verified certificate/update continuity.
             signingConfig = signingConfigs.getByName("debug")
         }
     }
@@ -47,6 +47,7 @@ android {
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -91,6 +92,10 @@ dependencies {
 
 
     testImplementation(libs.junit)
+    // Runs Android Navigation's real saved-stack behavior without an attached phone.
+    testImplementation("org.robolectric:robolectric:4.17")
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     testImplementation("org.json:json:20240303")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -1,71 +1,72 @@
+<img src="docs/screenshots/icon.webp" width="72" alt="Decryptum app icon">
+
 # Decryptum
 
-Offline password manager and 2FA authenticator for Android with system autofill integration and Passkey support.
+**Your passwords. Your keys. Your device.**
 
-[English] | [Українська](README.uk.md) | [Русский](README.ru.md)
+A local-first Android password manager and TOTP authenticator, built with Kotlin, Jetpack Compose and Material 3. No Decryptum account or hosted vault is required.
 
-[![Release](https://img.shields.io/github/v/release/Doffi4/Decryptum?style=flat-square)](https://github.com/Doffi4/Decryptum/releases/latest)
-[![License](https://img.shields.io/badge/license-GPLv3-blue.svg?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Android%208.0%2B%20(API%2026%2B)-green.svg?style=flat-square)](https://developer.android.com)
+[Русский](README.ru.md) · [Українська](README.uk.md) · [Releases](https://github.com/Doffi4/Decryptum/releases) · [Security](SECURITY.md) · [Privacy](PRIVACY.md)
 
-## Screenshots
+**Status: v1.1.0 public prerelease, active development.** This README describes the current source, including local Security Center work. Existing APKs may differ. Passkeys are experimental; Claude guidance is debug-only and disabled in release. Keep independent recovery options and test with disposable data while [launch gates](docs/PHASE6_HANDOFF.md) remain open.
 
-| Vault | Generator | 2FA Authenticator | Autofill Bottom Sheet |
-|:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/vault.png" width="200" alt="Vault"/> | <img src="docs/screenshots/generator.png" width="200" alt="Password Generator"/> | <img src="docs/screenshots/totp.png" width="200" alt="2FA Authenticator"/> | <img src="docs/screenshots/autofill.png" width="200" alt="Autofill Bottom Sheet"/> |
+**[Download v1.1.0 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 2026-10-08. [What changed](docs/RELEASE_NOTES_1.1.md), [artifact verification](docs/BUILD_VERIFICATION_1.1.md), [remaining gates](docs/LAUNCH_CHECKLIST.md).
 
-## Features
+## A look at the app
 
-### Core Vault & Encryption
-- Full-database AES-256 encryption via SQLCipher (`sqlcipher-android`) with page-level encryption.
-- Master password derivation using memory-hard Argon2id (RFC 9106) via `argon2kt`.
-- Hardware-backed DEK wrapping using Android Keystore AES-GCM (`enc:2:...`).
-- Biometric authentication (`BiometricPrompt`) with configurable auto-lock intervals.
-- Automatic clipboard clearing after 30 seconds via `AlarmManager` and `EXTRA_IS_SENSITIVE` flag on Android 13+.
-- Offline CSV export and import compatible with Bitwarden, KeePass, Chrome, and LastPass.
-- HaveIBeenPwned k-Anonymity API integration for checking compromised passwords (zero knowledge, 5-char SHA-1 prefix query).
+| Vault | TOTP authenticator |
+| --- | --- |
+| <img src="docs/screenshots/vault.png" width="200" alt="Earlier vault interface with grouped accounts"> | <img src="docs/screenshots/totp.png" width="200" alt="Earlier two-factor code interface"> |
 
-### Passkeys / WebAuthn
-- FIDO2 / WebAuthn passkey registration and authentication via Android Credential Manager API.
-- Hardware-backed ECDSA P-256 (secp256r1) key generation stored in Android Keystore.
-- Native CBOR encoding and decoding for authenticator data and client data JSON processing.
-- Direct inspection and management of registered passkeys per account.
+Existing screenshots of an earlier interface, **not current-build captures**. Exact capture provenance is unverified; displayed entries are not usage statistics. Current Material Privacy fallback colors and Security Center are not pictured. See [screenshot notes](docs/screenshots/README.md).
 
-### 2FA / TOTP Authenticator
-- Time-based one-time password generator (RFC 6238) supporting HMAC-SHA1, HMAC-SHA256, HMAC-SHA512.
-- Configurable token length (6 or 8 digits) and step intervals (30 or 60 seconds).
-- Real-time countdown timer with progress bar and one-tap clipboard copy.
-- Live camera QR code scanner via CameraX and Google ML Kit Barcode Scanning.
-- QR image import from device storage via ZXing fallback.
-- Batch account migration import from Google Authenticator export URIs (`otpauth-migration://`).
+<img src="design/add-password/compose-dark-ru.png" width="240" alt="v1.1.0 add-password sheet rendered with synthetic entries">
 
-### Android Integration
-- Native `AutofillService` implementation for browsers (Chrome, Firefox, Brave) and native applications.
-- Inline keyboard suggestions (IME chips) for Gboard and compatible keyboards.
-- Android 14+ Credential Provider integration (`DecryptumCredentialProviderService`).
-- Form structure parser (`AutofillStructureParser`) preventing suggestions in chat inputs and search fields.
-- In-app credential save flow (`AutofillSaveActivity`) when entering new accounts.
-- Per-app language support (English, Ukrainian, Russian) via Android 13+ `LocaleManager`.
-- Optional `FLAG_SECURE` window protection against screenshots and app switcher previews.
+New password-entry sheet: actual Compose component rendered locally with synthetic data through Robolectric, **not a physical-device screenshot**.
 
-## Tech Stack
+## What is implemented
 
-- **Language:** Kotlin 2.2.10 (Target SDK 37, Min SDK 26)
-- **UI:** Jetpack Compose, Material 3, Navigation Compose
-- **Database:** Room 2.8.4 + SQLCipher 4.6.1
-- **Cryptography:** Argon2kt 1.6.0, AndroidX Security Crypto, Android Keystore
-- **Credentials & Autofill:** AndroidX Credentials 1.5.0, Android Autofill Framework
-- **2FA & Vision:** CameraX 1.4.1, Google ML Kit Barcode Scanning 17.3.0, ZXing Core 3.5.3
-- **Dependency Injection:** Koin 3.5.0
-- **Image Loading:** Coil 2.7.0 (local ICO parser + disk caching)
-- **Code Shrinker:** ProGuard / R8 with baseline profiles
+- Local account vault: add/edit/delete, search, service grouping, master-password unlock and a supported biometric flow.
+- SecureRandom password generator with configurable length and character sets.
+- Local TOTP (SHA-1/256/512), manual/QR input, QR image decoding and Google Authenticator migration parsing.
+- Android Autofill Framework, inline suggestions and save/choose flows; Android 14+ Credential Provider code. Device/browser compatibility and recipient authorization need validation.
+- **Local Security Center:** weak-password heuristic, exact cross-account reuse and duplicate review. No automatic changes, global safety score or remote breach check.
+- **Experimental passkeys:** software P-256/ES256 creation/assertion implementation and local management. Exportable private keys, not hardware-bound credentials; protocol/caller trust and recovery remain gates.
+- CSV/JSON import parsers and **unencrypted CSV export**. Export can contain passwords, TOTP seeds and private passkey material; it is not a portable encrypted backup.
+- Optional aggregate-only Claude Security Advisor experiment, configured at runtime in debug only, with consent for every request. Release factory disables it.
 
-## Installation
+Android **8.0+ / API 26**; Credential Provider/passkeys require **Android 14+ / API 34**. App languages: **English and Russian**. No cloud sync, iOS/browser/desktop vault client or Ukrainian app strings are implemented. A [static landing website](website/README.md) is prepared locally; it is not a web vault.
 
-Download the signed APK from the [GitHub Releases](https://github.com/Doffi4/Decryptum/releases) page:
-- `Decryptum-v1.0.1-release.apk` - Optimized production build.
-- `Decryptum-v1.0.1-debug.apk` - Debug build with logs and diagnostics.
+## Security and privacy
 
-## License
+Room/SQLCipher encrypts the database with a random Keystore-wrapped database key. Password/TOTP fields and private passkey bytes use AES-GCM with a separate vault key wrapped by an Argon2id master-password-derived key. Biometrics provide an alternate DEK unlock path. Hardware properties and native behavior need device verification.
 
-This project is licensed under the terms of the GNU General Public License v3.0 (GPLv3). See [LICENSE](LICENSE) for details.
+Core features work offline, but favicon requests can disclose service domains to external providers. HIBP range-query code remains in the tree and is **not connected** to current loading/edit/Security Center checks. Breaches are not checked. No analytics or remote crash-reporting SDK was found in current app source/dependencies.
+
+The debug advisor sends only four counts, never passwords/secrets/hashes or account identities; IP/timing and provider metadata still leave the device. It is disabled in release. Android backup is disabled and complete encrypted recovery is not established. Uninstall, device/Keystore loss or a forgotten master password can make data unrecoverable.
+
+Read [Security](SECURITY.md), [Privacy](PRIVACY.md) and [Threat Model](docs/THREAT_MODEL.md). No independent audit, zero-knowledge, guaranteed memory erasure or proven WebAuthn compliance is claimed.
+
+## Try or build
+
+Download the approved **[v1.1.0 APK](https://github.com/Doffi4/Decryptum/releases/download/v1.1.0/Decryptum-v1.1.0.apk)** and review the [release notes](docs/RELEASE_NOTES_1.1.md). This is the owner-reviewed versionCode 7 candidate, published without rebuilding. It shares the Android Debug certificate with v1.0.1; native upgrade/data retention remains untested. Do not uninstall or reset an important vault to force an update.
+
+Build with Android Studio/SDK 37 and a JDK 25 Gradle runtime. The checked-in wrapper uses Gradle 9.6.0; Java source compatibility is 11. Set local SDK location in ignored local.properties.
+
+```powershell
+# Windows example: choose your installed JDK path.
+$env:JAVA_HOME='E:\Android Studio\jbr'
+.\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --console=plain
+```
+
+Debug output normally appears in app/build/outputs/apk/debug/. Disposable emulator/device tests: :app:connectedDebugAndroidTest. Compilation does not verify Android runtime behavior. See [Contributing](CONTRIBUTING.md). Local website: cd website, npm ci, npm run build, npm run preview.
+
+## Next priorities
+
+Close integration authorization and crash-safe migration gates; establish complete encrypted recovery; validate passkeys, native storage and device UX; prepare a production signing policy and validated device release. Better import diagnostics and consented HIBP are later work. Sync and browser/desktop clients are future exploration. See [Product & roadmap](docs/PRODUCT.md) and [Phase 6](docs/PHASE6_HANDOFF.md).
+
+## Contribute and disclose
+
+[Contributing](CONTRIBUTING.md) explains focused changes and checks. Use synthetic data and reviewed/redacted evidence. Follow [responsible disclosure](SECURITY.md#reporting-a-vulnerability); a private channel still needs owner confirmation, so do not post secrets or exploit details publicly.
+
+Licensed under [GNU GPLv3](LICENSE).

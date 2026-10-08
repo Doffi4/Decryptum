@@ -31,13 +31,13 @@ import androidx.compose.ui.unit.dp
 import com.doffi4.doffisecure.domain.model.PasswordStrength
 
 /** Fill color for each strength level. */
-private val PasswordStrength.color: Color
-    get() = when (this) {
-        PasswordStrength.WEAK -> Color(0xFFD32F2F)
-        PasswordStrength.MEDIUM -> Color(0xFFF57C00)
-        PasswordStrength.STRONG -> Color(0xFF388E3C)
-        PasswordStrength.VERY_STRONG -> Color(0xFF1B5E20)
-    }
+@Composable
+private fun PasswordStrength.color(): Color = when (this) {
+    PasswordStrength.WEAK -> MaterialTheme.colorScheme.error
+    PasswordStrength.MEDIUM -> MaterialTheme.colorScheme.secondary
+    PasswordStrength.STRONG -> MaterialTheme.colorScheme.primary
+    PasswordStrength.VERY_STRONG -> MaterialTheme.colorScheme.tertiary
+}
 
 /**
  * Compact rounded chip showing password strength as 4 proportional segments
@@ -55,6 +55,7 @@ fun PasswordStrengthBadge(
 ) {
     val strength = remember(password) { PasswordStrength.fromPassword(password) }
     val filled = if (password.isBlank()) 0 else strength.level
+    val strengthColor = strength.color()
 
     Surface(
         modifier = modifier,
@@ -73,7 +74,7 @@ fun PasswordStrengthBadge(
                 modifier = Modifier.width(64.dp)
             ) {
                 repeat(4) { index ->
-                    val target = if (index < filled) strength.color
+                    val target = if (index < filled) strengthColor
                     else MaterialTheme.colorScheme.surfaceVariant
                     val segmentColor by animateColorAsState(
                         targetValue = target,
@@ -98,7 +99,7 @@ fun PasswordStrengthBadge(
                     slideOutVertically(animationSpec = tween(140)) { -it / 2 }
             ) {
                 val labelColor by animateColorAsState(
-                    targetValue = strength.color,
+                    targetValue = strengthColor,
                     animationSpec = tween(durationMillis = 260),
                     label = "labelColor"
                 )

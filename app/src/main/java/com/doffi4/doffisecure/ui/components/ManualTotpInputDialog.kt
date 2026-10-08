@@ -3,9 +3,14 @@ package com.doffi4.doffisecure.ui.components
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.security.totp.TotpGenerator
 
@@ -15,6 +20,7 @@ fun ManualTotpInputDialog(
     onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
+    var secretVisible by remember { mutableStateOf(false) }
     val parsedConfig = remember(text) { TotpGenerator.parseOtpAuth(text) }
     val isError = text.isNotBlank() && parsedConfig == null
 
@@ -27,7 +33,15 @@ fun ManualTotpInputDialog(
                     value = text,
                     onValueChange = { text = it },
                     label = { Text(stringResource(R.string.totp_field_secret_hint)) },
-                    placeholder = { Text("JBSWY3DPEHPK3PXP") },
+                    visualTransformation = if (secretVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { secretVisible = !secretVisible }) {
+                            Icon(
+                                if (secretVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = stringResource(if (secretVisible) R.string.action_hide else R.string.action_show),
+                            )
+                        }
+                    },
                     isError = isError,
                     supportingText = if (isError) {
                         { Text(stringResource(R.string.totp_error_invalid_key)) }

@@ -1,0 +1,26 @@
+{
+  "name": "decryptum-website",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/serve.mjs",
+    "preview": "node scripts/serve.mjs",
+    "lint": "node scripts/check.mjs && prettier --check src scripts site.config.mjs jsconfig.json package.json",
+    "format": "prettier --write src scripts site.config.mjs jsconfig.json package.json",
+    "check:links": "node scripts/verify-output.mjs",
+    "typecheck": "tsc --project jsconfig.json",
+    "test": "node --test scripts/build.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.7",
+    "axe-core": "4.14.0",
+    "marked": "18.1.0",
+    "prettier": "3.9.9",
+    "typescript": "5.9.3"
+  }
+}
