@@ -10,7 +10,7 @@ Keep the core vault local, use established cryptographic primitives, minimize ou
 
 | Version | Security maintenance status |
 | --- | --- |
-| v1.1.0 prerelease (`versionCode` 7) | Published 2026-10-08 after owner review; production-readiness gates remain. See the [checklist](docs/LAUNCH_CHECKLIST.md) and [release notes](docs/RELEASE_NOTES_1.1.md) |
+| v1.1.0 prerelease (`versionCode` 7) | Published 2026-10-08; production-readiness limitations remain. See the [release notes](docs/RELEASE_NOTES_1.1.md) |
 | Published releases | No guaranteed security support window or verified backport policy has been established |
 
 Report the exact tag/commit, APK checksum and signing certificate where possible. No version is described here as independently audited or production certified.
@@ -67,14 +67,14 @@ No passwords, password hashes/fingerprints, usernames, service names, domains/UR
 
 ## Known limitations
 
-The [launch audit](docs/LAUNCH_AUDIT.md) is a historical baseline, not a current completion checklist. Later phases fixed some password-read/cache/decryption and HIBP-caller issues; they did not close every launch gate. Still requiring investigation and device evidence:
+The following areas still require investigation and device evidence:
 
 - Fresh authorization and lifecycle clearing across autofill/credential/export entry points; heuristic matching does not establish a trusted recipient.
 - Plaintext-to-SQLCipher migration now preserves the source until atomic replacement, checkpoints WAL, preserves schema version and checks the reopened export. JVM replacement/key-persistence regressions pass; native crash/low-space, historical schema upgrade and rollback evidence remains outstanding.
 - Complete encrypted recovery and tested passkey/TOTP-only restore; import/edit handling and developer tools need review.
 - WebAuthn protocol/caller trust, native SQLCipher/Keystore/biometric behavior and hardware properties on real devices.
 - Consistent screen/log/clipboard policy and complete network consent/toggle behavior.
-- Release signing uses Android Debug identity. Its certificate matches the public v1.0.1 release APK, but native upgrade/data retention and owner-approved public signing/key custody are outstanding. Candidate evidence is recorded in the launch checklist; no release was published.
+- Release signing uses Android Debug identity. Its certificate matches the public v1.0.1 release APK, but native upgrade/data retention and production signing/key custody are outstanding. See [v1.1.0 artifact verification](docs/BUILD_VERIFICATION_1.1.md).
 
 Root, a malicious OS, code executing inside an unlocked process, physical observation and compromised input/accessibility/clipboard software can exceed the app's protection. These are realistic limits, not permission to ignore reachable authorization bugs. Critical data loss or unauthorized secret access, recipient-trust failures, secret-bearing outbound requests and unsafe recovery are reportable. No known gap is declared an accepted risk or excluded from review by this document.
 

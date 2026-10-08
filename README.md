@@ -8,9 +8,9 @@ A local-first Android password manager and TOTP authenticator, built with Kotlin
 
 [Русский](README.ru.md) · [Українська](README.uk.md) · [Releases](https://github.com/Doffi4/Decryptum/releases) · **[Website](https://doffi4.github.io/Decryptum/)** · [Security](SECURITY.md) · [Privacy](PRIVACY.md)
 
-**Status: v1.1.0 public prerelease, active development.** This README describes the current source, including local Security Center work. Existing APKs may differ. Passkeys are experimental; Claude guidance is debug-only and disabled in release. Keep independent recovery options and test with disposable data while [launch gates](docs/PHASE6_HANDOFF.md) remain open.
+**Status: v1.1.0 public prerelease, active development.** This README describes the current source, including local Security Center work. Existing APKs may differ. Passkeys are experimental; Claude guidance is debug-only and disabled in release. Keep independent recovery options and test with disposable data while [launch gates](SECURITY.md#known-limitations) remain open.
 
-**[Download v1.1.0 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 2026-10-08. [What changed](docs/RELEASE_NOTES_1.1.md), [artifact verification](docs/BUILD_VERIFICATION_1.1.md), [remaining gates](docs/LAUNCH_CHECKLIST.md).
+**[Download v1.1.0 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 2026-10-08. [What changed](docs/RELEASE_NOTES_1.1.md), [artifact verification](docs/BUILD_VERIFICATION_1.1.md), [remaining gates](SECURITY.md#known-limitations).
 
 ## A look at the app
 
@@ -20,7 +20,7 @@ A local-first Android password manager and TOTP authenticator, built with Kotlin
 
 Existing screenshots of an earlier interface, **not current-build captures**. Exact capture provenance is unverified; displayed entries are not usage statistics. Current Material Privacy fallback colors and Security Center are not pictured. See [screenshot notes](docs/screenshots/README.md).
 
-<img src="design/add-password/compose-dark-ru.png" width="240" alt="v1.1.0 add-password sheet rendered with synthetic entries">
+<img src="docs/screenshots/password-entry.png" width="240" alt="v1.1.0 add-password sheet rendered with synthetic entries">
 
 New password-entry sheet: actual Compose component rendered locally with synthetic data through Robolectric, **not a physical-device screenshot**.
 
@@ -49,13 +49,13 @@ Read [Security](SECURITY.md), [Privacy](PRIVACY.md) and [Threat Model](docs/THRE
 
 ## Try or build
 
-Download the approved **[v1.1.0 APK](https://github.com/Doffi4/Decryptum/releases/download/v1.1.0/Decryptum-v1.1.0.apk)** and review the [release notes](docs/RELEASE_NOTES_1.1.md). This is the owner-reviewed versionCode 7 candidate, published without rebuilding. It shares the Android Debug certificate with v1.0.1; native upgrade/data retention remains untested. Do not uninstall or reset an important vault to force an update.
+Download **[v1.1.0 APK](https://github.com/Doffi4/Decryptum/releases/download/v1.1.0/Decryptum-v1.1.0.apk)** and review the [release notes](docs/RELEASE_NOTES_1.1.md). VersionCode 7 shares the Android Debug certificate with v1.0.1; native upgrade/data retention remains untested. Do not uninstall or reset an important vault to force an update.
 
 Build with Android Studio/SDK 37 and a JDK 25 Gradle runtime. The checked-in wrapper uses Gradle 9.6.0; Java source compatibility is 11. Set local SDK location in ignored local.properties.
 
 ```powershell
 # Windows example: choose your installed JDK path.
-$env:JAVA_HOME='E:\Android Studio\jbr'
+# Set JAVA_HOME to your installed JDK 25.
 .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --console=plain
 ```
 
@@ -63,7 +63,7 @@ Debug output normally appears in app/build/outputs/apk/debug/. Disposable emulat
 
 ## Next priorities
 
-Close integration authorization and crash-safe migration gates; establish complete encrypted recovery; validate passkeys, native storage and device UX; prepare a production signing policy and validated device release. Better import diagnostics and consented HIBP are later work. Sync and browser/desktop clients are future exploration. See [Product & roadmap](docs/PRODUCT.md) and [Phase 6](docs/PHASE6_HANDOFF.md).
+Close integration authorization and crash-safe migration gates; establish complete encrypted recovery; validate passkeys, native storage and device UX; prepare a production signing policy and validated device release. Better import diagnostics and consented HIBP are later work. Sync and browser/desktop clients are future exploration. See [Product & roadmap](docs/PRODUCT.md).
 
 ## Contribute and disclose
 

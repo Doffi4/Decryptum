@@ -2,7 +2,7 @@
 
 # Decryptum
 
-**[Завантажити v1.1.0 — попередній реліз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 08.10.2026. [Зміни](docs/RELEASE_NOTES_1.1.md), [перевірка APK](docs/BUILD_VERIFICATION_1.1.md), [залишкові обмеження](docs/LAUNCH_CHECKLIST.md).
+**[Завантажити v1.1.0 — попередній реліз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 08.10.2026. [Зміни](docs/RELEASE_NOTES_1.1.md), [перевірка APK](docs/BUILD_VERIFICATION_1.1.md), [залишкові обмеження](SECURITY.md#known-limitations).
 
 **Ваші паролі. Ваші ключі. Ваш пристрій.**
 
@@ -10,7 +10,7 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Релізи](https://github.com/Doffi4/Decryptum/releases) · **[Сайт](https://doffi4.github.io/Decryptum/)** · [Безпека](SECURITY.md) · [Приватність](PRIVACY.md)
 
-**v1.1.0 опубліковано як попередній реліз; розробка триває.** Опис стосується поточного коду, APK можуть відрізнятися. Passkeys експериментальні; Claude Advisor лише в debug, у release вимкнений. До закриття [блокерів](docs/PHASE6_HANDOFF.md) використовуйте тестові дані та незалежні способи відновлення важливих акаунтів.
+**v1.1.0 опубліковано як попередній реліз; розробка триває.** Опис стосується поточного коду, APK можуть відрізнятися. Passkeys експериментальні; Claude Advisor лише в debug, у release вимкнений. До закриття [блокерів](SECURITY.md#known-limitations) використовуйте тестові дані та незалежні способи відновлення важливих акаунтів.
 
 | Сховище | TOTP |
 | --- | --- |
@@ -45,6 +45,6 @@ APK: **[Decryptum v1.1.0](https://github.com/Doffi4/Decryptum/releases/download/
 
 Android Studio/SDK 37, JDK 25 для Gradle (Java target 11). Команди: [основний README](README.md#try-or-build), [Contributing](CONTRIBUTING.md). Тести Android потребують тестового пристрою/емулятора.
 
-Пріоритети: авторизація інтеграцій, безпечні міграції, відновлення, passkeys, пристрої/доступність і правильно підписаний кандидат. Sync та desktop/browser — майбутні ідеї. [Продукт](docs/PRODUCT.md), [Phase 6](docs/PHASE6_HANDOFF.md). [Відповідальне розкриття](SECURITY.md#reporting-a-vulnerability): приватний канал ще має підтвердити власник, секрети публічно не надсилайте.
+Пріоритети: авторизація інтеграцій, безпечні міграції, відновлення, passkeys, пристрої/доступність і правильно підписаний кандидат. Sync та desktop/browser — майбутні ідеї. [Продукт](docs/PRODUCT.md). [Відповідальне розкриття](SECURITY.md#reporting-a-vulnerability): приватний канал ще має підтвердити власник, секрети публічно не надсилайте.
 
 Ліцензія: [GNU GPLv3](LICENSE).

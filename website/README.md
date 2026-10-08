@@ -31,7 +31,7 @@ Security/Privacy/Product/Threat Model and center/advisor pages are rendered dire
 
 ## GitHub Pages publication
 
-Publication was authorized on 2026-10-08. `.github/workflows/pages.yml` installs locked dependencies, checks lint/types/tests, builds and verifies production links/metadata, then deploys `dist/` through GitHub Pages. It runs on relevant pushes to `main` and can be started manually from Actions. Actions are pinned to verified official commit revisions. The site URL is also set as the repository homepage.
+`.github/workflows/pages.yml` installs locked dependencies, checks lint/types/tests, builds and verifies production links/metadata, then deploys `dist/` through GitHub Pages. It runs on relevant pushes to `main` and can be started manually from Actions. Actions are pinned to verified official commit revisions. The site URL is also set as the repository homepage.
 
 Production uses `SITE_URL=https://doffi4.github.io` and `BASE_PATH=/Decryptum/`. Local previews retain the empty origin/root base defaults below. No custom domain, DNS change or mailbox is configured.
 
@@ -46,14 +46,10 @@ $env:BASE_PATH='/'
 npm run build
 ```
 
-For Pages upload the generated static output with `.nojekyll`; for Cloudflare Pages/Netlify/Vercel use build `npm ci && npm run build` from `website`, output `dist`, and no SPA rewrites. All routes are actual `.html` files. Review the host's logs/privacy settings and headers; serve HTTPS and add `X-Content-Type-Options: nosniff` and `Content-Security-Policy: frame-ancestors 'none'` as response headers if supported. The HTML supplies a restrictive CSP for script/style/image/network policy. Custom-domain purchase/DNS and mailbox setup still require separate owner authorization.
+For Pages upload the generated static output with `.nojekyll`; for Cloudflare Pages/Netlify/Vercel use build `npm ci && npm run build` from `website`, output `dist`, and no SPA rewrites. All routes are actual `.html` files. Review the host's logs/privacy settings and headers; serve HTTPS and add `X-Content-Type-Options: nosniff` and `Content-Security-Policy: frame-ancestors 'none'` as response headers if supported. The HTML supplies a restrictive CSP for script/style/image/network policy. Custom-domain purchase/DNS and mailbox setup are separate hosting decisions.
 
-## Screenshots and design exploration
+## Screenshots
 
 The existing `docs/screenshots/vault.png` and `totp.png` are retained images, not new device captures; their exact build/device and whether every account was synthetic are unverified. They contain no visible passwords, TOTP seeds or private keys; the displayed historical OTP is not a recovery secret. No image is evidence of current implementation. Earlier screenshot colors are wallpaper-derived and may differ from the current fallback palette. `autofill.png` (account addresses) and `generator.png` (plaintext value) were excluded from this presentation.
 
-The web icon is exported from current Android adaptive vector resources, not the stale Android-placeholder mipmap. Source Markdown is shipped under `dist/source/` so newly authored policy/handoff links do not depend on unpushed GitHub files.
-
-Stitch exploration reused project `12084559142297124082`, screen `c520b99700864484af32c94aca1adaf0`. Its generated copy contains unsupported claims (including screenshot provenance, Ed25519, entropy and a complete favicon toggle); it is a visual reference only, not shipped code, a real app capture or source authority. The implementation uses verified local code, existing images and native web semantics.
-
-See [Phase 5 evidence](../docs/PUBLIC_PRESENTATION.md) and [Phase 6 handoff](../docs/PHASE6_HANDOFF.md).
+The web icon is exported from current Android adaptive vector resources, not the stale Android-placeholder mipmap. Source Markdown is shipped under `dist/source/` to provide downloadable policy and product documentation.

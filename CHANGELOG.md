@@ -5,7 +5,7 @@
 ### Added
 - Local Security Center for weak-password heuristics, exact reuse and exact credential duplicates, with links to affected entries.
 - Optional Claude Security Advisor prototype in debug builds: per-request consent and an exact four-count JSON preview. Disabled in release builds.
-- Static presentation site with source-rendered privacy/security/product pages; release notes, startup application draft and launch checklist.
+- Static presentation site with source-rendered privacy/security/product pages; release notes and product documentation.
 
 ### Improved
 - Material 3 fallback colors, vault/TOTP/detail layouts, shared component styling and EN/RU copy. Dynamic color remains supported.
@@ -29,10 +29,10 @@
 
 ### Developer
 - Published versionName 1.1.0 / versionCode 7; JVM regression coverage and disposable native migration fixtures added.
-- Build/test/lint results, certificate comparison and artifact hashes recorded in the launch checklist. Android runtime tests require a device; compilation is not execution.
-- README EN/RU/UK, policies, contribution/issue/PR guidance and static website source accompany this release. Website deployment and startup application submission remain deferred.
+- Build/test/lint results, certificate comparison and artifact hashes recorded in the release verification notes. Android runtime tests require a device; compilation is not execution.
+- README EN/RU/UK, policies, contribution/issue/PR guidance and static website source accompany this release. The website is published on GitHub Pages.
 
-Published as a prerelease after explicit owner approval of the versionCode 7 APK. Native authorization/migration/recovery/passkey evidence and production signing/disclosure decisions remain open. See [release notes](docs/RELEASE_NOTES_1.1.md) and [checklist](docs/LAUNCH_CHECKLIST.md).
+Published as a prerelease with versionCode 7. Native authorization/migration/recovery/passkey evidence and production signing/disclosure decisions remain open. See [release notes](docs/RELEASE_NOTES_1.1.md) and [known limitations](SECURITY.md#known-limitations).
 
 All notable changes to this project will be documented in this file.
 

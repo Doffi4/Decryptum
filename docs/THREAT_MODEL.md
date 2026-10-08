@@ -1,6 +1,6 @@
 # Decryptum threat model
 
-Current development source reviewed 2026-10-07. Scope: Android app, its local storage and integrations, optional debug advisor, manual exports and the static presentation site. This is an engineering model of risks and controls, not a completed vulnerability audit or evidence that scenarios were exploited. The fresh-context reviewer was unavailable, so source-boundary review was performed sequentially, without an independent second review.
+Current development source reviewed 2026-10-07. Scope: Android app, its local storage and integrations, optional debug advisor, manual exports and the static presentation site. This is an engineering model of risks and controls, not a completed vulnerability audit or evidence that scenarios were exploited.
 
 ## Overview
 
@@ -30,7 +30,7 @@ Effective resources and independently enforced boundaries:
 | Icons | Domain fetch/cache | Caller `enabled`; setting not propagated everywhere | Google → DuckDuckGo → direct/apex; local caches | Providers, sites, possible redirect recipients | HTTPS; metadata disclosure persists; no comprehensive network-off control |
 | HIBP | Retained range-query transport | Current UI/ViewModel no longer invokes it | Five-hex SHA-1 prefix if reconnected | HIBP | Current center not checked; validation/consent/coverage gate before reconnection |
 | Manual export | Unencrypted credential file | User-selected SAF URI | Local or cloud-backed document provider | User/provider/any file reader | No independent encryption; success does not prove complete restore |
-| Landing site | Static HTML/CSS/assets | Empty site URL = noindex preview; explicit owner domain later | `website/dist` | Browser/selected host; GitHub on navigation | No analytics/backend/remote fonts; theme localStorage only; host logging unknown |
+| Landing site | Static HTML/CSS/assets | Empty site URL = noindex preview; Pages workflow sets the public origin | `website/dist` | Browser/GitHub Pages; GitHub on navigation | No analytics/backend/remote fonts; theme localStorage only; host logging unknown |
 
 ## Assets, trust boundaries and assumptions
 
@@ -46,11 +46,11 @@ No tenant/admin/hosted account model exists. No claim of universally hardware-ba
 
 ## Attacker stories and mitigations
 
-Priorities below guide investigation, not confirmed vulnerability severity. Source anchors refer to actual consumers; the [launch audit](LAUNCH_AUDIT.md) records earlier findings and later phase docs record some fixes.
+Priorities below guide investigation, not confirmed vulnerability severity. Source anchors refer to the implementation; native validation remains incomplete.
 
 | Priority | Scenario and capability gain | Prerequisites / impact | Existing controls | Required mitigation/evidence | Source |
 | --- | --- | --- | --- | --- | --- |
-| Critical gate | Migration failure loses the last usable vault | Legacy plaintext DB; crash/rename failure after deletion; availability loss | Temporary encrypted export exists | Preserve source until validated atomic replacement/rollback; crash/low-space/upgrade fixtures | `data/local/database/DatabaseMigrator.kt` delete/rename sequence |
+| Critical gate | Migration failure loses the last usable vault | Legacy plaintext DB; failed conversion or interrupted replacement; availability loss | Source preserved until validated atomic replacement; WAL/schema/export checks | Native crash/low-space/upgrade and rollback fixtures | `data/local/database/DatabaseMigrator.kt` |
 | High | Stolen locked phone leaks secret material | File access or bypassed integration authorization; account takeover | DB encryption, modern DEK wrapper, guarded password reads, lock | Verify every auth entry point and legacy path, rate limits and snapshot cleanup; OS lock remains essential | `PasswordCrypto`, `DatabaseKeyManager`, repositories, `autofill/` |
 | High | Stolen unlocked phone enables copying/export/signing | App already unlocked; user authority is available | Auto-lock timing and optional integration auth | Minimize unlocked exposure and test fresh-auth/export paths; do not promise protection after authorized unlock | `AppLockManager`, `SettingsViewModel`, auth activities |
 | High | Malicious local app receives the wrong credential | Framework selection, heuristic recipient match or incorrect caller/origin binding | Bind permissions, non-exported helper activities, user selection | Validate package/certificate/origin/RP binding; adversarial device/browser tests; consider capability gate | Manifest, `AutofillMatcher`, provider/save/auth activities |

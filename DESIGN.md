@@ -1,6 +1,6 @@
 # Decryptum design context
 
-The current Kotlin/Compose source is authoritative. Historical local design exports are not published as app source; their locale/palette statements can be stale. Actual locales are EN/RU. Phase 4 added the optional advisor inside Security Center; Phase 5 adapts the current identity for a static presentation website without changing Android UI.
+Kotlin/Compose source defines the Android UI. App locales are EN/RU. The static website follows the same visual identity.
 
 ## Runtime token ownership
 
@@ -22,11 +22,11 @@ All product copy lives in EN/RU strings.xml; language sent to Claude is a fixed 
 
 JVM tests verify privacy boundary, transport and lifecycle. Compose instrumentation covers intro, decline, exact payload, loading/cancel, result and configuration/offline failures; compilation is not runtime verification. Real device light/dark, dynamic color, accessibility, font scaling and offline traffic checks remain required if no device is available.
 
-## Static website adapter (Phase 5)
+## Static website adapter
 
 `website/src/styles.css` adapts current Android `Color.kt` roles: dark background #111318, foreground #E2E2E9, muted #C4C6D0, low/high surface #191C20/#282A2F, primary/onPrimary #AAC7FF/#0A305F, outlineVariant #44474E, tertiary #A5D0B9; light counterparts #F9F9FF, #191C20, #44474E, #F3F3FA/#E7E8EE, #415F91/#FFFFFF, #C4C6D0, #3E6655. Android runtime ownership/dynamic colors are unchanged. System sans, tonal surfaces, rounded cards/capsule links and restrained spacing carry Material Privacy into a spacious editorial landing. No remote fonts or generated app screenshots.
 
-Native links/buttons/details own website navigation, theme and FAQ keyboard behavior. Shared build shell owns header/footer/skip link; global CSS owns role tokens, focus and scrollbars. Default dark theme; optional script stores only a light/dark preference. Static content works without JavaScript. Earlier screenshots are labelled and are not current fallback-color evidence. Build-time Markdown rendering keeps public policy pages tied to source documents. Preview stays noindex until the owner configures a real HTTPS origin.
+Native links/buttons/details own website navigation, theme and FAQ keyboard behavior. Shared build shell owns header/footer/skip link; global CSS owns role tokens, focus and scrollbars. Default dark theme; optional script stores only a light/dark preference. Static content works without JavaScript. Earlier screenshots are labelled and are not current fallback-color evidence. Build-time Markdown rendering keeps public policy pages tied to source documents. Local preview is noindex; the Pages workflow supplies the public HTTPS origin.
 
 ## Password entry and tab behavior (v1.1.0)
 
@@ -35,5 +35,3 @@ Native links/buttons/details own website navigation, theme and FAQ keyboard beha
 The create draft lives only in remember state, never rememberSaveable/Bundle. Submission waits for AddPasswordUseCase, disables repeat writes/dismissal while pending, clears the draft and closes on success, preserves it with localized inline retry copy on failure, and does not render exception text. Service/login outer whitespace is trimmed; password contents are unchanged. Existing snackbar handles success. Cancellation/back/close discards the transient draft, matching the existing create-dialog policy.
 
 `MainTabNavigation.kt` owns main-tab and Security Center generator-shortcut navigation. Start-tab restoration is disabled because non-inclusive popUpTo can alias another saved stack to that destination; other main-tab root states remain restorable, while restored detail/security children are popped on an explicit tab press. NavHost screen crossfades are disabled, tab surfaces are opaque, and tab selectable feedback is clipped to CircleShape; the existing capsule indicator animation is preserved.
-
-Design reference: `design/add-password/stitch-proposal.png`, Stitch screen `f2a83b86e849495f8131b2adefe419c6`. The remote proposal used only synthetic data. Its unsupported Android Keystore/hardware/encryption caption was deliberately omitted from the implementation. This is a design reference, not a device screenshot.

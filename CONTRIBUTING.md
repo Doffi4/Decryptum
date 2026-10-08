@@ -12,7 +12,7 @@ Use Android Studio's SDK 37 and a JDK 25 Gradle runtime (Java source target is 1
 .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug :app:compileDebugAndroidTestKotlin --console=plain
 ```
 
-Instrumentation requires a disposable emulator/device: `:app:connectedDebugAndroidTest`. Compilation alone does not execute device tests. Release checks need the explicit release test gate described in [advisor verification](docs/SECURITY_ADVISOR.md); do not ship the current debug-signed release configuration.
+Instrumentation requires a disposable emulator/device: `:app:connectedDebugAndroidTest`. Compilation alone does not execute device tests. Release checks need the explicit release test gate described in [release verification](docs/BUILD_VERIFICATION_1.1.md). Current public APKs use Android Debug signing; production signing policy remains unresolved.
 
 For the static site:
 

@@ -119,7 +119,7 @@ class PasswordEntrySheetTest {
     }
 
     private fun capture(name: String) {
-        val output = File(System.getProperty("decryptum.preview.dir", ".codex-ui-fix/previews"), name)
+        val output = File(System.getProperty("decryptum.preview.dir", ".artifacts/previews"), name)
         checkNotNull(output.parentFile).mkdirs()
         // PixelCopy forceRedraw waits for a physical window frame; render the JVM dialog's
         // actual measured view instead. This is a Robolectric preview, not a device capture.

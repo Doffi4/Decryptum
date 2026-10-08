@@ -64,11 +64,7 @@ if (
 const sourceUrl = (path) => `${config.repository}/blob/main/${path}`;
 const localSources = [
   ...pages.map((p) => p[2]),
-  "docs/LAUNCH_AUDIT.md",
-  "docs/PHASE6_HANDOFF.md",
-  "docs/LAUNCH_CHECKLIST.md",
   "docs/RELEASE_NOTES_1.1.md",
-  "docs/PUBLIC_PRESENTATION.md",
   "docs/screenshots/README.md",
   "website/README.md",
   "DESIGN.md",

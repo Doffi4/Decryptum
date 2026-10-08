@@ -2,7 +2,7 @@
 
 # Decryptum
 
-**[Скачать v1.1.0 — предварительный релиз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 08.10.2026. [Что изменилось](docs/RELEASE_NOTES_1.1.md), [проверка APK](docs/BUILD_VERIFICATION_1.1.md), [оставшиеся ограничения](docs/LAUNCH_CHECKLIST.md).
+**[Скачать v1.1.0 — предварительный релиз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 08.10.2026. [Что изменилось](docs/RELEASE_NOTES_1.1.md), [проверка APK](docs/BUILD_VERIFICATION_1.1.md), [оставшиеся ограничения](SECURITY.md#known-limitations).
 
 **Ваши пароли. Ваши ключи. Ваше устройство.**
 
@@ -10,7 +10,7 @@
 
 [English](README.md) · [Українська](README.uk.md) · [Релизы](https://github.com/Doffi4/Decryptum/releases) · **[Сайт](https://doffi4.github.io/Decryptum/)** · [Безопасность](SECURITY.md) · [Приватность](PRIVACY.md)
 
-**v1.1.0 опубликован как предварительный релиз; разработка продолжается.** Здесь описан текущий код; опубликованные APK могут отличаться. Passkeys экспериментальные, Claude Advisor доступен только в debug и отключён в release. До закрытия [блокеров](docs/PHASE6_HANDOFF.md) используйте тестовые данные и сохраняйте независимые способы восстановления важных аккаунтов.
+**v1.1.0 опубликован как предварительный релиз; разработка продолжается.** Здесь описан текущий код; опубликованные APK могут отличаться. Passkeys экспериментальные, Claude Advisor доступен только в debug и отключён в release. До закрытия [блокеров](SECURITY.md#known-limitations) используйте тестовые данные и сохраняйте независимые способы восстановления важных аккаунтов.
 
 | Хранилище | TOTP |
 | --- | --- |
@@ -46,12 +46,12 @@ APK: **[Decryptum v1.1.0](https://github.com/Doffi4/Decryptum/releases/download/
 Нужны Android Studio/SDK 37 и JDK 25 для Gradle (языковой target Java 11), SDK задаётся в игнорируемом local.properties:
 
 ```powershell
-$env:JAVA_HOME='E:\Android Studio\jbr' # замените на свой путь
+# Set JAVA_HOME to your installed JDK 25.
 .\gradlew.bat :app:testDebugUnitTest :app:assembleDebug :app:lintDebug --console=plain
 ```
 
 Тесты на тестовом устройстве/эмуляторе: :app:connectedDebugAndroidTest. Сайт: cd website, npm ci, npm run build, npm run preview.
 
-Приоритет — авторизация интеграций, безопасные миграции, восстановление, passkeys, устройства/доступность и правильно подписанный кандидат. Sync и desktop/browser — будущие идеи. [План продукта](docs/PRODUCT.md), [Phase 6](docs/PHASE6_HANDOFF.md), [участие](CONTRIBUTING.md), [раскрытие уязвимостей](SECURITY.md#reporting-a-vulnerability). Приватный контакт ещё должен подтвердить владелец; секреты публично не отправляйте.
+Приоритет — авторизация интеграций, безопасные миграции, восстановление, passkeys, устройства/доступность и правильно подписанный кандидат. Sync и desktop/browser — будущие идеи. [План продукта](docs/PRODUCT.md), [участие](CONTRIBUTING.md), [раскрытие уязвимостей](SECURITY.md#reporting-a-vulnerability). Приватный контакт ещё должен подтвердить владелец; секреты публично не отправляйте.
 
 Лицензия: [GNU GPLv3](LICENSE).
