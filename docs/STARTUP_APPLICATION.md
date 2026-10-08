@@ -2,6 +2,23 @@
 
 Prepared 2026-10-07; release status updated 2026-10-08 for owner review. These are reusable answers, not a submitted application or verified company profile. Every unknown owner-specific fact stays `[OWNER INPUT REQUIRED]`. Do not describe the public 1.1.0 prerelease as production-ready or the debug advisor as a live customer integration.
 
+## Short description ready for owner review
+
+The following text is suitable as a starting point for a product/Claude-use description. The current form is behind Console sign-in; field names and length limits still need confirmation there.
+
+> Decryptum is an open-source Android password manager and TOTP authenticator with a local encrypted vault, password generation, autofill and local checks for weak, reused and duplicate credentials. The project is prototyping an optional Claude advisor that turns four aggregate security counts into practical guidance after explicit consent, without sending passwords, account identities, TOTP secrets or private keys. The advisor is currently debug-only and disabled in the public APK. API credits would support synthetic-data evaluations, English/Russian guidance quality and further privacy-reviewed integration. A public v1.1.0 prerelease, source code and product website are available.
+
+Ready public links:
+
+- Website: https://doffi4.github.io/Decryptum/
+- Privacy: https://doffi4.github.io/Decryptum/privacy.html
+- Security: https://doffi4.github.io/Decryptum/security.html
+- Repository: https://github.com/Doffi4/Decryptum
+- Current APK/release: https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0
+- Official application: https://platform.claude.com/offers/startups-application
+
+Still needed from the owner: website domain/company email, Console account/organization, project start date, founder/team/legal status, operating country and any actual funding/usage figures. The GitHub Pages URL is live; it does not provide a matching company mailbox. No application has been submitted.
+
 ## 1. One-sentence product description
 
 Decryptum is an open-source, local-first Android password manager and TOTP authenticator with local security checks, experimental passkey-provider code, and a consented debug prototype that asks Claude to explain four aggregate security counts without sending vault secrets.
@@ -69,7 +86,7 @@ Founder residence, business registration country, operating location and eligibi
 ## 17. Links
 
 - Repository: [Doffi4/Decryptum](https://github.com/Doffi4/Decryptum).
-- Existing release: [v1.0.1](https://github.com/Doffi4/Decryptum/releases/tag/v1.0.1); it predates this work.
+- Current release: [v1.1.0 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0); versionCode 7, published after owner review.
 - Live website: https://doffi4.github.io/Decryptum/ ; privacy policy: https://doffi4.github.io/Decryptum/privacy.html . Company email/demo/custom domain: `[OWNER INPUT REQUIRED]`. GitHub Pages publication does not establish company-domain eligibility.
 
 ## 18. Anything else reviewers should know?
@@ -78,7 +95,7 @@ Decryptum is openly developed under GPLv3. Its intended AI boundary is narrow an
 
 ## Current Claude Startups requirements — owner check
 
-As checked on 2026-10-07, the [official program FAQ](https://claude.com/programs/startups) allows bootstrapped applicants and describes eligibility as founding within five years or funding within two. It requests a Claude Console account, a company email matching the website domain, a short product description and compliance with supportability policies. First-party API credits apply through Console, not Bedrock/Vertex; approval and benefits are not guaranteed. The [official terms](https://www.anthropic.com/startup-program-official-terms) govern the application. Recheck them at submission time; this is not legal/eligibility advice.
+Rechecked on 2026-10-08: the [official program FAQ](https://claude.com/programs/startups) allows bootstrapped applicants and describes eligibility as founding within five years or funding within two. It requests a Claude Console account, a company email matching the website domain, a short product description and compliance with supportability policies. Approved applicants are offered $1,000 in API credits and a free year of Team for up to five Premium seats if new to Team; acceptance is not guaranteed. API credits apply through Console, not Bedrock/Vertex. The [official terms](https://www.anthropic.com/startup-program-official-terms) govern the application; eligibility and geographic restrictions require owner confirmation. The official application redirected to sign-in during this review, so the current authenticated fields were not inspected. Recheck requirements at submission time; this is not legal/eligibility advice.
 
 Before applying, the owner must confirm eligibility/date/company/country facts; choose an owned domain or separately authorize purchase; review the published website and configure any required owned-domain hosting; configure matching domain email; create/verify the correct Claude Console organization; confirm any required project/API settings without exposing keys; fill all placeholders and review the final form. No paid action, DNS change, account creation or submission was performed.
 
