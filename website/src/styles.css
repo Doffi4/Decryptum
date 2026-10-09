@@ -14,6 +14,10 @@
   --pill: 999px;
   --width: 1180px;
   --space: clamp(22px, 5vw, 64px);
+  --motion-fast: 180ms;
+  --motion-theme: 320ms;
+  --motion-enter: 640ms;
+  --motion-ease: cubic-bezier(0.05, 0.7, 0.1, 1);
   font-family:
     system-ui,
     -apple-system,
@@ -940,6 +944,275 @@ h1 span {
   color: var(--muted);
   margin-top: 16px;
   font-size: 13px;
+}
+
+/* One motion language across the landing page and source-derived documents. */
+body,
+.header,
+.hero-preview,
+.privacy-band,
+.source-cta,
+.capture-gallery figure,
+.architecture article,
+.advisor,
+.inline-note,
+h1,
+h2,
+h3,
+p,
+strong,
+a,
+summary,
+.principles,
+.footer,
+.doc th,
+.doc td {
+  transition:
+    color var(--motion-theme) ease,
+    background-color var(--motion-theme) ease,
+    border-color var(--motion-theme) ease;
+}
+.button,
+.theme-toggle {
+  transition:
+    transform var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) ease,
+    background-color var(--motion-theme) ease,
+    color var(--motion-theme) ease,
+    border-color var(--motion-theme) ease;
+}
+.button span,
+.text-link,
+.brand img,
+.feature-number,
+.tag,
+.roadmap li > span {
+  transition: transform var(--motion-fast) var(--motion-ease);
+}
+.button:is(:hover, :focus-visible) {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 20px #0002;
+}
+.button:is(:hover, :focus-visible) span {
+  transform: translate(3px, -2px);
+}
+.button:active,
+.theme-toggle:active {
+  transform: scale(0.97);
+}
+.theme-toggle:is(:hover, :focus-visible) {
+  background: var(--high);
+  border-color: var(--primary);
+}
+.brand:is(:hover, :focus-visible) img {
+  transform: rotate(-7deg) scale(1.06);
+}
+.header nav a,
+.footer nav a,
+.text-link {
+  background-image: linear-gradient(var(--primary), var(--primary));
+  background-repeat: no-repeat;
+  background-position: left calc(100% - 6px);
+  background-size: 0 1px;
+  transition:
+    background-size var(--motion-theme) var(--motion-ease),
+    color var(--motion-theme) ease,
+    transform var(--motion-fast) var(--motion-ease);
+}
+.header nav a:is(:hover, :focus-visible),
+.footer nav a:is(:hover, :focus-visible),
+.text-link:is(:hover, :focus-visible) {
+  background-size: 100% 1px;
+  color: var(--primary);
+}
+.text-link:is(:hover, :focus-visible) {
+  transform: translateX(3px);
+}
+.feature,
+.architecture article,
+.capture-gallery figure,
+.totp-preview figure,
+.data-list > div,
+.check-list > div,
+.roadmap li {
+  transition:
+    transform var(--motion-theme) var(--motion-ease),
+    opacity var(--motion-enter) var(--motion-ease),
+    border-color var(--motion-theme) ease,
+    background-color var(--motion-theme) ease,
+    box-shadow var(--motion-theme) ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .feature:hover,
+  .architecture article:hover,
+  .capture-gallery figure:hover,
+  .totp-preview figure:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+  }
+  .architecture article:hover,
+  .capture-gallery figure:hover {
+    background: var(--high);
+    box-shadow: 0 14px 32px #0002;
+  }
+  .feature:hover .feature-number,
+  .architecture article:hover .tag,
+  .roadmap li:hover > span {
+    transform: translateX(4px);
+  }
+  .data-list > div:hover,
+  .check-list > div:hover,
+  .roadmap li:hover {
+    border-color: var(--primary);
+    transform: translateX(3px);
+  }
+}
+:root[data-motion="ready"] .reveal {
+  transition:
+    opacity var(--motion-enter) var(--motion-ease),
+    transform var(--motion-enter) var(--motion-ease),
+    background-color var(--motion-theme) ease,
+    color var(--motion-theme) ease,
+    border-color var(--motion-theme) ease,
+    box-shadow var(--motion-theme) ease;
+}
+:root[data-motion="ready"] .reveal:not(.is-visible):not(:focus-within) {
+  opacity: 0;
+  transform: translateY(22px);
+}
+:root[data-motion="ready"] .reveal:focus-within {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+.reveal.is-visible.reveal-step-1 {
+  transition-delay: 55ms, 55ms, 0ms, 0ms, 0ms, 0ms;
+}
+.reveal.is-visible.reveal-step-2 {
+  transition-delay: 110ms, 110ms, 0ms, 0ms, 0ms, 0ms;
+}
+.reveal.is-visible.reveal-step-3 {
+  transition-delay: 165ms, 165ms, 0ms, 0ms, 0ms, 0ms;
+}
+.hero-preview .phone {
+  animation: phone-float 4.8s ease-in-out 1s 1;
+}
+@keyframes phone-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.faq summary {
+  position: relative;
+  list-style: none;
+}
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  top: 25px;
+  width: 14px;
+  height: 14px;
+  background:
+    linear-gradient(var(--primary), var(--primary)) center / 2px 100% no-repeat,
+    linear-gradient(var(--primary), var(--primary)) center / 100% 2px no-repeat;
+  transition: transform var(--motion-theme) var(--motion-ease);
+}
+.faq details[open] summary::after {
+  transform: rotate(45deg);
+}
+.faq summary:is(:hover, :focus-visible) {
+  color: var(--primary);
+}
+@supports (interpolate-size: allow-keywords) {
+  .faq details {
+    interpolate-size: allow-keywords;
+  }
+  .faq details::details-content {
+    overflow: clip;
+    height: 0;
+    opacity: 0;
+    transition:
+      height var(--motion-theme) var(--motion-ease),
+      opacity var(--motion-theme) ease,
+      content-visibility var(--motion-theme) allow-discrete;
+  }
+  .faq details[open]::details-content {
+    height: auto;
+    opacity: 1;
+  }
+}
+.reading-progress {
+  display: none;
+}
+@supports (animation-timeline: scroll()) {
+  .reading-progress {
+    display: block;
+    position: fixed;
+    inset: 0 0 auto;
+    height: 2px;
+    background: var(--primary);
+    transform-origin: left;
+    z-index: 4;
+    pointer-events: none;
+    animation: reading-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes reading-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-motion="ready"] .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .reading-progress {
+    display: none;
+  }
+  .hero-preview .phone,
+  .button,
+  .theme-toggle,
+  .feature,
+  .architecture article,
+  .capture-gallery figure,
+  .data-list > div,
+  .check-list > div,
+  .roadmap li,
+  .text-link,
+  .brand img,
+  .feature-number,
+  .tag,
+  .roadmap li > span {
+    transform: none !important;
+  }
+}
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  :root[data-motion="ready"] .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .reading-progress {
+    display: none;
+  }
 }
 @media (max-width: 650px) {
   .capture-gallery {

@@ -12,14 +12,15 @@ A local-first Android password manager and TOTP authenticator, built with Kotlin
 
 **[Download v1.1.1 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.1)** · versionCode 8 · 2026-10-09. [What changed](docs/RELEASE_NOTES_1.1.1.md), [artifact verification](docs/BUILD_VERIFICATION_1.1.1.md), [remaining gates](SECURITY.md#known-limitations).
 
+**Stable release: [v1.1.0](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0).**
+
 ## A look at the app
 
-| Vault | TOTP | Local Security Center | Test datasets |
+| Vault | TOTP | Password Generator | Local Security Center |
 | :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/vault-current.webp" width="200" alt="Vault"> | <img src="docs/screenshots/totp-current.webp" width="200" alt="TOTP"> | <img src="docs/screenshots/security-center.webp" width="200" alt="Local Security Center"> | <img src="docs/screenshots/test-data.webp" width="200" alt="Test datasets"> |
+| <img src="docs/screenshots/vault-current.webp" width="200" alt="Vault"> | <img src="docs/screenshots/totp-current.webp" width="200" alt="TOTP"> | <img src="docs/screenshots/password-generator.webp" width="200" alt="Password Generator"> | <img src="docs/screenshots/security-center.webp" width="200" alt="Local Security Center"> |
 
-Current v1.1.1 Compose screens and test-data controls rendered with synthetic fixtures. These are local Robolectric renders, not physical-device screenshots. [Capture notes](docs/screenshots/README.md).
-
+Current v1.1.1 Compose screens rendered with synthetic fixtures. These are local Robolectric renders, not physical-device screenshots. [Capture notes](docs/screenshots/README.md).
 
 ## What is implemented
 
@@ -57,8 +58,6 @@ Build with Android Studio/SDK 37 and a JDK 25 Gradle runtime. The checked-in wra
 ```
 
 Debug output normally appears in app/build/outputs/apk/debug/. Disposable emulator/device tests: :app:connectedDebugAndroidTest. Compilation does not verify Android runtime behavior. See [Contributing](CONTRIBUTING.md). Local website: cd website, npm ci, npm run build, npm run preview.
-
-For the tester round, use [the v1.1.1 instructions](docs/TESTING.md): six title taps and `Heytest08` open developer tools, including 1–5,000 synthetic records across up to 200 services and repeatable Security Center/TOTP fixtures. Use disposable data only.
 
 ## Next priorities
 

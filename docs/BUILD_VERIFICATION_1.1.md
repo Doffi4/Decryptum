@@ -1,4 +1,4 @@
-# v1.1.0 prerelease artifact verification
+# v1.1.0 release artifact verification
 
 The public v1.1.0 APK was built on 2026-10-07 and published on 2026-10-08. It was not rebuilt or resigned for publication. The build-time source is recorded by tag `v1.1.0`; later documentation changes do not alter the APK.
 
@@ -44,4 +44,4 @@ Generated output is under ignored `.artifacts/verification/`. Exact binary repro
 
 Native SQLCipher/Keystore/biometrics/lifecycle, migration crash/low-space behavior, complete encrypted recovery, passkey recipient/protocol interoperability, device UI/accessibility and production signing/disclosure policy remain open. Core local checks do not imply breach verification. Claude Advisor is disabled in release. See [release notes](RELEASE_NOTES_1.1.md), [Security](../SECURITY.md), [Privacy](../PRIVACY.md) and [known limitations](../SECURITY.md#known-limitations).
 
-The release is explicitly a **prerelease**. The website is now [published on GitHub Pages](https://doffi4.github.io/Decryptum/) through a separate workflow; this does not add native Android verification. No custom domain is configured.
+v1.1.0 is published as a full release. This status does not close the documented native verification or recovery limitations. The website is now [published on GitHub Pages](https://doffi4.github.io/Decryptum/) through a separate workflow; this does not add native Android verification. No custom domain is configured.

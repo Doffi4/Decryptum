@@ -1,6 +1,6 @@
 # Decryptum v1.1.0 — Security & Product Polish
 
-**Public prerelease · versionCode 7 · 2026-10-08.** See [artifact verification](BUILD_VERIFICATION_1.1.md) and [known limitations](../SECURITY.md#known-limitations).
+**Public release · versionCode 7 · 2026-10-08.** See [artifact verification](BUILD_VERIFICATION_1.1.md) and [known limitations](../SECURITY.md#known-limitations).
 
 This release adds useful local security checks and improves the vault interface while tightening several storage and authorization paths. It does not establish complete Android runtime safety or recovery.
 
@@ -31,7 +31,7 @@ Core vault, generator, TOTP generation and local checks operate offline. Favicon
 
 Passkeys remain experimental software P-256 credentials. Caller/origin/RP binding, challenge/allowCredentials correctness and interoperability remain launch blockers. CSV/JSON is not a tested encrypted recovery format: TOTP-only/standalone passkey restore, exact secret preservation, linked edits and legacy upgrades still need work. Developer cleanup can affect real records; do not use it on important data.
 
-JVM tests and APK assembly are not evidence of native SQLCipher/Keystore, biometrics, process-death behavior, TalkBack or device compatibility. Use disposable data for this prerelease and maintain independent account recovery methods. No independent security audit, guaranteed memory erasure or universally hardware-backed protection is claimed.
+JVM tests and APK assembly are not evidence of native SQLCipher/Keystore, biometrics, process-death behavior, TalkBack or device compatibility. Use disposable data while these limitations remain open and maintain independent account recovery methods. No independent security audit, guaranteed memory erasure or universally hardware-backed protection is claimed.
 
 ## Upgrade and signing notes
 

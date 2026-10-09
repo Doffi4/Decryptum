@@ -2,7 +2,7 @@
 
 **Public site: [https://doffi4.github.io/Decryptum/](https://doffi4.github.io/Decryptum/).**
 
-Build-time Node.js (22+) and Marked render maintained repository Markdown into static HTML. No runtime framework, backend, external fonts, analytics or client dependency bundle. The only browser script is the optional theme control. The site copy is English, matching the canonical public README; the app has EN/RU strings.
+Build-time Node.js (22+) and Marked render maintained repository Markdown into static HTML. No runtime framework, backend, external fonts, analytics or client dependency bundle. The local browser script handles the optional theme control and progressive section entrances. CSS owns shared interaction motion, native FAQ expansion and the reading indicator. The site copy is English, matching the canonical public README; the app has EN/RU strings.
 
 ```sh
 npm ci
@@ -20,7 +20,7 @@ Open `http://127.0.0.1:4173`. Preview server binds only to loopback. Output is `
 
 - `src/index.html`: factual landing copy and semantic sections.
 - `src/styles.css`: responsive Material Privacy roles adapted from Android `Color.kt`; dark default, light toggle, keyboard/reduced-motion/high-contrast behavior.
-- `src/theme.js`: optional localStorage theme preference; page remains readable with JS disabled.
+- `src/theme.js`: optional localStorage theme preference and IntersectionObserver entrances; keyboard focus reveals content immediately. The page remains readable with JS disabled. Reduced-motion and print show all content without movement.
 - `scripts/build.mjs`: build, shared page shell, Markdown render, relative-link mapping, configurable metadata/robots/sitemap.
 - `public/assets/`: existing app icon, optimized earlier vault/TOTP screenshots and a social card.
 - `site.config.mjs`: repository, optional real origin, base path and verified mailbox.

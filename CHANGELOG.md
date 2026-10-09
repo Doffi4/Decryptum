@@ -1,22 +1,14 @@
 # Changelog
 
-## [1.1.1] — 2026-10-09 (tester prerelease)
+## [1.1.1] — 2026-10-09 (prerelease)
 
-### Added
-- Current synthetic Compose captures for the vault, TOTP, local Security Center and test-data controls; refreshed EN/RU/UK repository presentation and website release links.
-- Isolated aggregate-only advisor contract and standalone synthetic evaluation harness, versioned prompts and stronger offline privacy/release isolation checks. The remote client remains debug-only.
-- Configurable synthetic vault datasets: 1–5,000 records across up to 200 familiar services with uneven account counts, unique fictional logins per batch, sample counts and confirmation before adding.
-- Separate four-record Security Center fixture and a passwordless public RFC 6238 TOTP demo, matching the tester instructions.
-- EN/RU validation, pending/error/actual-save-count feedback and focused regression tests for the generator and native Material 3 controls.
-- [Tester instructions](docs/TESTING.md) with the complete public fixtures and clear distinctions between the large dataset and expected Security Center counts.
+### Improved
+- Updated local vault, password generator, TOTP and Security Center presentation; refreshed EN/RU/UK repository and website release links.
+- Isolated aggregate-only advisor contract, standalone synthetic evaluation harness and versioned prompts, with stronger offline privacy/release isolation checks. The remote client remains debug-only.
 
-### Fixed
-- Developer entry code now matches tester instructions: six taps on the app title, then `Heytest08`. This code opens tools; vault authentication still uses the master password.
-- Test generation no longer cycles evenly through six services. Records use the existing encrypted bulk import without writing a plaintext CSV file.
+VersionName 1.1.1 / versionCode 8. Native device validation remains pending. Claude guidance remains disabled in release builds.
 
-VersionName 1.1.1 / versionCode 8. This is a synthetic-data tester prerelease; native device validation remains pending. Claude guidance remains disabled in release builds.
-
-## [1.1.0] — 2026-10-08 (prerelease)
+## [1.1.0] — 2026-10-08
 
 ### Added
 - Local Security Center for weak-password heuristics, exact reuse and exact credential duplicates, with links to affected entries.
@@ -48,7 +40,7 @@ VersionName 1.1.1 / versionCode 8. This is a synthetic-data tester prerelease; n
 - Build/test/lint results, certificate comparison and artifact hashes recorded in the release verification notes. Android runtime tests require a device; compilation is not execution.
 - README EN/RU/UK, policies, contribution/issue/PR guidance and static website source accompany this release. The website is published on GitHub Pages.
 
-Published as a prerelease with versionCode 7. Native authorization/migration/recovery/passkey evidence and production signing/disclosure decisions remain open. See [release notes](docs/RELEASE_NOTES_1.1.md) and [known limitations](SECURITY.md#known-limitations).
+Published as a release with versionCode 7. Native authorization/migration/recovery/passkey evidence and production signing/disclosure decisions remain open. See [release notes](docs/RELEASE_NOTES_1.1.md) and [known limitations](SECURITY.md#known-limitations).
 
 All notable changes to this project will be documented in this file.
 

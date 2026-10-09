@@ -44,7 +44,10 @@ fun SiteAvatar(
     enabled: Boolean = true,
     forceRefresh: Boolean = false,
 ) {
-    val isLocal = isLocalNetwork || DomainUtils.isLocalAddress(faviconUrl)
+    val parsed = remember(faviconUrl) { DomainUtils.parse(faviconUrl) }
+    val host = parsed.host
+    val rootDomain = apexDomain ?: parsed.apexDomain
+    val isLocal = isLocalNetwork || parsed.isLocalNetwork
 
     Box(
         modifier = modifier
@@ -64,15 +67,15 @@ fun SiteAvatar(
                 modifier = Modifier.size(size * 0.55f)
             )
         } else {
-            var isImageLoaded by remember(faviconUrl, apexDomain, forceRefresh) {
+            var isImageLoaded by remember(host, rootDomain, forceRefresh, enabled) {
                 mutableStateOf(false)
             }
 
-            if (enabled && faviconUrl.isNotBlank()) {
+            if (enabled && host.isNotBlank()) {
                 val context = LocalContext.current
-                val model = remember(faviconUrl, apexDomain, forceRefresh) {
+                val model = remember(host, rootDomain, forceRefresh) {
                     ImageRequest.Builder(context)
-                        .data(FaviconRequest(host = faviconUrl, apexDomain = apexDomain, forceRefresh = forceRefresh))
+                        .data(FaviconRequest(host = host, apexDomain = rootDomain, forceRefresh = forceRefresh))
                         .size(160)
                         .build()
                 }

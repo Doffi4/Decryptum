@@ -12,14 +12,13 @@
 
 **v1.1.1 опубліковано як попередній реліз; розробка триває.** Опис стосується поточного коду, APK можуть відрізнятися. Passkeys експериментальні; Claude Advisor лише в debug, у release вимкнений. До закриття [блокерів](SECURITY.md#known-limitations) використовуйте тестові дані та незалежні способи відновлення важливих акаунтів.
 
-| Сховище | TOTP | Локальний Security Center | Тестові дані |
+| Сховище | TOTP | Генератор паролів | Локальний Security Center |
 | :---: | :---: | :---: | :---: |
-| <img src="docs/screenshots/vault-current.webp" width="200" alt="Сховище"> | <img src="docs/screenshots/totp-current.webp" width="200" alt="TOTP"> | <img src="docs/screenshots/security-center.webp" width="200" alt="Локальний Security Center"> | <img src="docs/screenshots/test-data.webp" width="200" alt="Тестові дані"> |
+| <img src="docs/screenshots/vault-current.webp" width="200" alt="Сховище"> | <img src="docs/screenshots/totp-current.webp" width="200" alt="TOTP"> | <img src="docs/screenshots/password-generator.webp" width="200" alt="Генератор паролів"> | <img src="docs/screenshots/security-center.webp" width="200" alt="Локальний Security Center"> |
 
-Справжні Compose-екрани й елементи керування v1.1.1, відтворені локально на вигаданих даних через Robolectric. Це не знімки фізичного телефона. [Примітки](docs/screenshots/README.md).
+Справжні Compose-екрани v1.1.1, відтворені локально на вигаданих даних через Robolectric. Це не знімки фізичного телефона. [Примітки](docs/screenshots/README.md).
 
-
-Для тестувальників: [інструкція v1.1.1](docs/TESTING.md), шість натискань на назву та `Heytest08`. Генератор створює 1–5000 вигаданих записів для максимум 200 сервісів із різною кількістю облікових записів; є окремі контрольні набори Security Center і TOTP.
+**Повноцінний реліз: [v1.1.0](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0).**
 
 ## Можливості поточного коду
 
@@ -44,7 +43,7 @@ Android backup вимкнений; повне зашифроване відно�
 
 ## Спробувати й долучитися
 
-APK: **[Decryptum v1.1.1](https://github.com/Doffi4/Decryptum/releases/download/v1.1.1/Decryptum-v1.1.1.apk)** — зібраний тестовий prerelease з генератором вигаданих даних. Підпис Android Debug збігається з v1.0.1; оновлення та збереження даних на пристрої не перевірені. Не видаляйте застосунок і не скидайте важливе сховище заради встановлення.
+APK: **[Decryptum v1.1.1](https://github.com/Doffi4/Decryptum/releases/download/v1.1.1/Decryptum-v1.1.1.apk)** — попередній реліз. Підпис Android Debug збігається з v1.0.1; оновлення та збереження даних на пристрої не перевірені. Не видаляйте застосунок і не скидайте важливе сховище заради встановлення.
 
 Android Studio/SDK 37, JDK 25 для Gradle (Java target 11). Команди: [основний README](README.md#try-or-build), [Contributing](CONTRIBUTING.md). Тести Android потребують тестового пристрою/емулятора.
 

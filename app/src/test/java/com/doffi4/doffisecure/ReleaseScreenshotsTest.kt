@@ -3,15 +3,15 @@ package com.doffi4.doffisecure
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import coil.Coil
+import coil.ImageLoader
+import coil.fetch.Fetcher
+import coil.fetch.FetchResult
+import coil.request.Options
+import coil.request.ImageRequest
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.lifecycle.ViewModelStore
 import com.doffi4.doffisecure.dev.*
@@ -33,8 +33,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 import java.security.MessageDigest
+import java.util.concurrent.atomic.AtomicInteger
+import org.robolectric.Shadows.shadowOf
 
-/** Opt-in capture of real screens; fixtures and repositories are synthetic and have no I/O. */
+/** Opt-in capture of real screens with fictional accounts and locally cached public favicons. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "en-rUS-w412dp-h892dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -48,12 +50,46 @@ class ReleaseScreenshotsTest {
         val store = ViewModelStore()
         try {
             val context = RuntimeEnvironment.getApplication()
-            val settings = UserSettingsManager(context).apply { setLoadFavicons(false) }
+            val settings = UserSettingsManager(context).apply { setLoadFavicons(true) }
+            val iconDirectory = File(requireNotNull(System.getProperty("decryptum.favicons")))
+            val iconFiles = iconDirectory.listFiles()!!.filter { it.extension == "bin" }
+            Assert.assertTrue("Public service icons must be prepared before capture", iconFiles.size >= 12)
+            val cache = File(context.cacheDir, FaviconFetcher.CACHE_SUBDIR).apply { mkdirs() }
+            iconFiles.forEach { it.copyTo(File(cache, it.name), overwrite = true) }
+            val imageLoader = ImageLoader.Builder(context).components {
+                add(object : Fetcher.Factory<FaviconRequest> {
+                    override fun create(data: FaviconRequest, options: Options, imageLoader: ImageLoader): Fetcher {
+                        val delegate = FaviconFetcher.Factory(context).create(data, options, imageLoader)
+                        return object : Fetcher {
+                            override suspend fun fetch(): FetchResult? {
+                                check(!data.forceRefresh)
+                                requireCachedIcon(cache, data.host)
+                                return delegate.fetch()
+                            }
+                        }
+                    }
+                })
+                add(IcoDecoder.Factory())
+            }.build()
+            Coil.setImageLoader(imageLoader)
             val now = 1_791_547_200_000L
+            val iconHosts = iconFiles.map { it.nameWithoutExtension }.toSet()
             val vaultRows = SyntheticVaultGenerator.generate(SyntheticVaultGenerator.plan(100, 70), "demo", now)
+                .filter { it.service in iconHosts }
                 .mapIndexed { index, row -> row.copy(id = index.toLong() + 1, username = "demo-account-${index + 1}@example.invalid") }
-            val otpRows = (1..3).map { index -> SyntheticVaultGenerator.totpFixture(now)
-                .copy(id = 1000L + index, service = "Demo TOTP $index", username = "demo-user-$index") }
+            val otpRows = listOf("google.com", "github.com", "microsoft.com").mapIndexed { index, domain -> SyntheticVaultGenerator.totpFixture(now)
+                .copy(id = 1000L + index, service = domain, username = "demo-user-${index + 1}", url = "https://$domain") }
+            val loadedIcons = AtomicInteger()
+            val failedIcons = AtomicInteger()
+            val iconGroups = (vaultRows + otpRows).groupBySite()
+            iconGroups.forEach { requireCachedIcon(cache, it.parsedDomain.host) }
+            for (group in iconGroups) {
+                imageLoader.enqueue(ImageRequest.Builder(context)
+                    .data(FaviconRequest(group.parsedDomain.host, group.parsedDomain.apexDomain))
+                    .listener(onSuccess = { _, _ -> loadedIcons.incrementAndGet() },
+                        onError = { _, _ -> failedIcons.incrementAndGet() })
+                    .size(160).build())
+            }
             val repository = ScreenshotRepository(vaultRows + otpRows)
             val crypto = PasswordCrypto(FakeSharedPreferences()) { password, salt ->
                 MessageDigest.getInstance("SHA-256").digest(salt + password.toByteArray())
@@ -64,6 +100,8 @@ class ReleaseScreenshotsTest {
                 DevModeManager(FakeSharedPreferences()), VaultWarmup(repository, crypto), RefreshRateController(),
                 settings, ScreenshotPasskeys(), GeneratePasswordUseCase())
             store.put("screenshots", vm)
+            val generator = GeneratorViewModel(GeneratePasswordUseCase(), AddPasswordUseCase(repository), SecureClipboard(context))
+            store.put("generator-screenshot", generator)
             val fixture = SyntheticVaultGenerator.securityFixture(now).mapIndexed { index, row -> row.copy(id = index.toLong() + 1) }
             val summary = LocalSecurityAnalyzer().analyze(fixture)
             Assert.assertEquals(4, summary.passwordEntries)
@@ -73,14 +111,17 @@ class ReleaseScreenshotsTest {
                     when (page) {
                         0 -> PasswordScreen(viewModel = vm, onNavigateToDetail = {})
                         1 -> TotpScreen(viewModel = vm, onNavigateToDetail = {})
-                        2 -> SecurityCenterScreen(SecurityCenterState.Ready(summary), {}, {}, {}, {})
-                        else -> Surface(Modifier.fillMaxSize()) { Column(Modifier.verticalScroll(rememberScrollState())) {
-                            SyntheticDataPanel(TestDataSeedState.Idle, 0, {}, {})
-                        } }
+                        2 -> GeneratorScreen(viewModel = generator)
+                        else -> SecurityCenterScreen(SecurityCenterState.Ready(summary), {}, {}, {}, {})
                     }
                 }
             }
-            for ((index, name) in listOf("vault-current", "totp-current", "security-center", "test-data").withIndex()) {
+            compose.waitUntil(timeoutMillis = 15_000) {
+                shadowOf(android.os.Looper.getMainLooper()).idle()
+                loadedIcons.get() + failedIcons.get() == iconGroups.size
+            }
+            Assert.assertEquals("All prepared favicons must decode", 0, failedIcons.get())
+            for ((index, name) in listOf("vault-current", "totp-current", "password-generator", "security-center").withIndex()) {
                 compose.runOnIdle { page = index }
                 compose.waitForIdle()
                 compose.runOnIdle {
@@ -99,6 +140,19 @@ class ReleaseScreenshotsTest {
             store.clear()
             host.pause().stop().destroy()
         }
+    }
+
+    /** A cache hit with these signatures returns before FaviconFetcher's HTTP waterfall.
+     * Missing/bad headers stop capture; corrupt image bodies fail decoding without a network retry. */
+    private fun requireCachedIcon(cache: File, host: String) {
+        val bytes = File(cache, "${FaviconFetcher.sanitizeHost(host.lowercase())}.bin").readBytes()
+        val png = bytes.size >= 8 && bytes[0] == 0x89.toByte() && bytes[1] == 0x50.toByte()
+            && bytes[2] == 0x4e.toByte() && bytes[3] == 0x47.toByte()
+        val ico = bytes.size >= 8 && bytes[0] == 0.toByte() && bytes[1] == 0.toByte()
+            && bytes[2] == 1.toByte() && bytes[3] == 0.toByte()
+        val jpeg = bytes.size >= 8 && bytes[0] == 0xff.toByte() && bytes[1] == 0xd8.toByte()
+            && bytes[2] == 0xff.toByte()
+        check(png || ico || jpeg) { "Prepared PNG/JPEG/ICO favicon required for $host; capture never resolves a missing icon online" }
     }
 
     private class ScreenshotRepository(private val rows: List<Password>) : IPasswordRepository {
