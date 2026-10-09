@@ -2,7 +2,7 @@
 
 # Decryptum
 
-**[Завантажити v1.1.0 — попередній реліз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 08.10.2026. [Зміни](docs/RELEASE_NOTES_1.1.md), [перевірка APK](docs/BUILD_VERIFICATION_1.1.md), [залишкові обмеження](SECURITY.md#known-limitations).
+**[Завантажити v1.1.1 — попередній реліз](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.1)** · versionCode 8 · 09.10.2026. [Зміни](docs/RELEASE_NOTES_1.1.1.md), [перевірка APK](docs/BUILD_VERIFICATION_1.1.1.md), [залишкові обмеження](SECURITY.md#known-limitations).
 
 **Ваші паролі. Ваші ключі. Ваш пристрій.**
 
@@ -10,13 +10,16 @@
 
 [English](README.md) · [Русский](README.ru.md) · [Релізи](https://github.com/Doffi4/Decryptum/releases) · **[Сайт](https://doffi4.github.io/Decryptum/)** · [Безпека](SECURITY.md) · [Приватність](PRIVACY.md)
 
-**v1.1.0 опубліковано як попередній реліз; розробка триває.** Опис стосується поточного коду, APK можуть відрізнятися. Passkeys експериментальні; Claude Advisor лише в debug, у release вимкнений. До закриття [блокерів](SECURITY.md#known-limitations) використовуйте тестові дані та незалежні способи відновлення важливих акаунтів.
+**v1.1.1 опубліковано як попередній реліз; розробка триває.** Опис стосується поточного коду, APK можуть відрізнятися. Passkeys експериментальні; Claude Advisor лише в debug, у release вимкнений. До закриття [блокерів](SECURITY.md#known-limitations) використовуйте тестові дані та незалежні способи відновлення важливих акаунтів.
 
-| Сховище | TOTP |
-| --- | --- |
-| <img src="docs/screenshots/vault.png" width="200" alt="Попередній інтерфейс сховища"> | <img src="docs/screenshots/totp.png" width="200" alt="Попередній інтерфейс TOTP"> |
+| Сховище | TOTP | Локальний Security Center | Тестові дані |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/vault-current.webp" width="200" alt="Сховище"> | <img src="docs/screenshots/totp-current.webp" width="200" alt="TOTP"> | <img src="docs/screenshots/security-center.webp" width="200" alt="Локальний Security Center"> | <img src="docs/screenshots/test-data.webp" width="200" alt="Тестові дані"> |
 
-Це наявні знімки попереднього інтерфейсу, не поточної збірки. Версія та походження записів не встановлені; числа не є статистикою користувачів. Security Center не показаний. [Примітки](docs/screenshots/README.md).
+Справжні Compose-екрани й елементи керування v1.1.1, відтворені локально на вигаданих даних через Robolectric. Це не знімки фізичного телефона. [Примітки](docs/screenshots/README.md).
+
+
+Для тестувальників: [інструкція v1.1.1](docs/TESTING.md), шість натискань на назву та `Heytest08`. Генератор створює 1–5000 вигаданих записів для максимум 200 сервісів із різною кількістю облікових записів; є окремі контрольні набори Security Center і TOTP.
 
 ## Можливості поточного коду
 
@@ -41,7 +44,7 @@ Android backup вимкнений; повне зашифроване відно�
 
 ## Спробувати й долучитися
 
-APK: **[Decryptum v1.1.0](https://github.com/Doffi4/Decryptum/releases/download/v1.1.0/Decryptum-v1.1.0.apk)** — той самий перевірений власником файл, без повторної збірки. Підпис Android Debug збігається з v1.0.1; оновлення та збереження даних на пристрої не перевірені. Не видаляйте застосунок і не скидайте важливе сховище заради встановлення.
+APK: **[Decryptum v1.1.1](https://github.com/Doffi4/Decryptum/releases/download/v1.1.1/Decryptum-v1.1.1.apk)** — зібраний тестовий prerelease з генератором вигаданих даних. Підпис Android Debug збігається з v1.0.1; оновлення та збереження даних на пристрої не перевірені. Не видаляйте застосунок і не скидайте важливе сховище заради встановлення.
 
 Android Studio/SDK 37, JDK 25 для Gradle (Java target 11). Команди: [основний README](README.md#try-or-build), [Contributing](CONTRIBUTING.md). Тести Android потребують тестового пристрою/емулятора.
 

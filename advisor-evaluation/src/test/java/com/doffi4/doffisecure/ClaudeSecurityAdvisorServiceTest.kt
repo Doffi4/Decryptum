@@ -13,6 +13,7 @@ import org.junit.Test
 import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
+/** Offline evaluation against the real request builder with a synthetic transport. */
 class ClaudeSecurityAdvisorServiceTest {
     private val summary = AdvisorSummary(5, 2, 3, 0)
     private val valid = """{"stop_reason":"end_turn","content":[{"type":"text","text":"{\"overview\":\"Review local findings\",\"checklist\":[\"Replace reused passwords first\",\"Review weak passwords\"]}"}]}"""
@@ -30,6 +31,15 @@ class ClaudeSecurityAdvisorServiceTest {
         val buffer = okio.Buffer(); request.body!!.writeTo(buffer)
         val body = org.json.JSONObject(buffer.readUtf8())
         assertEquals(setOf("model", "max_tokens", "system", "messages", "output_config"), body.keys().asSequence().toSet())
+        val messages = body.getJSONArray("messages")
+        assertEquals(1, messages.length())
+        val message = messages.getJSONObject(0)
+        assertEquals(setOf("role", "content"), message.keys().asSequence().toSet())
+        assertEquals("user", message.get("role"))
+        assertEquals(
+            """{"password_entry_count":5,"weak_password_count":2,"reused_password_count":3,"duplicate_credential_count":0}""",
+            message.get("content"),
+        )
         assertEquals("json_schema", body.getJSONObject("output_config").getJSONObject("format").getString("type"))
         assertFalse(body.toString().contains("synthetic-test-key"))
     }
@@ -38,6 +48,17 @@ class ClaudeSecurityAdvisorServiceTest {
         val calls = FakeCalls(valid)
         assertEquals(AdvisorOutcome.Failure(AdvisorFailure.MISSING_CONFIGURATION), ClaudeSecurityAdvisorService({ null }, calls).advise(summary, AdvisorLanguage.RUSSIAN))
         assertNull(calls.last)
+    }
+
+    @Test fun `closed version selector controls actual HTTP system message`() = runTest {
+        for (version in AdvisorPromptVersion.entries) {
+            val calls = FakeCalls(valid)
+            ClaudeSecurityAdvisorService(config, calls, promptVersion = version).advise(summary, AdvisorLanguage.RUSSIAN)
+            val buffer = okio.Buffer(); calls.last!!.request().body!!.writeTo(buffer)
+            val body = org.json.JSONObject(buffer.readUtf8())
+            assertEquals(ClaudeAdvisorPrompts.system(AdvisorLanguage.RUSSIAN, version), body.getString("system"))
+            assertFalse(body.has("prompt_version"))
+        }
     }
 
     @Test fun `http failures do not expose body or auth secrets`() = runTest {

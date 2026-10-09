@@ -15,6 +15,8 @@ Only these vault-derived fields can leave the device:
 
 Each category count is at most `password_entry_count`; categories can overlap. They are entry counts, not the number of distinct passwords or verified affected websites. No groups/entry IDs/identity labels are sent. Breaches, password age and TOTP/passkey coverage are not implemented local checks and are omitted, never represented by reassuring zero values.
 
+Additional vault-derived fields are **not necessary** for this evaluation. The four counts and fixed instructions already support explaining the implemented local checks. New fields require a separate privacy justification and review; there is no extensible metadata map.
+
 Example with synthetic values:
 
 ```json
@@ -28,21 +30,21 @@ Example with synthetic values:
 
 The HTTPS request also contains a developer-selected model ID, a fixed system instruction with an EN/RU response-language choice, a 1200-token limit, a fixed response schema and one user message containing exactly this JSON. Authentication uses the provider API key in `x-api-key`, with `anthropic-version: 2023-06-01`; no application account/device ID is added. Anthropic sees the client's IP address, timing and ordinary transport metadata. Counts can themselves be sensitive (especially for a small vault); aggregate-only is not anonymity or zero knowledge.
 
+The current debug/evaluation prompt is `aggregate-v2-candidate`: a guidance writer for already-computed local findings, never a scanner. The frozen `aggregate-v1` baseline remains selectable by the standalone synthetic harness. [Prompt versions and audit policy](CLAUDE_ADVISOR_PROMPT.md) describe the canonical source, byte snapshots and limitations; no live quality improvement or production readiness is claimed. The version selector is a closed developer enum, not vault data or arbitrary instructions. It does not add outbound fields.
+
 ## What never enters this feature's request
 
-Plaintext passwords, any password hashes/fingerprints, usernames, service names, URLs/domains, notes, TOTP seeds/codes, passkey private material, recovery/master/DB keys, KDF outputs, encrypted vault blobs, autofill payloads and decrypted vault entries are never passed to the advisor. The developer API key is an explicitly configured authentication credential; it is not a vault encryption key.
+Plaintext passwords, password hashes/fingerprints or HIBP prefixes, TOTP secrets/codes, private **or public** passkey material, usernames, emails, account/service names, domains/URLs, Android package names derived from vault records, database identifiers, notes, master-password material, encryption/recovery/DB keys, KDF outputs, encrypted vault blobs, raw exceptions, clipboard contents, autofill payloads and decrypted vault entries are prohibited. No public-passkey exception is justified for this evaluation. The developer API key is an explicitly configured authentication credential; it is not a vault encryption key.
 
 ## Code boundary and lifecycle
 
-Paths below are relative to `app/src/main/java/com/doffi4/doffisecure/`:
+The module graph is `app → advisor-contract` and **debug only** `app → advisor-evaluation → advisor-contract`. Both libraries use the existing Android/Kotlin toolchain. Neither library depends on `app`, its vault models, database, repository, clipboard or local analysis. This is a compile-time dependency boundary, not a sandbox against deliberately rewritten build files or malicious code.
 
-- `domain/security/LocalSecurityAnalyzer.kt` performs existing local analysis.
-- `domain/advisor/AdvisorSummary.kt` contains the explicit four-Int allowlist and `AdvisorSanitizer`; mapper discards all `SecuritySummary` item references.
-- `domain/advisor/SecurityAdvisorService.kt` accepts only `AdvisorSummary` and an EN/RU enum; typed failures contain no exception text.
-- `data/advisor/ClaudeAdvisorCodec.kt` writes each allowed key explicitly. No reflection/generic vault serialization. The same writer produces the consent JSON and user-message JSON.
-- `data/advisor/ClaudeSecurityAdvisorService.kt` owns the fixed origin and dedicated OkHttp client. No vault repository, shared interceptors, body/header logging or telemetry.
-- `ui/security/SecurityAdvisorController.kt` holds only DTOs/guidance. The existing `SecurityCenterViewModel` owns it, supplies sanitized summaries and clears it on every new local state.
-- `ui/security/SecurityAdvisorPanel.kt` implements consent/transparency/loading/result/failure states; `SecurityCenterScreen.kt` adds the panel inside Ready state.
+- In `app/src/main/java/com/doffi4/doffisecure/`, `domain/security/LocalSecurityAnalyzer.kt` performs existing local analysis; `domain/advisor/AdvisorSanitizer.kt` copies four counts and discards all local item references.
+- In `advisor-contract/src/main/java/com/doffi4/doffisecure/domain/advisor/`, `AdvisorSummary.kt` is a final four-Int DTO with range validation. `SecurityAdvisorService.kt` accepts only that DTO and an EN/RU enum; typed failures contain no exception text.
+- `advisor-contract/.../AdvisorPayloadJson.kt` formats four explicitly named Int properties. It accepts no map, arbitrary object, text, bytes or exception; it does not use a reflective serializer. The UI preview and provider user message use this same writer.
+- In `advisor-evaluation/src/main/java/com/doffi4/doffisecure/data/advisor/`, `ClaudeAdvisorCodec.kt` builds the fixed provider envelope and validates untrusted replies. `ClaudeSecurityAdvisorService.kt` owns the fixed origin and dedicated OkHttp client. It has no vault repository, shared interceptors, body/header logging or telemetry.
+- In app, `ui/security/SecurityAdvisorController.kt` holds only DTOs/guidance. The existing `SecurityCenterViewModel` supplies sanitized summaries and clears it on every new local state. `SecurityAdvisorPanel.kt` preserves the consent/transparency/loading/result/failure UI.
 
 Before every send/retry: optional explanation, explicit recipient/privacy statement, the exact snapshot JSON and readable category counts, a separate View data being shared dialog, then explicit Send or Decline. Preview/decline performs no request. Retries reopen consent. A refresh, vault emission (even identical counts), local error/loading, lock or screen stop invalidates the snapshot and clears guidance. Cancellation invalidates a generation token so a late/non-cooperative reply cannot restore cleared state.
 
@@ -71,7 +73,15 @@ The configuration file is limited to 4 KiB; keys/model are validated without log
 
 The parser checks full consumption of both the outer API object and the inner guidance object, and checks real string types instead of Android `JSONObject.getString` coercion. It uses the platform JSON parser with its syntax tolerance; the enforced contract is complete objects, exact guidance keys/types, limits and completion status, not a claim of full RFC JSON grammar validation. Android-specific coercion regressions live in instrumentation tests as well as JVM tests.
 
-`app/src/release/.../AdvisorServiceFactory.kt` always returns `DisabledSecurityAdvisorService`. Release cannot read developer configuration or send an advisor request, even if that file exists. This does not alter the existing release signing policy, which still uses the Android Debug identity.
+`app/src/release/.../AdvisorServiceFactory.kt` always returns `DisabledSecurityAdvisorService`. The evaluation module is connected with `debugImplementation`, so its HTTP service, developer configuration and provider codec are absent from the app release classpath even before R8. Release cannot read developer configuration or send an advisor request through this feature, even if that file exists. This does not alter the existing release signing policy, which still uses the Android Debug identity.
+
+## Isolated offline evaluation
+
+Use synthetic fixtures without a key or network. `advisor-contract` tests exercise the real writer and run the JDK Java compiler against the actual Kotlin/JVM API: four integers compile; strings, byte arrays, maps, objects, exceptions, extra fields and DTO subclassing do not. A positive compilation control prevents compiler/classpath failures from being mistaken for privacy protection.
+
+`advisor-evaluation` tests capture the actual OkHttp request constructed by the service using a synthetic `Call.Factory`, then inspect the complete envelope and exact four-field user content. Existing offline, cancellation, authorization and malformed-response regressions stay with the client. `app/src/testDebug/.../AdvisorEvaluationPrivacyTest.kt` runs the real local analyzer, sanitizer and envelope writer with synthetic secret-bearing records and checks sentinel exclusion, literal payload values and snapshot detachment. A release test verifies that evaluation classes cannot be loaded.
+
+Run `./gradlew :advisor-contract:testDebugUnitTest :advisor-evaluation:testDebugUnitTest :app:testDebugUnitTest :app:testReleaseUnitTest` (`.\gradlew.bat` on Windows). Release unit tests are enabled in the tracked app Gradle configuration; no private init script is needed to enable the release guard. No live API request is required to exercise these boundaries. Offline tests do not evaluate Claude's actual guidance quality or prove provider compatibility; live synthetic evaluation requires a separately authorized developer key/budget and remains outside this change.
 
 ## Provider documentation and privacy caveat
 

@@ -23,10 +23,12 @@ class ClaudeDeveloperConfig(val apiKey: String, val model: String) {
     override fun toString() = "ClaudeDeveloperConfig(redacted)"
 }
 
+/** Evaluation-only client; app release has no dependency on this module. */
 class ClaudeSecurityAdvisorService(
     private val configuration: suspend () -> ClaudeDeveloperConfig?,
     private val calls: Call.Factory = defaultClient(),
     private val canSend: () -> Boolean = { true },
+    private val promptVersion: AdvisorPromptVersion = ClaudeAdvisorPrompts.current,
 ) : SecurityAdvisorService {
     override suspend fun advise(summary: AdvisorSummary, language: AdvisorLanguage): AdvisorOutcome {
         val config = try { configuration() } catch (e: CancellationException) { throw e }
@@ -34,7 +36,7 @@ class ClaudeSecurityAdvisorService(
             ?: return AdvisorOutcome.Failure(AdvisorFailure.MISSING_CONFIGURATION)
         val request = Request.Builder().url("https://api.anthropic.com/v1/messages")
             .header("x-api-key", config.apiKey).header("anthropic-version", "2023-06-01")
-            .post(ClaudeAdvisorCodec.requestJson(summary, config.model, language).toRequestBody("application/json; charset=utf-8".toMediaType()))
+            .post(ClaudeAdvisorCodec.requestJson(summary, config.model, language, promptVersion).toRequestBody("application/json; charset=utf-8".toMediaType()))
             .build()
         // Configuration can suspend. Recheck cancellation and authorization at the send boundary.
         currentCoroutineContext().ensureActive()

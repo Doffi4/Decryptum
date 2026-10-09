@@ -20,8 +20,8 @@ class DevModeManager(private val prefs: SharedPreferences) {
     constructor(context: Context) : this(context.getSharedPreferences("doffisecure_dev", Context.MODE_PRIVATE))
 
     private companion object {
-        /** Unlock code for the developer mode (shared with the test account). */
-        const val DEV_MODE_PASSWORD = "IrkaSec08"
+        /** Public tester affordance, not vault authentication or a security boundary. */
+        const val DEV_MODE_PASSWORD = "Heytest08"
         const val KEY_DEV_MODE = "dev_mode_enabled"
         const val KEY_SHOW_PASSWORD_COUNT = "show_password_count"
         const val KEY_SHOW_WARMUP_PROGRESS = "show_warmup_progress"

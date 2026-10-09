@@ -25,7 +25,7 @@ These are implementation characteristics, not claims of unique invention, market
 | Platforms/locales | Android 8+; provider needs Android 14+; app EN/RU | No iOS, web vault, desktop app or Ukrainian app strings |
 | Website | [Public GitHub Pages site](https://doffi4.github.io/Decryptum/) and source-derived documentation | Static presentation, not a vault client; custom domain/mailbox not configured |
 
-The public prerelease uses `versionName` 1.1.0 / `versionCode` 7, published 2026-10-08. Existing v1.0.1 APKs predate this work. Signing still uses Android Debug identity, matching the published v1.0.1 release certificate. Native upgrade/data retention and public signing policy remain unverified. Password-cache/corrupt-read, several mandatory-auth fallbacks, migration replacement/version and DB-key persistence paths were repaired. Integration/recipient trust, native migration, recovery and signing gates remain open. See [release notes](RELEASE_NOTES_1.1.md) and [known limitations](../SECURITY.md#known-limitations).
+The public prerelease uses `versionName` 1.1.1 / `versionCode` 8, published 2026-10-09. Existing v1.0.1 APKs predate this work. Signing still uses Android Debug identity, matching the published v1.0.1 release certificate. Native upgrade/data retention and public signing policy remain unverified. Password-cache/corrupt-read, several mandatory-auth fallbacks, migration replacement/version and DB-key persistence paths were repaired. Integration/recipient trust, native migration, recovery and signing gates remain open. See [release notes](RELEASE_NOTES_1.1.1.md) and [known limitations](../SECURITY.md#known-limitations).
 
 ## Roadmap
 
@@ -36,3 +36,5 @@ The public prerelease uses `versionName` 1.1.0 / `versionCode` 7, published 2026
 5. **Future exploration only:** encrypted cross-device sync, browser/desktop work and additional localization. None is implemented or scheduled. Sync must follow a threat model and recovery design; it is not implemented by the website.
 
 No delivery dates, revenue, funding, download counts, customer testimonials or security certifications are asserted.
+
+The v1.1.1 tester prerelease adds configurable synthetic vault datasets (up to 200 services / 5,000 entries), confirmation and dedicated local Security Center/TOTP fixtures. [Tester instructions](TESTING.md). These tools do not establish safe recovery or device compatibility.

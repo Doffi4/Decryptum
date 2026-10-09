@@ -473,4 +473,48 @@
     <string name="add_password_saving">Сохранение…</string>
     <string name="action_save_password">Сохранить пароль</string>
     <string name="add_password_generate">Сгенерировать пароль</string>
+    <string name="synthetic_description">Пример настоящего хранилища: известные сервисы, разное число аккаунтов, выдуманные логины и пароли. Как импорт CSV, без создания открытого файла.</string>
+    <string name="synthetic_entries_label">Всего записей</string>
+    <string name="synthetic_entries_help">От 1 до 5 000</string>
+    <string name="synthetic_services_label">Сервисы</string>
+    <string name="synthetic_services_help">От 1 до 200, не больше числа записей</string>
+    <string name="synthetic_summary">%1$s · %2$s</string>
+    <string name="synthetic_distribution">Аккаунтов на сервис: %1$d–%2$d</string>
+    <string name="synthetic_preview">Посмотреть набор</string>
+    <string name="synthetic_fixtures_title">Сценарии для тестеров</string>
+    <string name="synthetic_fixtures_help">Для ожидаемых счётчиков Security Center добавь его набор один раз в пустое тестовое хранилище. Большой набор проверяй отдельно.</string>
+    <string name="synthetic_security">Добавить 4 записи для Security Center</string>
+    <string name="synthetic_totp">Добавить демо TOTP</string>
+    <string name="synthetic_confirm_title">Добавить выдуманные записи?</string>
+    <string name="synthetic_warning">Используй пустое тестовое хранилище. Эти общедоступные значения непригодны для настоящих аккаунтов. Существующие записи сохранятся, новые добавятся к ним.</string>
+    <string name="synthetic_existing">Сейчас записей в хранилище: %1$d</string>
+    <string name="synthetic_network_notice">В наборе есть URL известных сервисов и логины с окончанием example.invalid. Аккаунты не создаются. Значки сайтов могут загружаться через существующие сетевые сервисы. Сам генератор сетевых запросов не делает.</string>
+    <string name="synthetic_service_preview">%1$s: %2$s</string>
+    <string name="synthetic_security_expected">4 парольные записи: 2 слабые, 2 повторно используют пароль, 2 точные копии. Счётчики пересекаются. URL и TOTP seeds отсутствуют. Эти итоги относятся только к одному набору в пустом хранилище.</string>
+    <string name="synthetic_totp_expected">Одна запись Demo TOTP без пароля с публичным seed из RFC 6238. Приложение показывает 6 цифр и таймер на 30 секунд. Запись не входит в число парольных и непригодна для настоящего аккаунта.</string>
+    <string name="synthetic_saving">Добавляем и шифруем тестовые записи…</string>
+    <string name="synthetic_confirm">Добавить тестовые записи</string>
+    <string name="synthetic_saved">Тестовых записей добавлено: %1$d / %2$d</string>
+    <string name="synthetic_partial">Часть записей не сохранилась. Проверь хранилище перед добавлением нового набора: повтор создаёт новые записи.</string>
+    <string name="synthetic_failed">Не удалось добавить тестовые записи. Проверь хранилище перед повтором.</string>
+    <string name="synthetic_locked">Разблокируй хранилище перед добавлением тестовых записей.</string>
+    <string name="synthetic_disabled">Включи режим разработчика перед добавлением тестовых записей.</string>
+    <plurals name="synthetic_records">
+        <item quantity="one">%d запись</item>
+        <item quantity="few">%d записи</item>
+        <item quantity="many">%d записей</item>
+        <item quantity="other">%d записи</item>
+    </plurals>
+    <plurals name="synthetic_services">
+        <item quantity="one">%d сервис</item>
+        <item quantity="few">%d сервиса</item>
+        <item quantity="many">%d сервисов</item>
+        <item quantity="other">%d сервиса</item>
+    </plurals>
+    <plurals name="synthetic_accounts">
+        <item quantity="one">%d аккаунт</item>
+        <item quantity="few">%d аккаунта</item>
+        <item quantity="many">%d аккаунтов</item>
+        <item quantity="other">%d аккаунта</item>
+    </plurals>
 </resources>

@@ -8,7 +8,7 @@ sealed interface AdvisorOutcome {
     data class Failure(val reason: AdvisorFailure) : AdvisorOutcome
 }
 
-/** Remote implementations can only receive this allowlisted DTO, never a vault model. */
+/** Isolated contract: implementations can only receive counts and a fixed language enum. */
 fun interface SecurityAdvisorService {
     suspend fun advise(summary: AdvisorSummary, language: AdvisorLanguage): AdvisorOutcome
 }

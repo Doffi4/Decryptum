@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.doffi4.doffisecure.dev.CpuMonitor
 import com.doffi4.doffisecure.dev.CpuStats
+import com.doffi4.doffisecure.dev.SyntheticVaultGenerator
+import com.doffi4.doffisecure.dev.TestDatasetRequest
+import com.doffi4.doffisecure.dev.TestDataSeedState
 import com.doffi4.doffisecure.domain.model.DuplicateGroup
-import com.doffi4.doffisecure.domain.model.Password
 import com.doffi4.doffisecure.domain.usecase.CheckEncryptionIntegrityUseCase
 import com.doffi4.doffisecure.domain.usecase.CountEncryptedPasswordsUseCase
 import com.doffi4.doffisecure.domain.usecase.CountPasswordsUseCase
@@ -34,6 +36,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import com.doffi4.doffisecure.R
 import com.doffi4.doffisecure.ui.util.UiText
+import java.util.UUID
 
 sealed interface DevToolsEvent {
     data class ShowToast(val message: UiText) : DevToolsEvent
@@ -173,15 +176,50 @@ class DevToolsViewModel(
 
     // ---- 1. Test data seeding ----
 
-    fun insertTestPasswords(count: Int) {
+    private val _seedState = MutableStateFlow<TestDataSeedState>(TestDataSeedState.Idle)
+    val seedState: StateFlow<TestDataSeedState> = _seedState.asStateFlow()
+
+    fun clearSeedResult() {
+        if (_seedState.value != TestDataSeedState.Running) _seedState.value = TestDataSeedState.Idle
+    }
+
+    fun insertTestData(request: TestDatasetRequest) {
+        if (_seedState.value == TestDataSeedState.Running) return
+        if (!devModeManager.devModeEnabled.value) {
+            _seedState.value = TestDataSeedState.Disabled
+            return
+        }
+        if (lockManager.isLocked()) {
+            _seedState.value = TestDataSeedState.Locked
+            return
+        }
+        // Set synchronously: rapid taps cannot queue two imports before launch starts.
+        _seedState.value = TestDataSeedState.Running
         viewModelScope.launch {
             try {
-                val inserted = importPasswordsUseCase(generateTestPasswords(count))
-                emitToast(UiText.StringResource(R.string.dev_toast_inserted_test_passwords, inserted))
+                val rows = withContext(Dispatchers.Default) {
+                    val now = System.currentTimeMillis()
+                    when (request) {
+                        is TestDatasetRequest.Realistic -> SyntheticVaultGenerator.generate(request.plan, UUID.randomUUID().toString(), now)
+                        TestDatasetRequest.SecurityCheck -> SyntheticVaultGenerator.securityFixture(now)
+                        TestDatasetRequest.Totp -> listOf(SyntheticVaultGenerator.totpFixture(now))
+                    }
+                }
+                if (!devModeManager.devModeEnabled.value) {
+                    _seedState.value = TestDataSeedState.Disabled
+                    return@launch
+                }
+                if (lockManager.isLocked()) {
+                    _seedState.value = TestDataSeedState.Locked
+                    return@launch
+                }
+                val inserted = importPasswordsUseCase(rows)
+                _seedState.value = TestDataSeedState.Saved(inserted, rows.size)
             } catch (e: CancellationException) {
+                _seedState.value = TestDataSeedState.Idle
                 throw e
-            } catch (e: Exception) {
-                emitToast(UiText.DynamicString("Test data failed: ${e.message ?: e.javaClass.simpleName}"))
+            } catch (_: Exception) {
+                _seedState.value = if (lockManager.isLocked()) TestDataSeedState.Locked else TestDataSeedState.Failed
             }
         }
     }
@@ -277,33 +315,4 @@ class DevToolsViewModel(
         viewModelScope.launch { _event.emit(DevToolsEvent.ShowToast(message)) }
     }
 
-    /**
-     * Builds realistic-looking test data: a handful of popular services each with
-     * several distinct URLs, and a small username pool, so grouping by service,
-     * search, favicons and the duplicate detector all get exercised.
-     */
-    private fun generateTestPasswords(count: Int): List<Password> {
-        val services = listOf(
-            "apple.com" to listOf("https://apple.com", "https://id.apple.com", "https://music.apple.com"),
-            "google.com" to listOf("https://accounts.google.com", "https://www.google.com"),
-            "github.com" to listOf("https://github.com", "https://gist.github.com"),
-            "netflix.com" to listOf("https://www.netflix.com"),
-            "spotify.com" to listOf("https://accounts.spotify.com"),
-            "amazon.com" to listOf("https://www.amazon.com", "https://music.amazon.com")
-        )
-        val usernames = listOf("alex", "mike", "jane", "test.user", "admin", "dev", "ivan", "olga")
-        val now = System.currentTimeMillis()
-
-        return List(count) { i ->
-            val (service, urls) = services[i % services.size]
-            Password(
-                id = 0L,
-                service = service,
-                username = usernames[i % usernames.size],
-                password = "Test#${1000 + i}!xY",
-                url = urls[i % urls.size],
-                createdAt = now - i * 60_000L
-            )
-        }
-    }
 }

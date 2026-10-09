@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
@@ -66,6 +65,7 @@ fun DeveloperSection(
     val showFpsOverlay by devTools.showFpsOverlay.collectAsState()
     val showCpuOverlay by devTools.showCpuOverlay.collectAsState()
     val prefetchCount by devTools.prefetchCount.collectAsState()
+    val seedState by devTools.seedState.collectAsState()
 
     var showWipeDialog by remember { mutableStateOf(false) }
     var showResetLockDialog by remember { mutableStateOf(false) }
@@ -172,28 +172,7 @@ fun DeveloperSection(
 
         // ──── Test data ────
         SectionLabel(stringResource(R.string.dev_section_test_data))
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
-        ) {
-            Column {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.dev_btn_insert_100)) },
-                    supportingContent = {
-                        Text(stringResource(R.string.dev_desc_insert_100))
-                    },
-                    leadingContent = { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier.clickable { devTools.insertTestPasswords(100) }
-                )
-                HorizontalDivider()
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.dev_btn_insert_500)) },
-                    supportingContent = { Text(stringResource(R.string.dev_desc_insert_500)) },
-                    leadingContent = { Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary) },
-                    modifier = Modifier.clickable { devTools.insertTestPasswords(500) }
-                )
-            }
-        }
+        SyntheticDataPanel(seedState, totalCount, devTools::clearSeedResult, devTools::insertTestData)
 
         // ──── Database ────
         SectionLabel(stringResource(R.string.dev_section_db))

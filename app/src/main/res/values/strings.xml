@@ -473,4 +473,42 @@
     <string name="add_password_saving">Saving…</string>
     <string name="action_save_password">Save password</string>
     <string name="add_password_generate">Generate password</string>
+    <string name="synthetic_description">A realistic sample vault: familiar services, different account counts, fictional logins and passwords. Like a CSV import, without creating a plaintext file.</string>
+    <string name="synthetic_entries_label">Total records</string>
+    <string name="synthetic_entries_help">From 1 to 5,000</string>
+    <string name="synthetic_services_label">Services</string>
+    <string name="synthetic_services_help">From 1 to 200, no more than the number of records</string>
+    <string name="synthetic_summary">%1$s · %2$s</string>
+    <string name="synthetic_distribution">Accounts per service: %1$d–%2$d</string>
+    <string name="synthetic_preview">Review dataset</string>
+    <string name="synthetic_fixtures_title">Tester scenarios</string>
+    <string name="synthetic_fixtures_help">For the expected Security Center counts, add its sample once to an empty test vault. Keep it separate from the large dataset.</string>
+    <string name="synthetic_security">Add 4 Security Center records</string>
+    <string name="synthetic_totp">Add a TOTP demo</string>
+    <string name="synthetic_confirm_title">Add fictional records?</string>
+    <string name="synthetic_warning">Use an empty test vault. These public test values are unsuitable for real accounts. Existing records will remain; this adds new ones.</string>
+    <string name="synthetic_existing">Records currently in this vault: %1$d</string>
+    <string name="synthetic_network_notice">Includes familiar service URLs and logins ending in example.invalid. No accounts are created. Website icons may use existing network providers. The generator itself makes no network requests.</string>
+    <string name="synthetic_service_preview">%1$s: %2$s</string>
+    <string name="synthetic_security_expected">4 password records: 2 weak, 2 reused, 2 exact duplicate copies. Counts overlap. No URLs or TOTP seeds are included. These totals apply only to this sample in an otherwise empty vault.</string>
+    <string name="synthetic_totp_expected">One passwordless Demo TOTP record with the public RFC 6238 seed. The app shows 6 digits with a 30-second timer. It does not count as a password record and cannot be used for a real account.</string>
+    <string name="synthetic_saving">Adding and encrypting test records…</string>
+    <string name="synthetic_confirm">Add test records</string>
+    <string name="synthetic_saved">Test records added: %1$d / %2$d</string>
+    <string name="synthetic_partial">Some records were not stored. Check the vault before adding another dataset; repeating adds new records.</string>
+    <string name="synthetic_failed">Could not add test records. Check the vault before retrying.</string>
+    <string name="synthetic_locked">Unlock the vault before adding test records.</string>
+    <string name="synthetic_disabled">Enable developer mode before adding test records.</string>
+    <plurals name="synthetic_records">
+        <item quantity="one">%d record</item>
+        <item quantity="other">%d records</item>
+    </plurals>
+    <plurals name="synthetic_services">
+        <item quantity="one">%d service</item>
+        <item quantity="other">%d services</item>
+    </plurals>
+    <plurals name="synthetic_accounts">
+        <item quantity="one">%d account</item>
+        <item quantity="other">%d accounts</item>
+    </plurals>
 </resources>

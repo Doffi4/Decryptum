@@ -12,8 +12,8 @@ android {
         applicationId = "com.doffi4.doffisecure"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "1.1.0"
+        versionCode = 8
+        versionName = "1.1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -51,7 +51,18 @@ android {
     }
 }
 
+androidComponents {
+    // Keep the release privacy gate runnable without local init scripts.
+    beforeVariants(selector().withBuildType("release")) { builder ->
+        (builder as com.android.build.api.variant.HasUnitTestBuilder).enableUnitTest = true
+    }
+}
+
 dependencies {
+    implementation(project(":advisor-contract"))
+    // Evaluation code cannot be linked from release, even before R8 shrinking.
+    debugImplementation(project(":advisor-evaluation"))
+
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)

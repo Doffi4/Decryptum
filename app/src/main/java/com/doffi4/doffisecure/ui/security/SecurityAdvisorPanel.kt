@@ -16,7 +16,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.doffi4.doffisecure.R
-import com.doffi4.doffisecure.data.advisor.ClaudeAdvisorCodec
 import com.doffi4.doffisecure.domain.advisor.*
 import org.json.JSONObject
 
@@ -130,7 +129,7 @@ private fun PayloadPreview(payload: AdvisorSummary) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.advisor_counts, payload.passwordEntryCount, payload.weakPasswordCount,
             payload.reusedPasswordCount, payload.duplicateCredentialCount), style = MaterialTheme.typography.bodyMedium)
-        val json = remember(payload) { JSONObject(ClaudeAdvisorCodec.summaryJson(payload)).toString(2) }
+        val json = remember(payload) { JSONObject(AdvisorPayloadJson.encode(payload)).toString(2) }
         SelectionContainer {
             Text(json, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.testTag("advisor_payload"))

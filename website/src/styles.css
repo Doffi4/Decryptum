@@ -915,3 +915,35 @@ h1 span {
     width: 160px;
   }
 }
+
+.capture-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+  margin-top: 32px;
+}
+.capture-gallery figure {
+  margin: 0;
+  padding: 24px;
+  border-radius: 24px;
+  background: var(--surface);
+  text-align: center;
+}
+.capture-gallery img {
+  width: min(100%, 280px);
+  height: auto;
+  margin: auto;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+}
+.capture-gallery figcaption {
+  color: var(--muted);
+  margin-top: 16px;
+  font-size: 13px;
+}
+@media (max-width: 650px) {
+  .capture-gallery {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

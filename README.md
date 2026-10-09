@@ -8,21 +8,18 @@ A local-first Android password manager and TOTP authenticator, built with Kotlin
 
 [Русский](README.ru.md) · [Українська](README.uk.md) · [Releases](https://github.com/Doffi4/Decryptum/releases) · **[Website](https://doffi4.github.io/Decryptum/)** · [Security](SECURITY.md) · [Privacy](PRIVACY.md)
 
-**Status: v1.1.0 public prerelease, active development.** This README describes the current source, including local Security Center work. Existing APKs may differ. Passkeys are experimental; Claude guidance is debug-only and disabled in release. Keep independent recovery options and test with disposable data while [launch gates](SECURITY.md#known-limitations) remain open.
+**Status: v1.1.1 public prerelease, active development.** This README describes the current source, including local Security Center work. Existing APKs may differ. Passkeys are experimental; Claude guidance is debug-only and disabled in release. Keep independent recovery options and test with disposable data while [launch gates](SECURITY.md#known-limitations) remain open.
 
-**[Download v1.1.0 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.0)** · versionCode 7 · 2026-10-08. [What changed](docs/RELEASE_NOTES_1.1.md), [artifact verification](docs/BUILD_VERIFICATION_1.1.md), [remaining gates](SECURITY.md#known-limitations).
+**[Download v1.1.1 prerelease](https://github.com/Doffi4/Decryptum/releases/tag/v1.1.1)** · versionCode 8 · 2026-10-09. [What changed](docs/RELEASE_NOTES_1.1.1.md), [artifact verification](docs/BUILD_VERIFICATION_1.1.1.md), [remaining gates](SECURITY.md#known-limitations).
 
 ## A look at the app
 
-| Vault | TOTP authenticator |
-| --- | --- |
-| <img src="docs/screenshots/vault.png" width="200" alt="Earlier vault interface with grouped accounts"> | <img src="docs/screenshots/totp.png" width="200" alt="Earlier two-factor code interface"> |
+| Vault | TOTP | Local Security Center | Test datasets |
+| :---: | :---: | :---: | :---: |
+| <img src="docs/screenshots/vault-current.webp" width="200" alt="Vault"> | <img src="docs/screenshots/totp-current.webp" width="200" alt="TOTP"> | <img src="docs/screenshots/security-center.webp" width="200" alt="Local Security Center"> | <img src="docs/screenshots/test-data.webp" width="200" alt="Test datasets"> |
 
-Existing screenshots of an earlier interface, **not current-build captures**. Exact capture provenance is unverified; displayed entries are not usage statistics. Current Material Privacy fallback colors and Security Center are not pictured. See [screenshot notes](docs/screenshots/README.md).
+Current v1.1.1 Compose screens and test-data controls rendered with synthetic fixtures. These are local Robolectric renders, not physical-device screenshots. [Capture notes](docs/screenshots/README.md).
 
-<img src="docs/screenshots/password-entry.png" width="240" alt="v1.1.0 add-password sheet rendered with synthetic entries">
-
-New password-entry sheet: actual Compose component rendered locally with synthetic data through Robolectric, **not a physical-device screenshot**.
 
 ## What is implemented
 
@@ -49,7 +46,7 @@ Read [Security](SECURITY.md), [Privacy](PRIVACY.md) and [Threat Model](docs/THRE
 
 ## Try or build
 
-Download **[v1.1.0 APK](https://github.com/Doffi4/Decryptum/releases/download/v1.1.0/Decryptum-v1.1.0.apk)** and review the [release notes](docs/RELEASE_NOTES_1.1.md). VersionCode 7 shares the Android Debug certificate with v1.0.1; native upgrade/data retention remains untested. Do not uninstall or reset an important vault to force an update.
+Download **[v1.1.1 APK](https://github.com/Doffi4/Decryptum/releases/download/v1.1.1/Decryptum-v1.1.1.apk)** and review the [release notes](docs/RELEASE_NOTES_1.1.1.md). VersionCode 8 shares the Android Debug certificate with v1.0.1; native upgrade/data retention remains untested. Do not uninstall or reset an important vault to force an update.
 
 Build with Android Studio/SDK 37 and a JDK 25 Gradle runtime. The checked-in wrapper uses Gradle 9.6.0; Java source compatibility is 11. Set local SDK location in ignored local.properties.
 
@@ -60,6 +57,8 @@ Build with Android Studio/SDK 37 and a JDK 25 Gradle runtime. The checked-in wra
 ```
 
 Debug output normally appears in app/build/outputs/apk/debug/. Disposable emulator/device tests: :app:connectedDebugAndroidTest. Compilation does not verify Android runtime behavior. See [Contributing](CONTRIBUTING.md). Local website: cd website, npm ci, npm run build, npm run preview.
+
+For the tester round, use [the v1.1.1 instructions](docs/TESTING.md): six title taps and `Heytest08` open developer tools, including 1–5,000 synthetic records across up to 200 services and repeatable Security Center/TOTP fixtures. Use disposable data only.
 
 ## Next priorities
 

@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Decryptum"
 include(":app")
+include(":advisor-contract", ":advisor-evaluation")

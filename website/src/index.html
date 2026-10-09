@@ -9,21 +9,26 @@
         Your passwords.<br />Your keys.<br /><span>Your device.</span>
       </h1>
       <p class="lead">
-        A quieter place for your digital essentials. Decryptum keeps your
-        passwords and two-factor codes in a local Android vault.
+        Passwords and two-factor codes in a local Android vault, with on-device
+        checks for weak, reused and duplicate credentials.
       </p>
       <div class="actions">
-        <a class="button primary" href="{{repository}}"
+        <a
+          class="button primary"
+          href="{{repository}}/releases/download/v1.1.1/Decryptum-v1.1.1.apk"
+          >Get the test APK <span aria-hidden="true">↗</span></a
+        ><a class="button outline" href="{{repository}}"
           >Explore the source <span aria-hidden="true">↗</span></a
-        ><a class="button outline" href="{{repository}}/releases"
-          >Browse releases <span aria-hidden="true">↗</span></a
         >
       </div>
       <p class="fine">Android 8+ · English &amp; Russian · GPLv3</p>
       <div class="status-note">
-        <strong>A project in active development.</strong> This page describes
-        v1.1.0, available as a public prerelease. Native security and recovery
-        verification remain incomplete.
+        <strong>v1.1.1 · synthetic-data test release.</strong> Use disposable
+        accounts while native security and recovery verification remain
+        incomplete.
+        <a href="{{repository}}/blob/main/docs/TESTING.md"
+          >Tester instructions ↗</a
+        >.
         <a href="{{base}}product.html"
           >See current status <span aria-hidden="true">→</span></a
         >
@@ -35,16 +40,17 @@
       </div>
       <div class="phone">
         <img
-          src="{{base}}assets/vault.webp"
-          width="465"
-          height="1024"
-          alt="Earlier Decryptum vault screen with search, grouped accounts and floating navigation"
+          src="{{base}}assets/vault-current.webp"
+          width="824"
+          height="1784"
+          alt="Current Compose vault screen with synthetic grouped accounts"
           fetchpriority="high"
           decoding="async"
         />
       </div>
       <figcaption>
-        Existing app screenshot.<br />Earlier interface; not the current build.
+        Current Compose vault · synthetic data.<br />Local render, not a
+        physical-device capture.
       </figcaption>
     </figure>
   </section>
@@ -104,20 +110,22 @@
           is no Decryptum server to contact for each code.
         </p>
         <p class="fine">
-          Existing app screenshot. Earlier interface, not the current build. The
-          displayed historical code is not a TOTP recovery secret.
+          Current Compose screen rendered locally with a public demo seed. The
+          displayed demo code is not a TOTP recovery secret.
         </p>
       </div>
       <figure>
         <img
-          src="{{base}}assets/totp.webp"
-          width="465"
-          height="1024"
-          alt="Earlier Decryptum TOTP screen with a code and countdown"
+          src="{{base}}assets/totp-current.webp"
+          width="824"
+          height="1784"
+          alt="Current Compose TOTP screen using a public demo seed"
           loading="lazy"
           decoding="async"
         />
-        <figcaption>Earlier Android interface</figcaption>
+        <figcaption>
+          Current Compose · public demo seed · local render
+        </figcaption>
       </figure>
     </div>
     <aside class="inline-note">
@@ -129,6 +137,52 @@
         >Read the limitations →</a
       >
     </aside>
+  </section>
+  <section class="section wrap" aria-labelledby="screens-title">
+    <div class="section-heading">
+      <p class="eyebrow">CURRENT COMPOSE INTERFACE</p>
+      <h2 id="screens-title">Local checks.<br />Clear next steps.</h2>
+      <p>
+        Review findings on your device. For testing, build a fictional vault
+        with up to 200 services and different account counts.
+      </p>
+    </div>
+    <div class="capture-gallery">
+      <figure>
+        <img
+          src="{{base}}assets/security-center.webp"
+          width="824"
+          height="1784"
+          alt="Local Security Center showing four synthetic entries and two findings in each category"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>
+          Local Security Center · synthetic 4 / 2 / 2 / 2 fixture
+        </figcaption>
+      </figure>
+      <figure>
+        <img
+          src="{{base}}assets/test-data.webp"
+          width="824"
+          height="1784"
+          alt="Developer test-data controls with 500 records across 200 services"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>
+          Developer test-data controls · preview before adding
+        </figcaption>
+      </figure>
+    </div>
+    <p class="fine">
+      Real v1.1.1 Compose screens and controls rendered locally through
+      Robolectric with synthetic fixtures. These are not physical-device
+      captures.
+      <a href="{{repository}}/blob/main/docs/screenshots/README.md"
+        >Capture notes ↗</a
+      >
+    </p>
   </section>
   <section class="privacy-band" id="privacy" aria-labelledby="privacy-title">
     <div class="wrap privacy-layout">
@@ -277,11 +331,11 @@
   <section class="wrap advisor" aria-labelledby="advisor-title">
     <div>
       <p class="eyebrow">OPTIONAL · DEVELOPMENT ONLY</p>
-      <h2 id="advisor-title">AI advice, with a narrow boundary.</h2>
+      <h2 id="advisor-title">Local analysis, optional Claude guidance.</h2>
       <p>
-        The Claude Security Advisor is a debug-only experiment and is disabled
-        in release builds. Each configured request requires consent and lets you
-        review the exact data first.
+        Local code finds credential hygiene issues. The debug-only Claude
+        prototype explains four aggregate counts after explicit consent; it does
+        not scan the vault or change credentials. It is disabled in release.
       </p>
       <a class="text-link" href="{{base}}security-advisor.html"
         >Inspect the outbound contract ↗</a

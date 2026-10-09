@@ -5,36 +5,20 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.json.JSONTokener
 
-/** Explicit writer, not reflective serialization. Also used by the consent preview. */
+/** Provider envelope/response codec. Has no dependency on the app or vault models. */
 object ClaudeAdvisorCodec {
-    fun summaryJson(summary: AdvisorSummary): String = JSONObject()
-        .put("password_entry_count", summary.passwordEntryCount)
-        .put("weak_password_count", summary.weakPasswordCount)
-        .put("reused_password_count", summary.reusedPasswordCount)
-        .put("duplicate_credential_count", summary.duplicateCredentialCount)
-        .toString()
-
-    fun requestJson(summary: AdvisorSummary, model: String, language: AdvisorLanguage): String {
+    val PROMPT_VERSION: String get() = ClaudeAdvisorPrompts.current.id
+    fun requestJson(summary: AdvisorSummary, model: String, language: AdvisorLanguage,
+        promptVersion: AdvisorPromptVersion = ClaudeAdvisorPrompts.current): String {
         val schema = JSONObject().put("type", "object")
             .put("properties", JSONObject()
                 .put("overview", JSONObject().put("type", "string"))
                 .put("checklist", JSONObject().put("type", "array").put("items", JSONObject().put("type", "string"))))
             .put("required", JSONArray(listOf("overview", "checklist")))
             .put("additionalProperties", false)
-        val instructions = """
-            You explain aggregate local password hygiene findings, not account-specific facts.
-            Counts are affected stored entries, not distinct passwords; categories may overlap.
-            Weakness is a local heuristic. Reuse means equality across stored account labels;
-            duplicate credentials are copies requiring manual review, never automatic deletion.
-            Breaches, password age, TOTP/passkey coverage and service support were NOT checked.
-            Give a concise overview (at most 600 characters) and 1-6 short prioritized checklist
-            steps (at most 400 characters each). Do not invent accounts or findings, ask for
-            passwords or any sensitive data, suggest cryptographic key handling, claim to have
-            inspected secrets, certify security or say the user is fully secure. No links.
-            You have no vault access, tools or authority to change credentials.
-        """.trimIndent() + if (language == AdvisorLanguage.RUSSIAN) " Respond in Russian." else " Respond in English."
+        val instructions = ClaudeAdvisorPrompts.system(language, promptVersion)
         return JSONObject().put("model", model).put("max_tokens", 1200).put("system", instructions)
-            .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", summaryJson(summary))))
+            .put("messages", JSONArray().put(JSONObject().put("role", "user").put("content", AdvisorPayloadJson.encode(summary))))
             .put("output_config", JSONObject().put("format", JSONObject().put("type", "json_schema").put("schema", schema)))
             .toString()
     }
